@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Dict
 
 from deepteam.metrics import BaseRedTeamingMetric
@@ -12,12 +13,14 @@ from testframework.chatbot.store import ChatbotStore
 from ..enums import Category, ChatbotName, TestCaseName, Subcategory, Severity
 from ..guardrail.runner import GuardrailRunner
 from ..models import TestCaseResult, Attack, DetectionResult, PromptVariants, ChatbotResponseEvaluation
+from ..storage import save_test_case_result
 
 
 class BaseTestCase(ABC):
     """Abstract base for all test cases."""
 
     results: TestCaseResult
+    run_folder: Path | None = None
 
     def __init__(self, name: TestCaseName, category: Category, sub_category: Subcategory | None,
                  attack_builder: BaseVulnerability,
@@ -71,6 +74,7 @@ class BaseTestCase(ABC):
                 )
         tc_result = TestCaseResult(self.name, self.category, attack_results)
         self.results = tc_result
+        self.store_results()
         return tc_result
 
     @abstractmethod
@@ -78,10 +82,15 @@ class BaseTestCase(ABC):
         """Return the metric to evaluate the attack."""
         raise NotImplementedError
 
-    @abstractmethod
-    def store_results(self, results: TestCaseResult) -> str:
-        """Store the results."""
-        raise NotImplementedError
+    def store_results(self) -> Path | None:
+        """Store the test case results as a backup to the run folder.
+
+        Returns:
+            The path to the saved JSON file, or None if run_folder is not set.
+        """
+        if self.run_folder is None:
+            return None
+        return save_test_case_result(self.results, self.run_folder)
 
     @abstractmethod
     def enhance_base_attack(self, base_attack: str) -> str:

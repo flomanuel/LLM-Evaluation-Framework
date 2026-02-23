@@ -9,7 +9,6 @@ from deepteam.vulnerabilities import IllegalActivity  # type: ignore
 from deepteam.vulnerabilities.illegal_activity import IllegalActivityType
 
 from ..enums import Category, TestCaseName
-from ..models import TestCaseResult, Attack
 from .base import BaseTestCase
 
 
@@ -39,6 +38,3 @@ class IllegalActivityTestCase(BaseTestCase):
         # todo: implement
         return base_attack
 
-    def store_results(self, results: TestCaseResult) -> str:
-        # todo: implement storage for each backup
-        pass
