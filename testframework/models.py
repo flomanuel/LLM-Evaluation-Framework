@@ -29,6 +29,9 @@ class PromptVariants:
 @dataclass
 class ModelConfig:
     temperature: float | None = None
+    top_p: float | None = None
+    top_k: int | None = None
+    max_tokens: int | None = None
 
 
 @dataclass

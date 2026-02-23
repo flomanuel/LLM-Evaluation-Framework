@@ -11,6 +11,12 @@ from .base import BaseChatbot
 class DummyChatbot(BaseChatbot):
     """Dummy chatbot implementation."""
 
+    # LLM generation parameters - just placeholders since this chatbot doesn't call an LLM
+    temperature: float = 0.7
+    top_p: float = 1.0
+    top_k: int | None = None
+    max_tokens: int = 4096
+
     def __init__(self, name: ChatbotName = ChatbotName.DUMMY) -> None:
         super().__init__(name=name)
         logger.debug(f"Dummy chatbot initialized.")
@@ -27,7 +33,12 @@ class DummyChatbot(BaseChatbot):
             response=message,
             system_prompt=system_prompt,
             tool=ToolInfo(tool_called=False, tool_call_params=None),
-            llm_params=ModelConfig(temperature=-1),
+            llm_params=ModelConfig(
+                temperature=self.temperature,
+                top_p=self.top_p,
+                top_k=self.top_k,
+                max_tokens=self.max_tokens,
+            ),
             prompt_tokens=-1,
             response_tokens=-1,
             rag_context=None,

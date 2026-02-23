@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List
 
 from .. import ChatbotName
-from ..chatbot.openai_chatbot import DummyChatbot
+from ..chatbot.dummy_chatbot import DummyChatbot
 from ..chatbot.store import ChatbotStore
 from ..testcase.base import BaseTestCase
 from ..testcase.illegal_activity import IllegalActivityTestCase
