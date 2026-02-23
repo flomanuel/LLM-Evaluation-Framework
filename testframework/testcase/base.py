@@ -1,22 +1,23 @@
 from __future__ import annotations
+
+import uuid
 from abc import ABC, abstractmethod
 from typing import Dict
-from uuid import UUID
 
 from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from deepteam.vulnerabilities import BaseVulnerability
-
-from ..chatbot import store
-from ..chatbot.base import BaseChatbot
-from ..chatbot.store import ChatbotStore
-from ..enums import Category, Chatbot, TestCaseName, Subcategory, Severity
+from testframework.chatbot.base import BaseChatbot
+from testframework.chatbot.store import ChatbotStore
+from ..enums import Category, ChatbotName, TestCaseName, Subcategory, Severity
 from ..guardrail.runner import GuardrailRunner
-from ..models import TestCaseResult, Attack, DetectionResult, PromptVariants, ChatbotResponseEvaluation, ChatbotResponse
+from ..models import TestCaseResult, Attack, DetectionResult, PromptVariants, ChatbotResponseEvaluation
 
 
 class BaseTestCase(ABC):
     """Abstract base for all test cases."""
+
+    results: TestCaseResult
 
     def __init__(self, name: TestCaseName, category: Category, sub_category: Subcategory | None,
                  attack_builder: BaseVulnerability,
@@ -33,22 +34,22 @@ class BaseTestCase(ABC):
         """Run the test case and return a mapping from attack_id to TestCaseResult.
             Build the attacks and add the techniques. Then execute the attacks on the guardrails.
         """
-        attack_results: dict[UUID, Attack] = {}
+        attack_results: dict[str, Attack] = {}
         if self.attack_builder:
-            chatbots: Dict[Chatbot, BaseChatbot] = ChatbotStore.get_chatbots()
+            chatbots: Dict[ChatbotName, BaseChatbot] = ChatbotStore.get_chatbots()
 
             attacks = self.attack_builder.simulate_attacks()
             for attack in attacks:
                 base_attack: str = str(attack.input)
                 attack.input = self.enhance_base_attack(attack.input)
-                llm_responses: dict[Chatbot, str] = {}
-                bot_responses_eval: dict[Chatbot, ChatbotResponseEvaluation] = {}
+                llm_responses: dict[ChatbotName, str] = {}
+                bot_responses_eval: dict[ChatbotName, ChatbotResponseEvaluation] = {}
 
                 # Build optional kwargs from attack attributes
                 query_kwargs = self._build_query_kwargs(attack)
 
                 # run attack on each chatbot
-                for name, chatbot in chatbots.values():
+                for name, chatbot in chatbots.items():
                     model_resp = chatbot.query(attack.input, **query_kwargs)
                     llm_responses[name] = str(model_resp.response)
                     attack.actual_output = model_resp.response
@@ -58,17 +59,19 @@ class BaseTestCase(ABC):
                                                                          float(metric.score),
                                                                          str(metric.reason)
                                                                          )
-                protection: Dict[str, Dict[Chatbot, DetectionResult]] = self.guardrail_runner.run(
+                protection: Dict[str, Dict[ChatbotName, DetectionResult]] = self.guardrail_runner.run(
                     attack.input,
                     llm_responses
                 )
 
-                attack_results[UUID(version=4)] = Attack(
+                attack_results[str(uuid.uuid4())] = Attack(
                     self.category, self.sub_category, self.severity,
                     PromptVariants(base_attack, attack.input),
                     bot_responses_eval, protection
                 )
-        return TestCaseResult(self.name, self.category, attack_results)
+        tc_result = TestCaseResult(self.name, self.category, attack_results)
+        self.results = tc_result
+        return tc_result
 
     @abstractmethod
     def _get_metric(self, attack: RTTestCase = None) -> BaseRedTeamingMetric:

@@ -5,7 +5,7 @@ __pycache__/
 *$py.class
 
 # Log files
-logs/
+_logs/
 
 # C extensions
 *.so
@@ -33,7 +33,7 @@ MANIFEST
 *.manifest
 *.spec
 
-# Installer logs
+# Installer _logs
 pip-log.txt
 pip-delete-this-directory.txt
 
@@ -202,3 +202,7 @@ http-client.private.env.json
 # Github Copilot persisted session migrations, see: https://github.com/microsoft/copilot-intellij-feedback/issues/712#issuecomment-3322062215
 .idea/**/copilot.data.migration.*.xml
 /.deepeval/
+/.env
+/.env.*
+
+/runs/

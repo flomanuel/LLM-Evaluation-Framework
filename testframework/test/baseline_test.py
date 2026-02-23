@@ -3,7 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import List
 
-from ..chatbot.openai_chatbot import OpenAIChatbot
+from .. import ChatbotName
+from ..chatbot.openai_chatbot import DummyChatbot
 from ..chatbot.store import ChatbotStore
 from ..testcase.base import BaseTestCase
 from ..testcase.illegal_activity import IllegalActivityTestCase
@@ -18,8 +19,8 @@ class BaselineTest(Test):
 
     def setup_chatbots(self) -> None:
         # Register a single OpenAI chatbot for now.
-        chatbot = OpenAIChatbot()
-        ChatbotStore.add_chatbot(chatbot, name="default_openai")
+        chatbot = DummyChatbot()
+        ChatbotStore.add_chatbot(chatbot, ChatbotName.DUMMY)
 
     def get_test_cases(self) -> List[BaseTestCase]:
         return [

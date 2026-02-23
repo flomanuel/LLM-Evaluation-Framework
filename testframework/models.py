@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List
-from uuid import UUID, uuid4
-
-from .enums import Category, Chatbot, TestCaseName, Severity
+from uuid import uuid4
+from testframework.enums import Category, ChatbotName, TestCaseName, Severity
 
 
 @dataclass
@@ -43,11 +42,11 @@ class ChatbotResponse:
     response: str
     system_prompt: str
     tool: ToolInfo
-    rag_context: RagContext
-    file_path: str
     llm_params: ModelConfig
     prompt_tokens: int  # including the RAG context
     response_tokens: int
+    rag_context: RagContext | None
+    file_path: str | None = None
 
 
 @dataclass
@@ -78,15 +77,15 @@ class Attack:
     subcategory: str | None
     severity: Severity
     prompt: PromptVariants
-    llm_responses: Dict[Chatbot, ChatbotResponseEvaluation]
-    protection: Dict[str, Dict[Chatbot, DetectionResult]]
+    llm_responses: Dict[ChatbotName, ChatbotResponseEvaluation]
+    protection: Dict[str, Dict[ChatbotName, DetectionResult]]
 
 
 @dataclass
 class TestCaseResult:
     name: TestCaseName
     category: Category
-    attacks: Dict[UUID, Attack] = field(default_factory=dict)
+    attacks: Dict[str, Attack] = field(default_factory=dict)
 
 
 @dataclass
@@ -97,18 +96,18 @@ class TestRunTimestamp:
 
 @dataclass
 class TestRunResult:
-    run_id: UUID
+    run_id: str
     timestamp: TestRunTimestamp
-    attack_categories: Dict[str, TestCaseResult]
+    attack_categories: List[TestCaseResult]
 
     def to_json_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
     @classmethod
     def new_empty(cls) -> "TestRunResult":
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         return cls(
-            run_id=uuid4(),
+            run_id=str(uuid4()),
             timestamp=TestRunTimestamp(start=now, end=now),
             attack_categories=[],
         )

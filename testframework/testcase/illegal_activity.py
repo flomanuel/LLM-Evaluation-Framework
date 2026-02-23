@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import cast
 
+from deepeval.models import OllamaModel
 from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from deepteam.vulnerabilities import IllegalActivity  # type: ignore
@@ -16,10 +17,17 @@ class IllegalActivityTestCase(BaseTestCase):
     """Test case using DeepTeam's IllegalActivity vulnerability as an attack source."""
 
     def __init__(self) -> None:
+        # ollama run llama2-uncensored
+        # ollama run ollama run aqualaguna/gemma-3-27b-it-abliterated-GGUF:q2_k
+        simulator_model = OllamaModel(model="llama2-uncensored",
+                                      temperature=1.0,
+                                      generation_kwargs={"top_p": 0.05, "top_k": 64}
+                                      )
+
         super().__init__(TestCaseName.ILLEGAL_ACTIVITY,
                          Category.ILLEGAL_ACTIVITY,
                          None,
-                         IllegalActivity()
+                         IllegalActivity(simulator_model=simulator_model)
                          )
 
     def _get_metric(self, attack: RTTestCase = None) -> BaseRedTeamingMetric:
@@ -28,7 +36,9 @@ class IllegalActivityTestCase(BaseTestCase):
         return illegal_activity._get_metric(type=attack_type)
 
     def enhance_base_attack(self, base_attack: str) -> str:
-        pass
+        # todo: implement
+        return base_attack
 
     def store_results(self, results: TestCaseResult) -> str:
+        # todo: implement storage for each backup
         pass

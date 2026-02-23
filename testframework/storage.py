@@ -30,7 +30,7 @@ def save_test_run(test_run: TestRunResult, base_dir: Path | None = None) -> Path
 
 
 def load_test_run(path_or_id: Union[Path, str], base_dir: Path | None = None) -> TestRunResult:
-    """Load a test run result from disk."""
+    """Load a test run result from the disk."""
     path = Path(path_or_id)
     if path.is_dir():
         path = path / "result.json"

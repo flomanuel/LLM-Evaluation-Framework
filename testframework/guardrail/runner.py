@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Dict
-from .. import Chatbot
+from .. import ChatbotName
 from ..models import DetectionResult, DetectionElement
 from .prompt_hardening import PromptHardeningGuardrail
 
@@ -17,8 +17,8 @@ class GuardrailRunner:
     def run(
             self,
             enhanced_attack: str,
-            chatbot_responses: Dict[Chatbot, str]
-    ) -> Dict[str, Dict[Chatbot, DetectionResult]]:
+            chatbot_responses: Dict[ChatbotName, str]
+    ) -> Dict[str, Dict[ChatbotName, DetectionResult]]:
         """
         Analyzes a given attack string against the chatbot's responses by iterating over the guardrails.
 
@@ -27,9 +27,10 @@ class GuardrailRunner:
         :return: A `DetectionResult` object encapsulating the details of detected
             vulnerabilities and relevant metadata of the analysis.
         """
-        result: Dict[str, Dict[Chatbot, DetectionResult]] = {}
+        result: Dict[str, Dict[ChatbotName, DetectionResult]] = {}
         for guardrail in self.guardrails:
             key: str = guardrail.name
+            result[key] = {}
             enhanced_attack_evaluation: DetectionElement = guardrail.eval_attack(enhanced_attack)
             for chatbot, response in chatbot_responses.items():
                 response_evaluation: DetectionElement = guardrail.eval_model_response(response)
