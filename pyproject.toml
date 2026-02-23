@@ -1,0 +1,21 @@
+[project]
+name = "thesis-llm-chatbot-protection"
+version = "0.1.0"
+description = "Test framework for evaluating LLM chatbot guardrails using DeepTeam and OpenAI."
+authors = [{ name = "Florian Sauer" }]
+requires-python = ">=3.11"
+
+dependencies = [
+  "openai>=1.60.0",
+  "pydantic>=2.9.0",
+  "deepteam>=0.1.0",
+  "deepeval>=1.0.0",
+]
+
+[project.scripts]
+llm-test-baseline = "testframework.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
