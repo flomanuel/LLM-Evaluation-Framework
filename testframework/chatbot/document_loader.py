@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import List
 
-from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from loguru import logger
@@ -47,16 +47,20 @@ class DocumentLoader:
         )
 
     def _load_pdf_files(self) -> List[Document]:
-        """Load all .txt files from the documents directory."""
-        loader = DirectoryLoader(
-            str(self._documents_dir),
-            glob="**/*.pdf",
-            loader_cls=PyPDFLoader,
-            loader_kwargs={"encoding": "utf-8"},
-            show_progress=True,
-            use_multithreading=True,
-        )
-        return loader.load()
+        """Load all .pdf files from the documents directory."""
+        documents: List[Document] = []
+        pdf_files = list(self._documents_dir.glob("**/*.pdf"))
+
+        for pdf_path in pdf_files:
+            try:
+                loader = PyPDFLoader(str(pdf_path))
+                docs = loader.load()
+                documents.extend(docs)
+                logger.debug(f"Loaded {len(docs)} pages from '{pdf_path.name}'")
+            except Exception as e:
+                logger.warning(f"Failed to load PDF '{pdf_path}': {e}")
+
+        return documents
 
     def load_documents(self) -> List[Document]:
         """Load all documents from the configured directory.
