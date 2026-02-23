@@ -41,11 +41,13 @@ class ToolInfo:
 @dataclass
 class ChatbotResponse:
     response: str
-    prompt_tokens: int  # including the RAG context
-    response_tokens: int
+    system_prompt: str
     tool: ToolInfo
     rag_context: RagContext
+    file_path: str
     llm_params: ModelConfig
+    prompt_tokens: int  # including the RAG context
+    response_tokens: int
 
 
 @dataclass
@@ -78,7 +80,6 @@ class Attack:
     prompt: PromptVariants
     llm_responses: Dict[Chatbot, ChatbotResponseEvaluation]
     protection: Dict[str, Dict[Chatbot, DetectionResult]]
-    document: str | None = None
 
 
 @dataclass
