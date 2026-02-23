@@ -4,6 +4,7 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.deepeval" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/_documents/1_harmlose_dokumente" />
       <excludeFolder url="file://$MODULE_DIR$/_logs" />
       <excludeFolder url="file://$MODULE_DIR$/_pgdata" />
       <excludeFolder url="file://$MODULE_DIR$/runs" />

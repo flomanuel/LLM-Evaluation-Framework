@@ -209,3 +209,4 @@ http-client.private.env.json
 /.env.*
 
 /runs/
+/_documents/
