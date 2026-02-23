@@ -5,6 +5,7 @@
       <excludeFolder url="file://$MODULE_DIR$/.deepeval" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/_logs" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata" />
       <excludeFolder url="file://$MODULE_DIR$/runs" />
       <excludeFolder url="file://$MODULE_DIR$/runs/20260223_202717_1600fb31-569e-4798-9c58-8ff845de4957" />
       <excludeFolder url="file://$MODULE_DIR$/thesis_llm_chatbot_protection.egg-info" />

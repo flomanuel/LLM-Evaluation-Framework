@@ -87,6 +87,7 @@ class ChatbotName(str, Enum):
     V_GPT_5 = "GPT_5"
     OPENAI = "OPENAI"
     DUMMY = "DUMMY"
+    LANGCHAIN = "LANGCHAIN"
 
 
 class TestCaseName(str, Enum):

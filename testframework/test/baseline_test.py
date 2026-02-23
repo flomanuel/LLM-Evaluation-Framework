@@ -20,6 +20,7 @@ class BaselineTest(Test):
     def setup_chatbots(self) -> None:
         # Register a single OpenAI chatbot for now.
         chatbot = DummyChatbot()
+        # todo: add RAG chatbot and create two chatbot instances, one for GPT_4.1 and one dor GPT_5.1 -> make the same rag class configurable
         ChatbotStore.add_chatbot(chatbot, ChatbotName.DUMMY)
 
     def get_test_cases(self) -> List[BaseTestCase]:
