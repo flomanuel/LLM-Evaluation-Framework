@@ -3,12 +3,15 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from argparse import ArgumentParser, _SubParsersAction
 from pathlib import Path
 
 from dotenv import load_dotenv
 from loguru import logger
 
 from .test.baseline_test import BaselineTest
+from .chatbot.document_loader import DocumentLoader
+from .chatbot.vector_store import VectorStore
 
 
 def configure_logging() -> None:
@@ -39,13 +42,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="LLM guardrail test framework CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    run_baseline_parser = subparsers.add_parser("run-baseline", help="Run the baseline test suite.")
-    run_baseline_parser.add_argument(
-        "--results-dir",
-        type=str,
-        default="runs",
-        help="Directory to store test run results.",
-    )
+    add_arguments(subparsers)
 
     args = parser.parse_args()
 
@@ -55,6 +52,67 @@ def main() -> None:
         test = BaselineTest(results_dir=results_dir)
         test.run()
         logger.info("Baseline test suite completed")
+
+    elif args.command == "populate-db":
+        documents_dir = Path(args.documents_dir)
+        logger.info(f"Starting document ingestion from: {documents_dir}")
+
+        loader = DocumentLoader(
+            documents_dir=documents_dir,
+            chunk_size=args.chunk_size,
+            chunk_overlap=args.chunk_overlap,
+        )
+        chunks = loader.load_and_split()
+
+        if not chunks:
+            logger.warning("No documents found to ingest. Exiting.")
+            sys.exit(0)
+
+        vector_store = VectorStore(collection_name=args.collection_name)
+        ids = vector_store.add_documents(chunks)
+
+        logger.info(f"Successfully ingested {len(ids)} document chunks into the vector store")
+
+
+def add_arguments(subparsers: _SubParsersAction[ArgumentParser]):
+    """Add command line arguments."""
+
+    run_baseline_parser = subparsers.add_parser("run-baseline", help="Run the baseline test suite.")
+    run_baseline_parser.add_argument(
+        "--results-dir",
+        type=str,
+        default="runs",
+        help="Directory to store test run results.",
+    )
+
+    populate_db_parser = subparsers.add_parser(
+        "populate-db",
+        help="Populate the vector database with documents from a directory.",
+    )
+    populate_db_parser.add_argument(
+        "--documents-dir",
+        type=str,
+        default="_documents",
+        help="Directory containing documents to ingest (default: _documents).",
+    )
+    populate_db_parser.add_argument(
+        "--chunk-size",
+        type=int,
+        default=1000,
+        help="Size of text chunks for splitting (default: 1000).",
+    )
+    populate_db_parser.add_argument(
+        "--chunk-overlap",
+        type=int,
+        default=200,
+        help="Overlap between chunks (default: 200).",
+    )
+    populate_db_parser.add_argument(
+        "--collection-name",
+        type=str,
+        default=None,
+        help="Name of the vector store collection (default: rag_documents).",
+    )
 
 
 if __name__ == "__main__":

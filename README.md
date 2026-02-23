@@ -56,3 +56,8 @@ uv run bandit -r testframework
 
 See the `testframework` package for details on extending chatbots, guardrails, and test cases.
 
+# Populate database with documents from _documents folder
+llm-test-baseline populate-db
+
+# Custom options
+llm-test-baseline populate-db --documents-dir _documents --chunk-size 1000 --chunk-overlap 200 --collection-name my_collection
