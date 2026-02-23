@@ -80,8 +80,21 @@ SUBCATEGORY_TO_CATEGORY: dict[Subcategory, Category] = {
 }
 
 
-class LLM(str, Enum):
-    """Supported LLM models."""
+class Chatbot(str, Enum):
+    """Supported LLM models / Chatbots."""
 
-    GPT_41 = "GPT_41"
-    GPT_5 = "GPT_5"
+    V_GPT_41 = "GPT_41"
+    V_GPT_5 = "GPT_5"
+
+
+class TestCaseName(str, Enum):
+    """Supported test case identifiers."""
+
+    ILLEGAL_ACTIVITY = "illegal_activity"
+
+
+class Severity(str, Enum):
+    """Define whether a test case (.e. a prompt / attack) is harmful."""
+
+    UNSAFE = "unsafe"
+    SAFE = "safe"

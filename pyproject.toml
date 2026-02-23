@@ -7,7 +7,6 @@ requires-python = ">=3.11"
 
 dependencies = [
     "openai~= 2.21.0",
-    "pydantic~=2.12.5",
     "deepteam~=1.0.5",
     "deepeval~=3.8.6",
     "loguru~=0.7.0",

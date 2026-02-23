@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Any, Dict, List
 from uuid import UUID, uuid4
 
-from .enums import Category, LLM
+from .enums import Category, Chatbot, TestCaseName, Severity
 
 
 @dataclass
@@ -15,41 +15,21 @@ class TimestampRange:
 
 
 @dataclass
-class RagNode:
-    text: str
-
-
-@dataclass
 class RagContext:
     embedding_vector: float | None = None
     embedding_model: str | None = None
-    nodes: List[RagNode] = field(default_factory=list)
+    nodes: List[str] = field(default_factory=list)
 
 
 @dataclass
 class PromptVariants:
     baseline: str
-    attack: str
     enhanced: str
 
 
 @dataclass
-class PromptTokens:
-    baseline: int
-    attack: int
-    enhanced: int
-
-
-@dataclass
-class LlmParamsPerModel:
+class ModelConfig:
     temperature: float | None = None
-    # extendable for more params
-
-
-@dataclass
-class LlmParams:
-    gpt_41: LlmParamsPerModel | None = None
-    gpt_5: LlmParamsPerModel | None = None
 
 
 @dataclass
@@ -59,28 +39,24 @@ class ToolInfo:
 
 
 @dataclass
-class ModelResponse:
+class ChatbotResponse:
     response: str
-    token_count: int
-    tool: ToolInfo | None = None
-
-
-@dataclass
-class LlmResponsePerModel:
-    response: str
-    token: int
-    attack_success: bool
+    prompt_tokens: int  # including the RAG context
+    response_tokens: int
     tool: ToolInfo
+    rag_context: RagContext
+    llm_params: ModelConfig
 
 
 @dataclass
-class LlmResponses:
-    gpt_41: LlmResponsePerModel | None = None
-    gpt_5: LlmResponsePerModel | None = None
+class ChatbotResponseEvaluation:
+    chatbot_response: ChatbotResponse
+    score: float
+    reason: str
 
 
 @dataclass
-class DetectionResult:
+class DetectionElement:
     success: bool
     detected_type: Category | None
     severity: float
@@ -89,64 +65,27 @@ class DetectionResult:
 
 
 @dataclass
-class PromptHardeningPerModel:
-    input_detection: DetectionResult
-    output_detection: DetectionResult
-
-
-@dataclass
-class PromptHardening:
-    gpt_41: PromptHardeningPerModel | None = None
-    gpt_5: PromptHardeningPerModel | None = None
-
-
-@dataclass
-class LlmGuard:
-    # Placeholder for future LLM guard integrations
-    data: Dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass
-class Protection:
-    prompt_hardening: PromptHardening
-    llm_guard: LlmGuard | None = None
-
-
-@dataclass
-class AttackMetadata:
-    severity: str | None = None
-    category_raw: str | None = None
-    tool_check: str | None = None
-    tool_check_condition: str | None = None
-    remote_attack_generation: str | None = None
-    document: str | None = None
+class DetectionResult:
+    input_detection: DetectionElement
+    output_detection: DetectionElement
 
 
 @dataclass
 class Attack:
-    attack_id: UUID
-    subcategory: str
+    category: str
+    subcategory: str | None
+    severity: Severity
     prompt: PromptVariants
-    prompt_tokens: PromptTokens
-    rag_context: RagContext
-    llm_params: LlmParams
-    llm_responses: LlmResponses
-    protection: Protection
-    metadata: AttackMetadata | None = None
+    llm_responses: Dict[Chatbot, ChatbotResponseEvaluation]
+    protection: Dict[str, Dict[Chatbot, DetectionResult]]
+    document: str | None = None
 
 
 @dataclass
 class TestCaseResult:
-    """Container for the result of a single test case for one attack."""
-
-    attack: Attack
-
-
-@dataclass
-class AttackCategoryResult:
-    category_id: UUID
-    name: Category
-    attacks: Dict[str, Attack] = field(default_factory=dict)
+    name: TestCaseName
+    category: Category
+    attacks: Dict[UUID, Attack] = field(default_factory=dict)
 
 
 @dataclass
@@ -159,7 +98,7 @@ class TestRunTimestamp:
 class TestRunResult:
     run_id: UUID
     timestamp: TestRunTimestamp
-    attack_categories: List[AttackCategoryResult]
+    attack_categories: Dict[str, TestCaseResult]
 
     def to_json_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -172,4 +111,3 @@ class TestRunResult:
             timestamp=TestRunTimestamp(start=now, end=now),
             attack_categories=[],
         )
-

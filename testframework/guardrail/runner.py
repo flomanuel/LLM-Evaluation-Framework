@@ -1,50 +1,37 @@
 from __future__ import annotations
 
-from typing import Dict, Iterable
-
-from ..enums import Category
-from ..models import (
-    LlmResponses,
-    PromptHardening,
-    PromptHardeningPerModel,
-    Protection,
-)
+from typing import Dict
+from .. import Chatbot
+from ..models import DetectionResult, DetectionElement
 from .prompt_hardening import PromptHardeningGuardrail
 
 
 class GuardrailRunner:
-    """Runs configured guardrails over attacks and model responses."""
+    """Runs configured guardrails over custom_attacks and model responses."""
 
-    def __init__(self, prompt_hardening_guardrail: PromptHardeningGuardrail | None = None) -> None:
-        self.prompt_hardening_guardrail = prompt_hardening_guardrail or PromptHardeningGuardrail()
-
-    def build_system_prompt(self, category: Category | None = None) -> str:
-        return self.prompt_hardening_guardrail.build_system_prompt(category=category)
+    def __init__(self) -> None:
+        self.guardrails = [
+            PromptHardeningGuardrail()
+        ]
 
     def run(
-        self,
-        category: Category | None,
-        user_prompt: str,
-        llm_responses: LlmResponses,
-    ) -> Protection:
-        ph = PromptHardening()
+            self,
+            enhanced_attack: str,
+            chatbot_responses: Dict[Chatbot, str]
+    ) -> Dict[str, Dict[Chatbot, DetectionResult]]:
+        """
+        Analyzes a given attack string against the chatbot's responses by iterating over the guardrails.
 
-        if llm_responses.gpt_41 is not None:
-            per_model: PromptHardeningPerModel = self.prompt_hardening_guardrail.evaluate_for_model(
-                category=category,
-                user_prompt=user_prompt,
-                response=llm_responses.gpt_41.response,
-            )
-            ph.gpt_41 = per_model
-
-        if llm_responses.gpt_5 is not None:
-            per_model_5: PromptHardeningPerModel = self.prompt_hardening_guardrail.evaluate_for_model(
-                category=category,
-                user_prompt=user_prompt,
-                response=llm_responses.gpt_5.response,
-            )
-            ph.gpt_5 = per_model_5
-
-        return Protection(prompt_hardening=ph, llm_guard=None)
-
-
+        :param chatbot_responses: The responses for each chatbot in the test case (Chatbot-ID -> Response).
+        :param enhanced_attack: The adversarial attack (RAG + attack + attack technique)
+        :return: A `DetectionResult` object encapsulating the details of detected
+            vulnerabilities and relevant metadata of the analysis.
+        """
+        result: Dict[str, Dict[Chatbot, DetectionResult]] = {}
+        for guardrail in self.guardrails:
+            key: str = guardrail.name
+            enhanced_attack_evaluation: DetectionElement = guardrail.eval_attack(enhanced_attack)
+            for chatbot, response in chatbot_responses.items():
+                response_evaluation: DetectionElement = guardrail.eval_model_response(response)
+                result[key][chatbot] = DetectionResult(enhanced_attack_evaluation, response_evaluation)
+        return result

@@ -1,6 +1,6 @@
-from .enums import Category, LLM
+from .enums import Category, Chatbot
 
 __all__ = [
     "Category",
-    "LLM",
+    "Chatbot",
 ]

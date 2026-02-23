@@ -40,9 +40,5 @@ def load_test_run(path_or_id: Union[Path, str], base_dir: Path | None = None) ->
     logger.debug(f"Loading test run from: {path}")
     with path.open(encoding="utf-8") as f:
         data = json.load(f)
-    # For now, return raw dict; structured re-hydration can be added later.
-    # This keeps the implementation simple while satisfying the storage contract.
     logger.warning("Deserialization into TestRunResult is not implemented yet")
     raise NotImplementedError("Deserialization into TestRunResult is not implemented yet.")
-
-

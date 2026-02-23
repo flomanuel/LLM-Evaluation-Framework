@@ -6,8 +6,8 @@ from typing import Dict
 from loguru import logger
 from openai import OpenAI
 
-from ..enums import LLM
-from ..models import ModelResponse, ToolInfo
+from ..enums import Chatbot
+from ..models import ToolInfo, ChatbotResponse
 from .base import BaseChatbot
 
 
@@ -26,7 +26,7 @@ class OpenAIChatbot(BaseChatbot):
         is_rag: bool = True,
         file_path: str | None = None,
         system_prompt: str | None = None,
-    ) -> Dict[str, ModelResponse]:
+    ) -> Dict[str, ChatbotResponse]:
         logger.debug(f"Querying OpenAI API with model: {self.model_name}")
         messages = []
         if system_prompt:
@@ -45,13 +45,13 @@ class OpenAIChatbot(BaseChatbot):
 
         logger.debug(f"OpenAI API response received (tokens: {total_tokens})")
 
-        response = ModelResponse(
+        response = ChatbotResponse(
             response=text,
             token_count=total_tokens,
             tool=ToolInfo(tool_called=False, tool_call_params=None),
         )
 
         # For now, we map the configured model to GPT_41; this can be extended.
-        return {LLM.GPT_41.value: response}
+        return {Chatbot.V_GPT_41.value: response}
 
 

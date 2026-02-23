@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Dict
 
-from ..models import ModelResponse
+from testframework.models import ChatbotResponse
 
 
 class BaseChatbot(ABC):
@@ -16,13 +16,11 @@ class BaseChatbot(ABC):
 
     @abstractmethod
     def query(
-        self,
-        user_prompt: str,
-        is_rag: bool = True,
-        file_path: str | None = None,
-        system_prompt: str | None = None,
-    ) -> Dict[str, ModelResponse]:
+            self,
+            user_prompt: str,
+            is_rag: bool = True,
+            file_path: str | None = None,
+            system_prompt: str | None = None,
+    ) -> Dict[str, ChatbotResponse]:
         """Query the chatbot and return a mapping from model identifier to ModelResponse."""
         raise NotImplementedError
-
-

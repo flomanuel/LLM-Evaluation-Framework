@@ -13,20 +13,13 @@ from .test.baseline_test import BaselineTest
 
 def configure_logging() -> None:
     """Configure loguru with file and console logging."""
-    # Remove default handler
     logger.remove()
-
-    # Get log level from environment variable, default to INFO
     log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
-
-    # Add console handler
     logger.add(
         sys.stderr,
         level=log_level,
         format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
     )
-
-    # Add file handler with rotation
     log_dir = Path("logs")
     log_dir.mkdir(exist_ok=True)
     logger.add(
@@ -36,18 +29,13 @@ def configure_logging() -> None:
         rotation="10 MB",
         retention="7 days",
     )
-
     logger.info(f"Logging configured with level: {log_level}")
 
 
 def main() -> None:
     """Entry point for the CLI."""
-    # Load environment variables from .env file
     load_dotenv()
-
-    # Configure logging
     configure_logging()
-
     parser = argparse.ArgumentParser(description="LLM guardrail test framework CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -71,4 +59,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

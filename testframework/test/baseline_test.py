@@ -6,7 +6,6 @@ from typing import List
 from ..chatbot.openai_chatbot import OpenAIChatbot
 from ..chatbot.store import ChatbotStore
 from ..testcase.base import BaseTestCase
-from ..testcase.indirect_prompt_injection_csv import IndirectPromptInjectionCsvTestCase
 from ..testcase.illegal_activity import IllegalActivityTestCase
 from .base_test import Test
 
@@ -24,8 +23,5 @@ class BaselineTest(Test):
 
     def get_test_cases(self) -> List[BaseTestCase]:
         return [
-            IndirectPromptInjectionCsvTestCase(),
             IllegalActivityTestCase(),
         ]
-
-
