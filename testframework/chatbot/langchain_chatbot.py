@@ -34,7 +34,7 @@ When asked to generate an image, use the generate_image tool with a detailed des
     def __init__(
             self,
             name: ChatbotName = ChatbotName.LANGCHAIN,
-            model: str = "gpt-4o-mini",
+            model: str = "gpt-4.1",
             vector_store: VectorStore | None = None,
             rag_k: int = 4,
     ) -> None:

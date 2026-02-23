@@ -3,12 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import List
 
-from .. import ChatbotName
-from ..chatbot.dummy_chatbot import DummyChatbot
-from ..chatbot.store import ChatbotStore
-from ..testcase.base import BaseTestCase
-from ..testcase.illegal_activity import IllegalActivityTestCase
-from .base_test import Test
+from testframework import ChatbotName
+from testframework.chatbot import LangChainChatbot, VectorStore
+from testframework.chatbot.store import ChatbotStore
+from testframework.testcase.base import BaseTestCase
+from testframework.testcase.illegal_activity import IllegalActivityTestCase
+from testframework.test.base_test import Test
 
 
 class BaselineTest(Test):
@@ -19,9 +19,11 @@ class BaselineTest(Test):
 
     def setup_chatbots(self) -> None:
         # Register a single OpenAI chatbot for now.
-        chatbot = DummyChatbot()
-        # todo: add RAG chatbot and create two chatbot instances, one for GPT_4.1 and one dor GPT_5.1 -> make the same rag class configurable
-        ChatbotStore.add_chatbot(chatbot, ChatbotName.DUMMY)
+        # chatbot = DummyChatbot()
+        vector_store = VectorStore()
+        rag_chatbot = LangChainChatbot(vector_store=vector_store)
+        # todo: RAG chatbot - create two chatbot instances, one for GPT_4.1 and one dor GPT_5.1 -> make the same rag class configurable
+        ChatbotStore.add_chatbot(rag_chatbot, ChatbotName.DUMMY)
 
     def get_test_cases(self) -> List[BaseTestCase]:
         return [

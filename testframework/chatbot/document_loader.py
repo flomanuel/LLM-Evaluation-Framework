@@ -107,4 +107,3 @@ class DocumentLoader:
     def documents_dir(self) -> Path:
         """Get the documents directory path."""
         return self._documents_dir
-
