@@ -6,16 +6,68 @@ authors = [{ name = "Florian Sauer" }]
 requires-python = ">=3.11"
 
 dependencies = [
-  "openai>=1.60.0",
-  "pydantic>=2.9.0",
-  "deepteam>=0.1.0",
-  "deepeval>=1.0.0",
+    "openai~= 2.21.0",
+    "pydantic~=2.12.5",
+    "deepteam~=1.0.5",
+    "deepeval~=3.8.6",
+    "loguru~=0.7.0",
+    "python-dotenv~=1.2.1",
 ]
 
 [project.scripts]
 llm-test-baseline = "testframework.cli:main"
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[project.optional-dependencies]
+dev = [
+    "flake8~=7.3.0",
+    "flake8-pyproject~=1.2.0",
+    "flake8-docstrings~=1.7.0",
+    "pylint~=4.0.5",
+    "bandit~=1.9.3",
+]
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = ["E203", "W503"]
+docstring-convention = "pep257"
+
+[tool.pylint.main]
+max-line-length = 100
+
+[tool.pylint."messages control"]
+disable = [
+    # Docstrings handled by flake8-docstrings
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    # Style checks handled by flake8/PEP8
+    "line-too-long",
+    "invalid-name",
+    "too-few-public-methods",
+    "trailing-whitespace",
+    "wrong-import-order",
+    "ungrouped-imports",
+    "wrong-import-position",
+    "multiple-imports",
+    "multiple-statements",
+    "superfluous-parens",
+    "unnecessary-semicolon",
+    # Convention codes (C0xxx) - style related
+    "C0301",
+    "C0302",
+    "C0303",
+    "C0304",
+    "C0305",
+    "C0321",
+    "C0325",
+    "C0327",
+    "C0328",
+]
+
+[tool.bandit]
+skips = ["B101"]
+targets = ["testframework"]
+
+[tool.uv]
+package = true
 

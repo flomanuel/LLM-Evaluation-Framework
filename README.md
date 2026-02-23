@@ -16,16 +16,38 @@ Key characteristics:
 uv sync
 ```
 
-2. Run the baseline test suite (once implemented):
+2. Configure environment variables:
+
+```bash
+cp .env.template .env
+# Edit .env and fill in your values (e.g., OPENAI_API_KEY, LOG_LEVEL)
+```
+
+3. Run the baseline test suite:
 
 ```bash
 uv run llm-test-baseline run-baseline
 ```
 
-3. Configure your OpenAI API key (for example):
+## Development
+
+Install dev dependencies for linting and static analysis:
 
 ```bash
-export OPENAI_API_KEY="sk-..."
+uv sync --extra dev
+```
+
+Run linters:
+
+```bash
+# Style and docstring enforcement (PEP8/PEP257)
+uv run flake8 testframework
+
+# Static code analysis
+uv run pylint testframework
+
+# Security checks
+uv run bandit -r testframework
 ```
 
 See the `testframework` package for details on extending chatbots, guardrails, and test cases.

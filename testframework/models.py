@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
-from typing import Any, Dict, List, Mapping, Optional
+from typing import Any, Dict, List
 from uuid import UUID, uuid4
 
 from .enums import Category, LLM
@@ -56,6 +56,13 @@ class LlmParams:
 class ToolInfo:
     tool_called: bool
     tool_call_params: str | None = None
+
+
+@dataclass
+class ModelResponse:
+    response: str
+    token_count: int
+    tool: ToolInfo | None = None
 
 
 @dataclass
@@ -126,6 +133,13 @@ class Attack:
     llm_responses: LlmResponses
     protection: Protection
     metadata: AttackMetadata | None = None
+
+
+@dataclass
+class TestCaseResult:
+    """Container for the result of a single test case for one attack."""
+
+    attack: Attack
 
 
 @dataclass
