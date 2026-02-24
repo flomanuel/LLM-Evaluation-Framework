@@ -9,9 +9,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 from loguru import logger
 
-from .test.default_test import DefaultTest
-from testframework.chatbot.rag.document_loader import DocumentLoader
-from testframework.chatbot.rag.vector_store import VectorStore
+from .tests.default_test import DefaultTest
+from testframework.chatbots.rag.document_loader import DocumentLoader
+from testframework.chatbots.rag.vector_store import VectorStore
 
 
 def configure_logging() -> None:
@@ -47,11 +47,11 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.command == "run-baseline":
-        logger.info("Starting baseline test suite")
+        logger.info("Starting default test suite")
         results_dir = Path(args.results_dir)
         test = DefaultTest(results_dir=results_dir)
         test.run()
-        logger.info("Baseline test suite completed")
+        logger.info("Default test suite completed")
 
     elif args.command == "populate-db":
         documents_dir = Path(args.documents_dir)
@@ -77,7 +77,7 @@ def main() -> None:
 def add_arguments(subparsers: _SubParsersAction[ArgumentParser]):
     """Add command line arguments."""
 
-    run_baseline_parser = subparsers.add_parser("run-baseline", help="Run the baseline test suite.")
+    run_baseline_parser = subparsers.add_parser("run-baseline", help="Run the default test suite.")
     run_baseline_parser.add_argument(
         "--results-dir",
         type=str,

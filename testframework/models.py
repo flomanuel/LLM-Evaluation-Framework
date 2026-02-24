@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List
 from uuid import uuid4
-from testframework.enums import Category, ChatbotName, TestCaseName, Severity
+from testframework.enums import Category, ChatbotName, Severity
 
 
 class LLMErrorType(str, Enum):
@@ -202,10 +202,17 @@ class Attack:
 
 @dataclass
 class TestCaseResult:
-    name: TestCaseName
     category: Category
+    subcategory: str | None
     attacks: Dict[str, Attack] = field(default_factory=dict)
     generation_error: TestErrorInfo | None = None
+
+    @property
+    def identifier(self) -> str:
+        """Return identifier in format 'category_subcategory' or 'category'."""
+        if self.subcategory:
+            return f"{self.category.value}_{self.subcategory}"
+        return self.category.value
 
     @property
     def has_errors(self) -> bool:

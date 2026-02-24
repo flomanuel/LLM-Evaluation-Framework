@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from testframework.chatbot.base import BaseChatbot
+from testframework.chatbots.base import BaseChatbot
 from testframework import ChatbotName
 
 

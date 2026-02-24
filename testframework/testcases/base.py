@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from abc import ABC, abstractmethod
+from enum import Enum
 from pathlib import Path
 from typing import Dict, List
 
@@ -10,10 +11,10 @@ from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from deepteam.vulnerabilities import BaseVulnerability
 from loguru import logger
-from testframework.chatbot.base import BaseChatbot
-from testframework.chatbot.rag.store import ChatbotStore
-from testframework.enums import Category, ChatbotName, TestCaseName, Subcategory, Severity
-from testframework.guardrail.runner import GuardrailRunner
+from testframework.chatbots.base import BaseChatbot
+from testframework.chatbots.rag.store import ChatbotStore
+from testframework.enums import Category, ChatbotName, Severity
+from testframework.guardrails.runner import GuardrailRunner
 from testframework.models import TestCaseResult, Attack, DetectionResult, PromptVariants, ChatbotResponseEvaluation, \
     TestErrorInfo
 from testframework.storage import save_test_case_result
@@ -26,18 +27,16 @@ class BaseTestCase(ABC):
     run_folder: Path | None = None
     simulator_model: DeepEvalBaseLLM
 
-    def __init__(self, name: TestCaseName,
+    def __init__(self,
                  category: Category,
-                 sub_category: Subcategory | None,
-                 attack_builder: BaseVulnerability,
+                 sub_category: Enum | None,
                  severity: Severity = Severity.UNSAFE,
                  timeout: float = 120.0
                  ) -> None:
-        self.name = name
         self.category = category
         self.sub_category = sub_category
         self.guardrail_runner = GuardrailRunner()
-        self.attack_builder: BaseVulnerability = attack_builder
+        self.attack_builder: BaseVulnerability | None = None
         self.severity = severity
 
         # ollama run llama2-uncensored
@@ -62,11 +61,11 @@ class BaseTestCase(ABC):
             attacks: List[RTTestCase] = []
             try:
                 attacks = self.attack_builder.simulate_attacks()
-                logger.info(f"Generated {len(attacks)} attacks for {self.name}")
+                logger.info(f"Generated {len(attacks)} attacks for {self.category.value}")
             except Exception as e:
                 generation_error = TestErrorInfo.from_exception(e)
                 logger.error(
-                    f"Attack generation failed for {self.name} "
+                    f"Attack generation failed for {self.category.value} "
                     f"({generation_error.error_type.value}): {generation_error.message}"
                 )
 
@@ -76,7 +75,10 @@ class BaseTestCase(ABC):
                 attack_results[str(uuid.uuid4())] = attack_result
 
         tc_result = TestCaseResult(
-            self.name, self.category, attack_results, generation_error
+            self.category,
+            self.sub_category.value if self.sub_category else None,
+            attack_results,
+            generation_error
         )
         self.results = tc_result
         self.store_results()

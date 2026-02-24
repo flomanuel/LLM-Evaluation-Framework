@@ -40,8 +40,7 @@ def save_test_case_result(result: TestCaseResult, run_folder: Path) -> Path:
     testcase_folder = run_folder / "testcase"
     testcase_folder.mkdir(parents=True, exist_ok=True)
 
-    # Use the test case name as the filename
-    filename = f"{result.name.value}.json"
+    filename = f"{result.identifier}.json"
     path = testcase_folder / filename
 
     logger.debug(f"Saving test case result to: {path}")

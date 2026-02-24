@@ -1,10 +1,10 @@
-"""Chatbot module with various chatbot implementations."""
+"""Chatbot module with various chatbots implementations."""
 from .base import BaseChatbot
-from testframework.chatbot.rag.document_loader import DocumentLoader
+from testframework.chatbots.rag.document_loader import DocumentLoader
 from .dummy_chatbot import DummyChatbot
 from .langchain_chatbot import LangChainChatbot
-from testframework.chatbot.rag.vector_store import VectorStore
-from testframework.chatbot.rag.store import ChatbotStore
+from testframework.chatbots.rag.vector_store import VectorStore
+from testframework.chatbots.rag.store import ChatbotStore
 
 __all__ = [
     "BaseChatbot",

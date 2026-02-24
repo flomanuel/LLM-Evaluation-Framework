@@ -3,7 +3,7 @@ from typing import Dict
 from loguru import logger
 from testframework import ChatbotName
 from testframework.models import DetectionResult, DetectionElement, TestErrorInfo
-from testframework.guardrail.prompt_hardening import PromptHardeningGuardrail
+from testframework.guardrails.prompt_hardening import PromptHardeningGuardrail
 
 
 class GuardrailRunner:

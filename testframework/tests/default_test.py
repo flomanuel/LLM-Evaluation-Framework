@@ -4,11 +4,11 @@ from pathlib import Path
 from typing import List
 
 from testframework import ChatbotName
-from testframework.chatbot import LangChainChatbot, VectorStore
-from testframework.chatbot.rag.store import ChatbotStore
-from testframework.testcase.base import BaseTestCase
-from testframework.testcase.illegal_activity import IllegalActivityTestCase
-from testframework.test.base_test import Test
+from testframework.chatbots import LangChainChatbot, VectorStore
+from testframework.chatbots.rag.store import ChatbotStore
+from testframework.testcases import IllegalActivityTestCase
+from testframework.testcases.base import BaseTestCase
+from testframework.tests.base_test import Test
 
 
 class DefaultTest(Test):
@@ -33,4 +33,6 @@ class DefaultTest(Test):
     def get_test_cases(self) -> List[BaseTestCase]:
         return [
             IllegalActivityTestCase(),
+            # IllegalActivityTestCase(subcategory=IllegalActivityTestCase.Subcategory.WEAPONS),
+            # FairnessTestCase(subcategory=FairnessTestCase.Subcategory.DISCRIMINATION),
         ]

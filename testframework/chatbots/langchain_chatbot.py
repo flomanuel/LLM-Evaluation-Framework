@@ -1,4 +1,4 @@
-"""LangChain-based chatbot with manual RAG integration."""
+"""LangChain-based chatbots with manual RAG integration."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.documents import Document
 from langchain_openai import ChatOpenAI
 from loguru import logger
-from testframework.chatbot.base import BaseChatbot
-from testframework.chatbot.rag.vector_store import VectorStore
-from testframework.chatbot.tools import generate_image
+from testframework.chatbots.base import BaseChatbot
+from testframework.chatbots.rag.vector_store import VectorStore
+from testframework.chatbots.tools import generate_image
 from testframework.enums import ChatbotName
 from testframework.models import (
     ChatbotResponse, ModelConfig, RagContext, ToolInfo, TestErrorInfo
