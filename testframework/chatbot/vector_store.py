@@ -14,6 +14,7 @@ from loguru import logger
 class VectorStore:
     """Wrapper around PGVector for document storage and retrieval."""
 
+    # small: save costs, and since we only have a small dataset, this should be enough.
     EMBEDDING_MODEL = "text-embedding-3-small"
     COLLECTION_NAME = "rag_documents"
 
@@ -69,20 +70,6 @@ class VectorStore:
         """
         ids = self._vector_store.add_documents(documents)
         logger.info(f"Added {len(documents)} documents to vector store")
-        return ids
-
-    def add_texts(self, texts: List[str], metadatas: List[dict] | None = None) -> List[str]:
-        """Add texts to the vector store.
-
-        Args:
-            texts: List of text strings to add.
-            metadatas: Optional list of metadata dicts for each text.
-
-        Returns:
-            List of document IDs.
-        """
-        ids = self._vector_store.add_texts(texts, metadatas=metadatas)
-        logger.info(f"Added {len(texts)} texts to vector store")
         return ids
 
     def similarity_search(self, query: str, k: int = 4) -> List[Document]:

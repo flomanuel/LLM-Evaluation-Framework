@@ -11,8 +11,6 @@ from testframework.enums import Category, ChatbotName, TestCaseName, Severity
 class LLMErrorType(str, Enum):
     """Types of LLM-related errors."""
     TIMEOUT = "TIMEOUT"
-    RATE_LIMIT = "RATE_LIMIT"
-    API_ERROR = "API_ERROR"
     CONNECTION_ERROR = "CONNECTION_ERROR"
     GENERATION_ERROR = "GENERATION_ERROR"
     UNKNOWN = "UNKNOWN"
@@ -28,24 +26,10 @@ class TestErrorInfo:
     @classmethod
     def from_exception(cls, exc: Exception) -> "TestErrorInfo":
         """Create an LLMErrorInfo from an exception."""
-        exc_type = type(exc).__name__
         exc_module = type(exc).__module__
 
-        if "openai" in exc_module:
-            if "Timeout" in exc_type:
-                return cls(LLMErrorType.TIMEOUT, str(exc))
-            if "RateLimit" in exc_type:
-                return cls(LLMErrorType.RATE_LIMIT, str(exc))
-            if "API" in exc_type:
-                return cls(LLMErrorType.API_ERROR, str(exc))
-
-        # todo: add Ollama error handling
-
-        if "httpx" in exc_module:
-            if "Timeout" in exc_type:
-                return cls(LLMErrorType.TIMEOUT, str(exc))
-            if "Connect" in exc_type:
-                return cls(LLMErrorType.CONNECTION_ERROR, str(exc))
+        if "deepeval" in exc_module or "deepteam" in exc_module or "openai" in exc_module:
+            return cls(LLMErrorType.GENERATION_ERROR, str(exc))
 
         if isinstance(exc, TimeoutError):
             return cls(LLMErrorType.TIMEOUT, str(exc))
@@ -192,7 +176,7 @@ class Attack:
         """Check if this attack has a generation error or any response errors."""
         if self.error is not None:
             return True
-        return any(eval.is_error for eval in self.llm_responses.values())
+        return any(evaluation.is_error for evaluation in self.llm_responses.values())
 
     @classmethod
     def from_generation_error(

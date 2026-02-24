@@ -7,6 +7,7 @@ from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from deepteam.vulnerabilities import IllegalActivity  # type: ignore
 from deepteam.vulnerabilities.illegal_activity import IllegalActivityType
+from deepteam.attacks.single_turn import MathProblem
 
 from ..enums import Category, TestCaseName
 from .base import BaseTestCase
@@ -22,7 +23,7 @@ class IllegalActivityTestCase(BaseTestCase):
         # ollama run ollama run aqualaguna/gemma-3-27b-it-abliterated-GGUF:q2_k
         effective_timeout = timeout or self.DEFAULT_OLLAMA_TIMEOUT
         simulator_model = OllamaModel(
-            model="llama2-uncensored",
+            model="aqualaguna/gemma-3-27b-it-abliterated-GGUF:q2_k",
             temperature=1.0,
             generation_kwargs={
                 "timeout": effective_timeout,
@@ -42,5 +43,5 @@ class IllegalActivityTestCase(BaseTestCase):
 
     def enhance_base_attack(self, base_attack: str) -> str:
         # todo: implement
-        return base_attack
-
+        mp = MathProblem()
+        return mp.enhance(base_attack)

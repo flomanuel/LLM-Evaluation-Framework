@@ -5,12 +5,10 @@ from __future__ import annotations
 import json
 import os
 from typing import List
-
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.documents import Document
 from langchain_openai import ChatOpenAI
 from loguru import logger
-
 from testframework.chatbot.base import BaseChatbot
 from testframework.chatbot.vector_store import VectorStore
 from testframework.chatbot.tools import generate_image
@@ -23,7 +21,6 @@ from testframework.models import (
 class LangChainChatbot(BaseChatbot):
     """LangChain-based chatbot with manual RAG and tool support."""
 
-    # LLM generation parameters
     # todo: adjust to reasonable values
     temperature: float = 0.7
     top_p: float = 1.0
@@ -70,6 +67,7 @@ When asked to generate an image, use the generate_image tool with a detailed des
         )
 
         # RAG is not implemented as a tool since the current approach streamlines the test process without giving too much control to the chatbot which introduces more uncertainty / less control.
+        # Also: the original architecture does not contain a tool for RAg, too.
         self._tools = [generate_image]
         self._llm_with_tools = self._llm.bind_tools(self._tools)
 
@@ -247,36 +245,3 @@ Question: {user_prompt}"""
             rag_context=rag_context,
             file_path=file_path,
         )
-
-    def add_documents(self, documents: List[Document]) -> List[str]:
-        """Add documents to the vector store.
-
-        Args:
-            documents: List of documents to add.
-
-        Returns:
-            List of document IDs.
-
-        Raises:
-            ValueError: If no vector store is configured.
-        """
-        if self._vector_store is None:
-            raise ValueError("No vector store configured. Initialize with a VectorStore instance.")
-        return self._vector_store.add_documents(documents)
-
-    def add_texts(self, texts: List[str], metadata: List[dict] | None = None) -> List[str]:
-        """Add texts to the vector store.
-
-        Args:
-            texts: List of texts to add.
-            metadata: Optional metadata for each text.
-
-        Returns:
-            List of document IDs.
-
-        Raises:
-            ValueError: If no vector store is configured.
-        """
-        if self._vector_store is None:
-            raise ValueError("No vector store configured. Initialize with a VectorStore instance.")
-        return self._vector_store.add_texts(texts, metadatas=metadata)

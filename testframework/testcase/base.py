@@ -170,7 +170,7 @@ class BaseTestCase(ABC):
         raise NotImplementedError
 
     @staticmethod
-    def _build_query_kwargs(attack: Attack) -> dict:
+    def _build_query_kwargs(attack: RTTestCase) -> dict:
         """Build additional args for custom attack scenarios."""
 
         query_kwargs = {}

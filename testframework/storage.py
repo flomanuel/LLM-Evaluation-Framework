@@ -4,11 +4,8 @@ import json
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
-from typing import Union
-
 from loguru import logger
-
-from .models import TestRunResult, TestCaseResult
+from testframework.models import TestRunResult, TestCaseResult
 
 
 def get_run_folder(run_id: str, timestamp: datetime, base_dir: Path | None = None) -> Path:

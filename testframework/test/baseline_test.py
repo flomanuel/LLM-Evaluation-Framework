@@ -23,7 +23,7 @@ class BaselineTest(Test):
         vector_store = VectorStore()
         rag_chatbot = LangChainChatbot(vector_store=vector_store)
         # todo: RAG chatbot - create two chatbot instances, one for GPT_4.1 and one dor GPT_5.1 -> make the same rag class configurable
-        ChatbotStore.add_chatbot(rag_chatbot, ChatbotName.DUMMY)
+        ChatbotStore.add_chatbot(rag_chatbot, ChatbotName.LANGCHAIN)
 
     def get_test_cases(self) -> List[BaseTestCase]:
         return [

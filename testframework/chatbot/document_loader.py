@@ -34,6 +34,7 @@ class DocumentLoader:
         self._chunk_size = chunk_size
         self._chunk_overlap = chunk_overlap
 
+        # recommended text splitter for generic text use cases: https://docs.langchain.com/oss/python/langchain/rag
         self._text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
@@ -47,7 +48,7 @@ class DocumentLoader:
         )
 
     def _load_pdf_files(self) -> List[Document]:
-        """Load all .pdf files from the documents directory."""
+        """Load all PDF files from the documents directory."""
         documents: List[Document] = []
         pdf_files = list(self._documents_dir.glob("**/*.pdf"))
 
@@ -76,10 +77,9 @@ class DocumentLoader:
 
         documents: List[Document] = []
 
-        # Load text files
-        txt_docs = self._load_pdf_files()
-        logger.info(f"Loaded {len(txt_docs)} .pdf files")
-        documents.extend(txt_docs)
+        pdf_docs = self._load_pdf_files()
+        logger.info(f"Loaded {len(pdf_docs)} PDF files")
+        documents.extend(pdf_docs)
 
         logger.info(f"Total documents loaded: {len(documents)}")
         return documents
