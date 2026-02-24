@@ -92,8 +92,8 @@ def add_arguments(subparsers: _SubParsersAction[ArgumentParser]):
     populate_db_parser.add_argument(
         "--documents-dir",
         type=str,
-        default="_documents",
-        help="Directory containing documents to ingest (default: _documents).",
+        default="_rag_documents",
+        help="Directory containing documents to ingest (default: _rag_documents).",
     )
     populate_db_parser.add_argument(
         "--chunk-size",

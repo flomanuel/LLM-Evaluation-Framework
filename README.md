@@ -64,7 +64,7 @@ llm-test-baseline populate-db
 
 ## Custom options
 
-llm-test-baseline populate-db --documents-dir _documents --chunk-size 1000 --chunk-overlap 200 --collection-name
+llm-test-baseline populate-db --documents-dir _rag_documents --chunk-size 1000 --chunk-overlap 200 --collection-name
 my_collection
 
 # Interpreting the results

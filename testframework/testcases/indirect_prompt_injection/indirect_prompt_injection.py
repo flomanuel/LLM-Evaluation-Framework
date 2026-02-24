@@ -28,3 +28,5 @@ class IndirectPromptInjectionTestCase(BaseTestCase):
         # TODO: Implement enhancement logic
         raise NotImplementedError("IndirectPromptInjectionTestCase.enhance_base_attack not yet implemented")
 
+# todo: set "is_rag" to "false" for the custom attacks that use the poisoned documents.
+# also: check the logic in "langchain_chatbot.py". Maybe the is_rag flag is not necessary anymore.

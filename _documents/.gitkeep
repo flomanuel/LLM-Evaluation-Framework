@@ -1,4 +1,0 @@
-# Place documents here to be ingested into the vector store.
-# Supported formats: .txt, .md, .pdf
-# Run: llm-test-baseline populate-db
-

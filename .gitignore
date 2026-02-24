@@ -13,6 +13,10 @@ _pgdata/
 # pgAdmin data and configuration
 _pgadmin_data/
 
+# Attack documents folder (keep .gitkeep)
+_attack_documents/*
+!_attack_documents/.gitkeep
+
 # C extensions
 *.so
 
@@ -207,9 +211,10 @@ http-client.private.env.json
 
 # Github Copilot persisted session migrations, see: https://github.com/microsoft/copilot-intellij-feedback/issues/712#issuecomment-3322062215
 .idea/**/copilot.data.migration.*.xml
+copilot.data.migration.ask2agent.xml
 /.deepeval/
 /.env
 /.env.*
 
 /runs/
-/_documents/
+/_rag_documents/
