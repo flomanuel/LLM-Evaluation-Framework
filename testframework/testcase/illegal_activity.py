@@ -15,13 +15,19 @@ from .base import BaseTestCase
 class IllegalActivityTestCase(BaseTestCase):
     """Test case using DeepTeam's IllegalActivity vulnerability as an attack source."""
 
-    def __init__(self) -> None:
+    DEFAULT_OLLAMA_TIMEOUT: float = 120.0
+
+    def __init__(self, timeout: float | None = None) -> None:
         # ollama run llama2-uncensored
         # ollama run ollama run aqualaguna/gemma-3-27b-it-abliterated-GGUF:q2_k
-        simulator_model = OllamaModel(model="llama2-uncensored",
-                                      temperature=1.0,
-                                      generation_kwargs={"top_p": 0.05, "top_k": 64}
-                                      )
+        effective_timeout = timeout or self.DEFAULT_OLLAMA_TIMEOUT
+        simulator_model = OllamaModel(
+            model="llama2-uncensored",
+            temperature=1.0,
+            generation_kwargs={
+                "timeout": effective_timeout,
+            }
+        )
 
         super().__init__(TestCaseName.ILLEGAL_ACTIVITY,
                          Category.ILLEGAL_ACTIVITY,

@@ -2,9 +2,57 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Any, Dict, List
 from uuid import uuid4
 from testframework.enums import Category, ChatbotName, TestCaseName, Severity
+
+
+class LLMErrorType(str, Enum):
+    """Types of LLM-related errors."""
+    TIMEOUT = "TIMEOUT"
+    RATE_LIMIT = "RATE_LIMIT"
+    API_ERROR = "API_ERROR"
+    CONNECTION_ERROR = "CONNECTION_ERROR"
+    GENERATION_ERROR = "GENERATION_ERROR"
+    UNKNOWN = "UNKNOWN"
+
+
+@dataclass
+class TestErrorInfo:
+    """Information about an LLM call error."""
+    error_type: LLMErrorType
+    message: str
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+    @classmethod
+    def from_exception(cls, exc: Exception) -> "TestErrorInfo":
+        """Create an LLMErrorInfo from an exception."""
+        exc_type = type(exc).__name__
+        exc_module = type(exc).__module__
+
+        if "openai" in exc_module:
+            if "Timeout" in exc_type:
+                return cls(LLMErrorType.TIMEOUT, str(exc))
+            if "RateLimit" in exc_type:
+                return cls(LLMErrorType.RATE_LIMIT, str(exc))
+            if "API" in exc_type:
+                return cls(LLMErrorType.API_ERROR, str(exc))
+
+        # todo: add Ollama error handling
+
+        if "httpx" in exc_module:
+            if "Timeout" in exc_type:
+                return cls(LLMErrorType.TIMEOUT, str(exc))
+            if "Connect" in exc_type:
+                return cls(LLMErrorType.CONNECTION_ERROR, str(exc))
+
+        if isinstance(exc, TimeoutError):
+            return cls(LLMErrorType.TIMEOUT, str(exc))
+        if isinstance(exc, ConnectionError):
+            return cls(LLMErrorType.CONNECTION_ERROR, str(exc))
+
+        return cls(LLMErrorType.UNKNOWN, str(exc))
 
 
 @dataclass
@@ -50,6 +98,26 @@ class ChatbotResponse:
     response_tokens: int
     rag_context: RagContext | None
     file_path: str | None = None
+    error: TestErrorInfo | None = None
+
+    @property
+    def is_error(self) -> bool:
+        """Check if this response represents an error."""
+        return self.error is not None
+
+    @classmethod
+    def from_error(cls, error: TestErrorInfo, system_prompt: str = "") -> "ChatbotResponse":
+        """Create an error ChatbotResponse."""
+        return cls(
+            response="",
+            system_prompt=system_prompt,
+            tool=ToolInfo(tool_called=False),
+            llm_params=ModelConfig(),
+            prompt_tokens=-1,
+            response_tokens=-1,
+            rag_context=None,
+            error=error,
+        )
 
 
 @dataclass
@@ -57,6 +125,23 @@ class ChatbotResponseEvaluation:
     chatbot_response: ChatbotResponse
     score: float
     reason: str
+    error: TestErrorInfo | None = None
+
+    @property
+    def is_error(self) -> bool:
+        """Check if this evaluation or its response has an error."""
+        return self.error is not None or self.chatbot_response.is_error
+
+    @classmethod
+    def from_error(cls, chatbot_response: ChatbotResponse,
+                   error: TestErrorInfo | None = None) -> "ChatbotResponseEvaluation":
+        """Create an error ChatbotResponseEvaluation."""
+        return cls(
+            chatbot_response=chatbot_response,
+            score=-1.0,
+            reason="Evaluation failed due to error",
+            error=error or chatbot_response.error,
+        )
 
 
 @dataclass
@@ -66,6 +151,24 @@ class DetectionElement:
     severity: float
     judge_raw_response: str
     timestamp: TimestampRange
+    error: TestErrorInfo | None = None
+
+    @property
+    def is_error(self) -> bool:
+        """Check if this detection represents an error."""
+        return self.error is not None
+
+    @classmethod
+    def from_error(cls, error: TestErrorInfo) -> "DetectionElement":
+        """Create an error DetectionElement."""
+        return cls(
+            success=False,
+            detected_type=None,
+            severity=0.0,
+            judge_raw_response="",
+            timestamp=TimestampRange(start=error.timestamp, end=error.timestamp),
+            error=error,
+        )
 
 
 @dataclass
@@ -82,6 +185,33 @@ class Attack:
     prompt: PromptVariants
     llm_responses: Dict[ChatbotName, ChatbotResponseEvaluation]
     protection: Dict[str, Dict[ChatbotName, DetectionResult]]
+    error: TestErrorInfo | None = None
+
+    @property
+    def is_error(self) -> bool:
+        """Check if this attack has a generation error or any response errors."""
+        if self.error is not None:
+            return True
+        return any(eval.is_error for eval in self.llm_responses.values())
+
+    @classmethod
+    def from_generation_error(
+            cls,
+            category: str,
+            subcategory: str | None,
+            severity: Severity,
+            error: TestErrorInfo,
+    ) -> "Attack":
+        """Create an Attack representing a generation failure."""
+        return cls(
+            category=category,
+            subcategory=subcategory,
+            severity=severity,
+            prompt=PromptVariants(baseline="", enhanced=""),
+            llm_responses={},
+            protection={},
+            error=error,
+        )
 
 
 @dataclass
@@ -89,6 +219,21 @@ class TestCaseResult:
     name: TestCaseName
     category: Category
     attacks: Dict[str, Attack] = field(default_factory=dict)
+    generation_error: TestErrorInfo | None = None
+
+    @property
+    def has_errors(self) -> bool:
+        """Check if this test case has any errors."""
+        if self.generation_error is not None:
+            return True
+        return any(attack.is_error for attack in self.attacks.values())
+
+    @property
+    def error_count(self) -> int:
+        """Count the number of attacks with errors."""
+        count = 1 if self.generation_error else 0
+        count += sum(1 for attack in self.attacks.values() if attack.is_error)
+        return count
 
 
 @dataclass

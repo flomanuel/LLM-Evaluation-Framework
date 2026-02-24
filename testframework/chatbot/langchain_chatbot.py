@@ -15,18 +15,25 @@ from testframework.chatbot.base import BaseChatbot
 from testframework.chatbot.vector_store import VectorStore
 from testframework.chatbot.tools import generate_image
 from testframework.enums import ChatbotName
-from testframework.models import ChatbotResponse, ModelConfig, RagContext, ToolInfo
+from testframework.models import (
+    ChatbotResponse, ModelConfig, RagContext, ToolInfo, TestErrorInfo
+)
 
 
 class LangChainChatbot(BaseChatbot):
     """LangChain-based chatbot with manual RAG and tool support."""
 
-    # LLM generation parameters todo: adjust to reasonable values
+    # LLM generation parameters
+    # todo: adjust to reasonable values
     temperature: float = 0.7
     top_p: float = 1.0
     top_k: int | None = None
     max_tokens: int = 4096
 
+    # Timeout configuration (in seconds)
+    DEFAULT_TIMEOUT: float = 120.0
+
+    # todo: an Domäne anpassen und aus .env ziehen
     DEFAULT_SYSTEM_PROMPT = """You are a helpful AI assistant. Use the provided context to answer questions accurately. If you cannot find relevant information in the context, say so clearly.
 
 When asked to generate an image, use the generate_image tool with a detailed description."""
@@ -37,6 +44,7 @@ When asked to generate an image, use the generate_image tool with a detailed des
             model: str = "gpt-4.1",
             vector_store: VectorStore | None = None,
             rag_k: int = 4,
+            timeout: float | None = None,
     ) -> None:
         """Initialize the LangChain chatbot.
 
@@ -45,25 +53,26 @@ When asked to generate an image, use the generate_image tool with a detailed des
             model: The OpenAI model to use.
             vector_store: Optional VectorStore instance. If None, creates a new one.
             rag_k: Number of documents to retrieve for RAG.
+            timeout: Request timeout in seconds. Defaults to DEFAULT_TIMEOUT.
         """
         super().__init__(name=name)
         self._model_name = model
         self._rag_k = rag_k
+        self._timeout = timeout or self.DEFAULT_TIMEOUT
 
-        # Initialize the LLM
         self._llm = ChatOpenAI(
             model=model,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
             api_key=os.getenv("OPENAI_API_KEY"),
+            timeout=self._timeout,
+            max_retries=2,
         )
 
-        # Bind tools to the LLM
         # RAG is not implemented as a tool since the current approach streamlines the test process without giving too much control to the chatbot which introduces more uncertainty / less control.
         self._tools = [generate_image]
         self._llm_with_tools = self._llm.bind_tools(self._tools)
 
-        # Initialize or use the provided vector store
         self._vector_store = vector_store
 
         logger.debug(
@@ -143,6 +152,31 @@ Question: {user_prompt}"""
 
         Returns:
             ChatbotResponse with the model's response and metadata.
+            If an error occurs, returns a ChatbotResponse with error info set.
+        """
+        effective_system_prompt = system_prompt or self.DEFAULT_SYSTEM_PROMPT
+
+        try:
+            return self._execute_query(
+                user_prompt, is_rag, file_path, effective_system_prompt
+            )
+        except Exception as e:
+            error_info = TestErrorInfo.from_exception(e)
+            logger.error(
+                f"LLM query failed ({error_info.error_type.value}): {error_info.message}"
+            )
+            return ChatbotResponse.from_error(error_info, effective_system_prompt)
+
+    def _execute_query(
+            self,
+            user_prompt: str,
+            is_rag: bool,
+            file_path: str | None,
+            effective_system_prompt: str,
+    ) -> ChatbotResponse:
+        """Execute the actual query to the LLM.
+
+        This method contains the core query logic, separated for cleaner error handling.
         """
         # Retrieve context if RAG is enabled
         context_docs: List[Document] = []
@@ -154,7 +188,6 @@ Question: {user_prompt}"""
         enhanced_prompt = self._build_prompt_with_context(user_prompt, context_docs)
 
         # Prepare messages
-        effective_system_prompt = system_prompt or self.DEFAULT_SYSTEM_PROMPT
         messages = [
             SystemMessage(content=effective_system_prompt),
             HumanMessage(content=enhanced_prompt),

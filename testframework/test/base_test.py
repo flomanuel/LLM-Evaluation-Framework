@@ -69,6 +69,7 @@ class Test(ABC):
 
     def _calculate_stats(self) -> dict[str, float]:
         # Placeholder for stats calculation logic, e.g., success rates or F1
+        # Resume half-finished test runs or calculate metrics only from completed test runs or test cases.
         # todo: implement
         pass
 

@@ -1,9 +1,9 @@
 from __future__ import annotations
-
 from typing import Dict
-from .. import ChatbotName
-from ..models import DetectionResult, DetectionElement
-from .prompt_hardening import PromptHardeningGuardrail
+from loguru import logger
+from testframework import ChatbotName
+from testframework.models import DetectionResult, DetectionElement, TestErrorInfo
+from testframework.guardrail.prompt_hardening import PromptHardeningGuardrail
 
 
 class GuardrailRunner:
@@ -31,8 +31,52 @@ class GuardrailRunner:
         for guardrail in self.guardrails:
             key: str = guardrail.name
             result[key] = {}
-            enhanced_attack_evaluation: DetectionElement = guardrail.eval_attack(enhanced_attack)
+
+            enhanced_attack_evaluation = self._safe_eval_attack(guardrail, enhanced_attack)
+
             for chatbot, response in chatbot_responses.items():
-                response_evaluation: DetectionElement = guardrail.eval_model_response(response)
-                result[key][chatbot] = DetectionResult(enhanced_attack_evaluation, response_evaluation)
+                response_evaluation = self._safe_eval_response(guardrail, response)
+                result[key][chatbot] = DetectionResult(
+                    enhanced_attack_evaluation, response_evaluation
+                )
         return result
+
+    def _safe_eval_attack(self, guardrail, attack: str) -> DetectionElement:
+        """Evaluate an attack, catching any errors.
+
+        Args:
+            guardrail: The guardrail to use for evaluation.
+            attack: The attack string to evaluate.
+
+        Returns:
+            DetectionElement with results or error info.
+        """
+        try:
+            return guardrail.eval_attack(attack)
+        except Exception as e:
+            error = TestErrorInfo.from_exception(e)
+            logger.warning(
+                f"Guardrail '{guardrail.name}' attack evaluation failed "
+                f"({error.error_type.value}): {error.message}"
+            )
+            return DetectionElement.from_error(error)
+
+    def _safe_eval_response(self, guardrail, response: str) -> DetectionElement:
+        """Evaluate a response, catching any errors.
+
+        Args:
+            guardrail: The guardrail to use for evaluation.
+            response: The response string to evaluate.
+
+        Returns:
+            DetectionElement with results or error info.
+        """
+        try:
+            return guardrail.eval_model_response(response)
+        except Exception as e:
+            error = TestErrorInfo.from_exception(e)
+            logger.warning(
+                f"Guardrail '{guardrail.name}' response evaluation failed "
+                f"({error.error_type.value}): {error.message}"
+            )
+            return DetectionElement.from_error(error)
