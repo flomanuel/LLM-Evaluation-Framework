@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Dict
 
-from .base import BaseChatbot
-from .. import ChatbotName
+from testframework.chatbot.base import BaseChatbot
+from testframework import ChatbotName
 
 
 class ChatbotStore:
@@ -12,8 +12,8 @@ class ChatbotStore:
     _chatbots: Dict[ChatbotName, BaseChatbot] = {}
 
     @staticmethod
-    def add_chatbot(chatbot: BaseChatbot, name: ChatbotName) -> None:
-        ChatbotStore._chatbots[name] = chatbot
+    def add_chatbot(chatbot: BaseChatbot) -> None:
+        ChatbotStore._chatbots[chatbot.name] = chatbot
 
     @staticmethod
     def remove_chatbot(name: ChatbotName) -> None:

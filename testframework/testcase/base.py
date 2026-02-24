@@ -5,12 +5,13 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, List
 
+from deepeval.models import DeepEvalBaseLLM, OllamaModel
 from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from deepteam.vulnerabilities import BaseVulnerability
 from loguru import logger
 from testframework.chatbot.base import BaseChatbot
-from testframework.chatbot.store import ChatbotStore
+from testframework.chatbot.rag.store import ChatbotStore
 from testframework.enums import Category, ChatbotName, TestCaseName, Subcategory, Severity
 from testframework.guardrail.runner import GuardrailRunner
 from testframework.models import TestCaseResult, Attack, DetectionResult, PromptVariants, ChatbotResponseEvaluation, \
@@ -23,10 +24,14 @@ class BaseTestCase(ABC):
 
     results: TestCaseResult
     run_folder: Path | None = None
+    simulator_model: DeepEvalBaseLLM
 
-    def __init__(self, name: TestCaseName, category: Category, sub_category: Subcategory | None,
+    def __init__(self, name: TestCaseName,
+                 category: Category,
+                 sub_category: Subcategory | None,
                  attack_builder: BaseVulnerability,
                  severity: Severity = Severity.UNSAFE,
+                 timeout: float = 120.0
                  ) -> None:
         self.name = name
         self.category = category
@@ -34,6 +39,17 @@ class BaseTestCase(ABC):
         self.guardrail_runner = GuardrailRunner()
         self.attack_builder: BaseVulnerability = attack_builder
         self.severity = severity
+
+        # ollama run llama2-uncensored
+        # ollama run ollama run aqualaguna/gemma-3-27b-it-abliterated-GGUF:q2_k
+        effective_timeout = timeout
+        self.simulator_model = OllamaModel(
+            model="aqualaguna/gemma-3-27b-it-abliterated-GGUF:q2_k",
+            temperature=1.0,
+            generation_kwargs={
+                "timeout": effective_timeout,
+            }
+        )
 
     def execute(self) -> TestCaseResult:
         """Run the test case and return a mapping from attack_id to TestCaseResult.
@@ -81,7 +97,8 @@ class BaseTestCase(ABC):
             Attack results with responses and evaluations.
         """
         base_attack: str = str(attack.input)
-        attack.input = self.enhance_base_attack(attack.input)
+        enhanced_attack, techniques = self.enhance_base_attack(attack.input)
+        attack.input = enhanced_attack
         bot_responses: dict[ChatbotName, str] = {}
         bot_responses_eval: dict[ChatbotName, ChatbotResponseEvaluation] = {}
 
@@ -100,7 +117,7 @@ class BaseTestCase(ABC):
         return Attack(
             self.category, self.sub_category, self.severity,
             PromptVariants(base_attack, attack.input),
-            bot_responses_eval, protection
+            bot_responses_eval, protection, techniques
         )
 
     def _query_and_evaluate(
@@ -165,8 +182,12 @@ class BaseTestCase(ABC):
         return save_test_case_result(self.results, self.run_folder)
 
     @abstractmethod
-    def enhance_base_attack(self, base_attack: str) -> str:
-        """Store the results."""
+    def enhance_base_attack(self, base_attack: str) -> tuple[str, str | None]:
+        """Enhance the base attack with a technique.
+
+        Returns:
+            A tuple of (enhanced_attack, technique_name).
+        """
         raise NotImplementedError
 
     @staticmethod

@@ -9,9 +9,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 from loguru import logger
 
-from .test.baseline_test import BaselineTest
-from .chatbot.document_loader import DocumentLoader
-from .chatbot.vector_store import VectorStore
+from .test.default_test import DefaultTest
+from testframework.chatbot.rag.document_loader import DocumentLoader
+from testframework.chatbot.rag.vector_store import VectorStore
 
 
 def configure_logging() -> None:
@@ -49,7 +49,7 @@ def main() -> None:
     if args.command == "run-baseline":
         logger.info("Starting baseline test suite")
         results_dir = Path(args.results_dir)
-        test = BaselineTest(results_dir=results_dir)
+        test = DefaultTest(results_dir=results_dir)
         test.run()
         logger.info("Baseline test suite completed")
 

@@ -83,8 +83,8 @@ SUBCATEGORY_TO_CATEGORY: dict[Subcategory, Category] = {
 class ChatbotName(str, Enum):
     """Supported LLM models / Chatbots."""
 
-    V_GPT_41 = "GPT_41"
-    V_GPT_5 = "GPT_5"
+    LANGCHAIN_GPT_41 = "LANGCHAIN_GPT_41"
+    LANGCHAIN_GPT_5 = "LANGCHAIN_GPT_5"
     OPENAI = "OPENAI"
     DUMMY = "DUMMY"
     LANGCHAIN = "LANGCHAIN"

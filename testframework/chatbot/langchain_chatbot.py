@@ -10,7 +10,7 @@ from langchain_core.documents import Document
 from langchain_openai import ChatOpenAI
 from loguru import logger
 from testframework.chatbot.base import BaseChatbot
-from testframework.chatbot.vector_store import VectorStore
+from testframework.chatbot.rag.vector_store import VectorStore
 from testframework.chatbot.tools import generate_image
 from testframework.enums import ChatbotName
 from testframework.models import (
@@ -30,9 +30,7 @@ class LangChainChatbot(BaseChatbot):
     # Timeout configuration (in seconds)
     DEFAULT_TIMEOUT: float = 120.0
 
-    # todo: an Domäne anpassen und aus .env ziehen
-    DEFAULT_SYSTEM_PROMPT = """You are a helpful AI assistant. Use the provided context to answer questions accurately. If you cannot find relevant information in the context, say so clearly.
-
+    DEFAULT_SYSTEM_PROMPT = """You are a helpful bank assistant. Use the provided context to answer questions accurately. If you cannot find relevant information in the context, say so clearly.
 When asked to generate an image, use the generate_image tool with a detailed description."""
 
     def __init__(

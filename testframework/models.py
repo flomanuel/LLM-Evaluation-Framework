@@ -169,6 +169,7 @@ class Attack:
     prompt: PromptVariants
     llm_responses: Dict[ChatbotName, ChatbotResponseEvaluation]
     protection: Dict[str, Dict[ChatbotName, DetectionResult]]
+    techniques: str | None = None  # concatenated techniques, use underscore as a delimiter
     error: TestErrorInfo | None = None
 
     @property
@@ -194,6 +195,7 @@ class Attack:
             prompt=PromptVariants(baseline="", enhanced=""),
             llm_responses={},
             protection={},
+            techniques=None,
             error=error,
         )
 
