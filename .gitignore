@@ -10,6 +10,9 @@ _logs/
 # PostgreSQL data directory (Docker volume)
 _pgdata/
 
+# pgAdmin data and configuration
+_pgadmin_data/
+
 # C extensions
 *.so
 
