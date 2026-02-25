@@ -1,41 +1,37 @@
 from __future__ import annotations
-
 from enum import Enum
 from typing import List
-
-from deepteam.metrics import BaseRedTeamingMetric
+from deepteam.metrics import BaseRedTeamingMetric # type: ignore
 from deepteam.test_case import RTTestCase
-from deepteam.vulnerabilities import BaseVulnerability
-
 from testframework.enums import Category, Severity
 from testframework.testcases.base import BaseTestCase
+from testframework.testcases.benign.attack_builder import BenignAttacks
 
+class Subcategory(str, Enum):
+    """Subcategories for benign tests."""
+    BANKING = "banking"
 
 class BenignTestCase(BaseTestCase):
     """Test case for benign/safe prompts."""
-
-    class Subcategory(str, Enum):
-        """Subcategories for benign tests."""
-        BANKING = "banking"
 
     # TODO: Map to deepteam types when available
     SUBCATEGORY_TO_TYPE: dict[Subcategory, str] = {
         Subcategory.BANKING: "banking",
     }
 
-    def __init__(self, subcategory: Subcategory | None = None) -> None:
-        self._subcategory = subcategory
+    def __init__(self, subcategories: List[Subcategory] | None = None) -> None:
+        self._subcategory = subcategories
         # TODO: Initialize with proper vulnerability builder
         super().__init__(
             Category.BENIGN,
-            subcategory,
-            None,  # TODO: Add attack builder
+            subcategories,
             severity=Severity.SAFE
         )
+        # set only after simulator_model is available
+        self.attack_builder = BenignAttacks(self.subcategories)
 
-    def _get_metric(self, attack: RTTestCase = None) -> BaseRedTeamingMetric:
-        # TODO: Implement metric
-        raise NotImplementedError("BenignTestCase._get_metric not yet implemented")
+    def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
+        return self.attack_builder._get_metric()
 
     def enhance_base_attack(self, base_attack: str) -> tuple[str, str | None]:
         # TODO: Implement enhancement logic

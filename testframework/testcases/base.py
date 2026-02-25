@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from deepeval.models import DeepEvalBaseLLM, OllamaModel
-from deepteam.metrics import BaseRedTeamingMetric
+from deepteam.metrics import BaseRedTeamingMetric # type: ignore
 from deepteam.test_case import RTTestCase
 from deepteam.vulnerabilities import BaseVulnerability
 from loguru import logger
@@ -29,12 +29,12 @@ class BaseTestCase(ABC):
 
     def __init__(self,
                  category: Category,
-                 sub_category: Enum | None,
+                 subcategories: List[Enum],
                  severity: Severity = Severity.UNSAFE,
                  timeout: float = 120.0
                  ) -> None:
         self.category = category
-        self.sub_category = sub_category
+        self.subcategories = subcategories
         self.guardrail_runner = GuardrailRunner()
         self.attack_builder: BaseVulnerability | None = None
         self.severity = severity
@@ -76,7 +76,7 @@ class BaseTestCase(ABC):
 
         tc_result = TestCaseResult(
             self.category,
-            self.sub_category.value if self.sub_category else None,
+            self.subcategories if not self.subcategories else [],
             attack_results,
             generation_error
         )
@@ -117,7 +117,7 @@ class BaseTestCase(ABC):
         )
 
         return Attack(
-            self.category, self.sub_category, self.severity,
+            self.category, self.subcategories, self.severity,
             PromptVariants(base_attack, attack.input),
             bot_responses_eval, protection, techniques
         )
@@ -169,7 +169,7 @@ class BaseTestCase(ABC):
             return ChatbotResponseEvaluation.from_error(model_resp, eval_error)
 
     @abstractmethod
-    def _get_metric(self, attack: RTTestCase = None) -> BaseRedTeamingMetric:
+    def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         """Return the metric to evaluate the attack."""
         raise NotImplementedError
 

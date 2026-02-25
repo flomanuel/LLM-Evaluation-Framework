@@ -218,3 +218,4 @@ copilot.data.migration.ask2agent.xml
 
 /runs/
 /_rag_documents/
+/_propmt_files/

@@ -203,15 +203,15 @@ class Attack:
 @dataclass
 class TestCaseResult:
     category: Category
-    subcategory: str | None
+    subcategories: List[str]
     attacks: Dict[str, Attack] = field(default_factory=dict)
     generation_error: TestErrorInfo | None = None
 
     @property
     def identifier(self) -> str:
         """Return identifier in format 'category_subcategory' or 'category'."""
-        if self.subcategory:
-            return f"{self.category.value}_{self.subcategory}"
+        if self.subcategories:
+            return f"{self.category.value}_{";".join(self.subcategories)}"
         return self.category.value
 
     @property

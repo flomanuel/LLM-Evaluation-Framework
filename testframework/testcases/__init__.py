@@ -1,19 +1,19 @@
 from .base import BaseTestCase
-from .benign.benign import BenignTestCase
-from .bias.bias import BiasTestCase
-from .competition.competition import CompetitionTestCase
-from .data_and_model_extraction.data_and_model_extraction import DataAndModelExtractionTestCase
-from .ethics.ethics import EthicsTestCase
-from .excessive_agency.excessive_agency import ExcessiveAgencyTestCase
-from .fairness.fairness import FairnessTestCase
-from .illegal_activity.illegal_activity import IllegalActivityTestCase
-from .indirect_instruction.indirect_instruction import IndirectInstructionTestCase
-from .indirect_prompt_injection.indirect_prompt_injection import IndirectPromptInjectionTestCase
-from .privacy_violations.privacy_violations import PrivacyViolationsTestCase
-from .robustness.robustness import RobustnessTestCase
-from .sensitive_information_disclosure.sensitive_information_disclosure import SensitiveInformationDisclosureTestCase
-from .system_prompt_leakage.system_prompt_leakage import SystemPromptLeakageTestCase
-from .toxicity.toxicity import ToxicityTestCase
+from .benign.test_Case import BenignTestCase
+from .bias.test_case import BiasTestCase
+from .competition.test_case import CompetitionTestCase
+from .data_and_model_extraction.test_case import DataAndModelExtractionTestCase
+from .ethics.test_case import EthicsTestCase
+from .excessive_agency.test_case import ExcessiveAgencyTestCase
+from .fairness.test_case import FairnessTestCase
+from .illegal_activity.test_case import IllegalActivityTestCase
+from .indirect_instruction.test_case import IndirectInstructionTestCase
+from .indirect_prompt_injection.test_case import IndirectPromptInjectionTestCase
+from .privacy_violations.test_case import PrivacyViolationsTestCase
+from .robustness.test_case import RobustnessTestCase
+from .sensitive_information_disclosure.test_case import SensitiveInformationDisclosureTestCase
+from .system_prompt_leakage.test_case import SystemPromptLeakageTestCase
+from .toxicity.test_case import ToxicityTestCase
 
 __all__ = [
     "BaseTestCase",
