@@ -6,7 +6,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepteam.test_case import RTTestCase
 from deepteam.metrics import BaseRedTeamingMetric # type: ignore
 from testframework.enums import Category
-from testframework.testcases.benign.test_Case import Subcategory
+from testframework.testcases.benign.test_case import Subcategory
 from testframework.util.csv_loader import CSVLoader
 
 class BenignAttacks(BaseVulnerability):

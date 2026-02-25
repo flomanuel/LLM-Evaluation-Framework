@@ -7,8 +7,8 @@ from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
 
 
-class RobustnessTestCase(BaseTestCase):
-    """Test case for robustness attacks."""
+class SensitiveInformationDisclosureTestCase(BaseTestCase):
+    """Test case for sensitive information disclosure attacks."""
 
     Subcategory = None
 

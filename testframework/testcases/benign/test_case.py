@@ -20,8 +20,6 @@ class BenignTestCase(BaseTestCase):
     }
 
     def __init__(self, subcategories: List[Subcategory] | None = None) -> None:
-        self._subcategory = subcategories
-        # TODO: Initialize with proper vulnerability builder
         super().__init__(
             Category.BENIGN,
             subcategories,
@@ -34,5 +32,4 @@ class BenignTestCase(BaseTestCase):
         return self.attack_builder._get_metric()
 
     def enhance_base_attack(self, base_attack: str) -> tuple[str, str | None]:
-        # TODO: Implement enhancement logic
         raise NotImplementedError("BenignTestCase.enhance_base_attack not yet implemented")
