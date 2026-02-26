@@ -24,5 +24,5 @@ class CompetitionTestCase(BaseTestCase):
         attack_type = cast(CompetitionType, attack.vulnerability_type)
         return cast(Competition, self.attack_builder)._get_metric(type=attack_type)
 
-    def enhance_base_attack(self, base_attack: str) -> tuple[str, str | None]:
-        return base_attack, None
+    def enhance_base_attack(self, base_attack: str) -> tuple[str, list[str]]:
+        return base_attack, []

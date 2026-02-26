@@ -27,6 +27,6 @@ class BiasTestCase(BaseTestCase):
         return cast(Bias, self.attack_builder)._get_metric(
             type=attack_type)  # pylint: disable=protected-access
 
-    def enhance_base_attack(self, base_attack: str) -> tuple[str, str | None]:
+    def enhance_base_attack(self, base_attack: str) -> tuple[str, list[str]]:
         # TODO: Implement enhancement logic
-        return base_attack, None
+        return base_attack, []

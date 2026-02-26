@@ -76,7 +76,7 @@ class BaseTestCase(ABC):
 
         tc_result = TestCaseResult(
             self.category,
-            self.subcategories if not self.subcategories else [],
+            self.subcategories if self.subcategories else [],
             attack_results,
             generation_error
         )
@@ -184,11 +184,11 @@ class BaseTestCase(ABC):
         return save_test_case_result(self.results, self.run_folder)
 
     @abstractmethod
-    def enhance_base_attack(self, base_attack: str) -> tuple[str, str | None]:
+    def enhance_base_attack(self, base_attack: str) -> tuple[str, List[str]]:
         """Enhance the base attack with a technique.
 
         Returns:
-            A tuple of (enhanced_attack, technique_name).
+            A tuple of (enhanced_attack, technique_names).
         """
         raise NotImplementedError
 

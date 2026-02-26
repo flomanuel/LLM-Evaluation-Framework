@@ -22,6 +22,6 @@ class IllegalActivityTestCase(BaseTestCase):
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         return self.attack_builder._get_metric(attack)
 
-    def enhance_base_attack(self, base_attack: str) -> tuple[str, str | None]:
+    def enhance_base_attack(self, base_attack: str) -> tuple[str, list[str]]:
         # todo: implement full enhancement logic
-        return base_attack, None
+        return base_attack, []

@@ -10,6 +10,7 @@ from loguru import logger
 
 from testframework.models import TestRunResult, TestRunTimestamp, TestCaseResult
 from testframework.storage import save_test_run, get_run_folder
+from testframework.testcases import BaseTestCase
 
 
 class Test(ABC):
@@ -26,7 +27,7 @@ class Test(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_test_cases(self) -> List:
+    def get_test_cases(self) -> List[BaseTestCase]:
         """Return a list of BaseTestCase instances to execute."""
         raise NotImplementedError
 
@@ -55,7 +56,7 @@ class Test(ABC):
         test_cases = self.get_test_cases()
         logger.info(f"Executing {len(test_cases)} test case(s)")
         for tc in test_cases:
-            tc_identifier = f"{tc.category.value}_{tc.sub_category.value}" if tc.sub_category else tc.category.value
+            tc_identifier = f"{tc.category.value}_{";".join([str(subcat.value) for subcat in tc.subcategories])}" if tc.subcategories else tc.category.value
             logger.debug(f"Running test case: {tc_identifier}")
             tc.run_folder = run_folder
             tc_results = tc.execute()

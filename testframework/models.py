@@ -164,12 +164,12 @@ class DetectionResult:
 @dataclass
 class Attack:
     category: str
-    subcategory: str | None
+    subcategories: List[Enum]
     severity: Severity
     prompt: PromptVariants
     llm_responses: Dict[ChatbotName, ChatbotResponseEvaluation]
     protection: Dict[str, Dict[ChatbotName, DetectionResult]]
-    techniques: str | None = None  # concatenated techniques, use underscore as a delimiter
+    techniques: List[str] = field(default_factory=list)
     error: TestErrorInfo | None = None
 
     @property
@@ -183,19 +183,19 @@ class Attack:
     def from_generation_error(
             cls,
             category: str,
-            subcategory: str | None,
+            subcategories: List[Enum] | None,
             severity: Severity,
             error: TestErrorInfo,
     ) -> "Attack":
         """Create an Attack representing a generation failure."""
         return cls(
             category=category,
-            subcategory=subcategory,
+            subcategories=subcategories if subcategories else [],
             severity=severity,
             prompt=PromptVariants(baseline="", enhanced=""),
             llm_responses={},
             protection={},
-            techniques=None,
+            techniques=[],
             error=error,
         )
 
