@@ -1,0 +1,65 @@
+@startuml
+!theme plain
+top to bottom direction
+skinparam componentStyle uml2
+
+package "Test Framework Core" {
+    [<img:placeholder_orchestrator.png> Test Orchestrator] as Orchestrator
+    [<img:placeholder_tcmanager.png> Test Case Manager] as TCManager
+    [<img:placeholder_chatbots.png> Chatbot Interface] as Chatbots
+    [<img:placeholder_chatbot_store.png> Chatbot Store] as CBStore
+    [<img:placeholder_chatbot_tools.png> Chatbot Tools] as CBTools
+    [<img:placeholder_guardrails.png> Guardrail System] as Guardrails
+    [<img:placeholder_rag.png> RAG Components] as RAG
+    [<img:placeholder_enhancer.png> Attack Enhancer] as Enhancer
+    [<img:placeholder_storage.png> Storage & Reporting] as Storage
+}
+
+package "External Integration" {
+    [<img:placeholder_langchain.png> LangChain] as LangChainExt
+    [<img:placeholder_deepteam.png> DeepTeam Test Cases] as DeepTeam
+    [<img:placeholder_llm.png> LLM Providers] as LLMServices
+}
+
+package "Infrastructure" {
+    [<img:placeholder_pgadmin.png> pgAdmin] as pgAdmin
+    [<img:placeholder_docker.png> Docker & Compose] as Docker
+}
+
+[CLI] --> Orchestrator
+[CLI] --> RAG : populate DB
+
+Orchestrator --> TCManager : initiates
+Orchestrator --> Storage : saves results
+Orchestrator ..> CBStore : registers chatbots
+
+TCManager --> DeepTeam : loads test cases
+TCManager --> CBStore : retrieves chatbots
+TCManager --> Chatbots : queries
+TCManager --> Guardrails : evaluates responses
+TCManager --> Enhancer : transforms attacks
+
+Chatbots --> LangChainExt : uses
+Chatbots --> CBTools : uses
+Chatbots --> RAG : context retrieval
+LangChainExt --> LLMServices : remote API calls
+
+Guardrails --> [Specific Guardrails] : executes
+
+database "File System Storage" {
+    [Runs Folders (JSON)]
+    [Vector Database]
+    [Logs]
+    [CSV Prompt Files]
+}
+
+Storage --> [Runs Folders (JSON)]
+RAG --> [Vector Database]
+[CLI] --> [Logs]
+TCManager ..> [CSV Prompt Files] : loads custom attacks
+
+Docker ..> pgAdmin : manages
+Docker ..> [Vector Database] : orchestrates
+pgAdmin ..> [Vector Database] : inspects
+
+@enduml

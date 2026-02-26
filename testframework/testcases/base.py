@@ -12,7 +12,7 @@ from deepteam.test_case import RTTestCase
 from deepteam.vulnerabilities import BaseVulnerability
 from loguru import logger
 from testframework.chatbots.base import BaseChatbot
-from testframework.chatbots.rag.store import ChatbotStore
+from testframework.chatbots.store import ChatbotStore
 from testframework.custom_attack_techniques import AttackListEnhancer
 from testframework.enums import Category, ChatbotName, Severity
 from testframework.guardrails.runner import GuardrailRunner

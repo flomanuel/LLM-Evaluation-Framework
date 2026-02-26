@@ -1,0 +1,65 @@
+@startuml
+skinparam componentStyle uml2
+skinparam rectangle {
+    BackgroundColor<<Category>> #D1E5F4
+    BorderColor<<Category>> #5D8AA8
+    FontStyle bold
+}
+
+title LLM Chatbot Protection Framework - Technology Stack
+
+rectangle "Project Technology Stack" {
+
+    rectangle "Development & Tools" <<Category>> {
+        [<img:placeholder_python.png>\nPython 3.14] as Python
+        [<img:placeholder_uv.png>\nUV (Package Manager)] as UV
+        [<img:placeholder_github.png>\nGitHub (Repository)] as GitHub
+        [<img:placeholder_plantuml.png>\nPlantUML (Documentation)] as PlantUML
+    }
+
+    rectangle "AI & LLM Frameworks" <<Category>> {
+        [<img:placeholder_langchain.png>\nLangChain] as LangChain
+        [<img:placeholder_openai.png>\nOpenAI API] as OpenAI
+        [<img:placeholder_ollama.png>\nOllama (Local LLMs)] as Ollama
+        [<img:placeholder_deepteam.png>\nDeepTeam (Adversarial Data)] as DeepTeam
+        [<img:placeholder_deepeval.png>\nDeepEval (Unit Testing)] as DeepEval
+        [<img:placeholder_langchain_tools.png>\nLangChain Tools] as LCTools
+        [<img:placeholder_csv.png>\nCSV (Adversarial Prompts)\n- Severity & Category\n- Tool Checks & Conditions\n- Remote Generation Flags\n- PDF Document Links] as CSV
+    }
+
+    rectangle "Infrastructure & Persistence" <<Category>> {
+        [<img:placeholder_docker.png>\nDocker & Docker Compose] as Docker
+        [<img:placeholder_postgres.png>\nPostgres + pgvector] as Postgres
+        [<img:placeholder_pgadmin.png>\npgAdmin (DB Management)] as pgAdmin
+        [<img:placeholder_vectorstore.png>\nVector Store (RAG)] as VectorStore
+    }
+
+    rectangle "Security & Quality" <<Category>> {
+        [<img:placeholder_bandit.png>\nBandit (Security Scanning)] as Bandit
+        [<img:placeholder_pylint.png>\nPylint (Static Analysis)] as Pylint
+        [<img:placeholder_flake8.png>\nFlake8 (Code Style)] as Flake8
+    }
+
+    rectangle "Observability & Utilities" <<Category>> {
+        [<img:placeholder_loguru.png>\nLoguru (Logging)] as Loguru
+        [<img:placeholder_dotenv.png>\npython-dotenv] as Dotenv
+        [<img:placeholder_pypdf.png>\npypdf (PDF Ingestion)] as PyPDF
+    }
+
+}
+
+' Relationships
+Python ..> UV : managed by
+GitHub ..> Python : hosts project code
+UV ..> Python : manages environment
+
+Docker ..> Postgres : orchestrates
+Docker ..> pgAdmin : orchestrates
+Postgres ..> VectorStore : implementation
+LangChain ..> OpenAI : uses
+LangChain ..> Ollama : uses
+DeepTeam ..> DeepEval : uses
+LangChain ..> LCTools : integrates
+DeepTeam ..> CSV : extended by
+CSV ..> PyPDF : links to documents
+@enduml

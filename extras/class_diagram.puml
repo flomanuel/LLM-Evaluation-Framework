@@ -1,0 +1,248 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+package "testframework" {
+    package "models" {
+        class TestRunResult {
+            +run_id: str
+            +timestamp: TestRunTimestamp
+            +attack_categories: List[TestCaseResult]
+            +to_json_dict(): dict
+            {static} +new_empty(): TestRunResult
+        }
+
+        class TestCaseResult {
+            +category: Category
+            +subcategories: List[str]
+            +attacks: Dict[str, Attack]
+            +generation_error: TestErrorInfo | None
+            +identifier(): str
+            +has_errors(): bool
+            +error_count(): int
+        }
+
+        class Attack {
+            +category: str
+            +subcategories: List[Enum]
+            +severity: Severity
+            +prompt: PromptVariants
+            +llm_responses: Dict[ChatbotName, ChatbotResponseEvaluation]
+            +protection: Dict[str, Dict[ChatbotName, DetectionResult]]
+            +techniques: List[str]
+            +error: TestErrorInfo | None
+            +is_error(): bool
+            {static} +from_generation_error(...): Attack
+        }
+
+        class EnhancedAttack {
+            +attack_case: RTTestCase
+            +baseline_input: str
+            +enhanced_input: str
+            +techniques: List[str]
+        }
+
+        class PromptVariants {
+            +baseline: str
+            +enhanced: str
+        }
+
+        class ChatbotResponse {
+            +response: str
+            +system_prompt: str
+            +tool: ToolInfo
+            +llm_params: ModelConfig
+            +prompt_tokens: int
+            +response_tokens: int
+            +rag_context: RagContext | None
+            +file_path: str | None
+            +error: TestErrorInfo | None
+            +is_error(): bool
+            {static} +from_error(...): ChatbotResponse
+        }
+
+        class ToolInfo {
+            +tool_called: bool
+            +tool_call_params: str | None
+        }
+
+        class ModelConfig {
+            +temperature: float | None
+            +top_p: float | None
+            +top_k: int | None
+            +max_tokens: int | None
+        }
+
+        class RagContext {
+            +embedding_model: str | None
+            +nodes: List[str]
+        }
+
+        class ChatbotResponseEvaluation {
+            +chatbot_response: ChatbotResponse
+            +guardrail_evaluations: Dict[str, DetectionResult]
+            +is_error(): bool
+            {static} +from_error(...): ChatbotResponseEvaluation
+        }
+
+        class DetectionResult {
+            +attack_evaluation: DetectionElement
+            +response_evaluation: DetectionElement
+        }
+
+        class DetectionElement {
+            +is_harmful: bool
+            +is_vulnerable: bool
+            +vulnerability_type: str | None
+            +confidence: float
+            +metadata: dict
+            +error: TestErrorInfo | None
+            +is_error(): bool
+            {static} +from_error(...): DetectionElement
+        }
+
+        class TestErrorInfo {
+            +error_type: LLMErrorType
+            +message: str
+            +traceback: str | None
+            {static} +from_exception(exc: Exception): TestErrorInfo
+        }
+    }
+
+    package "tests" {
+        abstract class Test {
+            +name: str
+            +results_dir: Path
+            +test_case_results: List[TestCaseResult]
+            {abstract} +setup_chatbots()
+            {abstract} +get_test_cases(): List[BaseTestCase]
+            +run(): TestRunResult
+            -_execute_test_cases(run_folder: Path)
+            +store_test_run(test_run: TestRunResult): str
+        }
+        class DefaultTest extends Test {
+            +setup_chatbots()
+            +get_test_cases(): List[BaseTestCase]
+        }
+    }
+
+    package "testcases" {
+        abstract class BaseTestCase {
+            +category: Category
+            +subcategories: List[Enum]
+            +severity: Severity
+            +timeout: float
+            +execute(): TestCaseResult
+            -_execute_single_attack(attack: EnhancedAttack, chatbots: Dict[ChatbotName, BaseChatbot])
+            -_query_and_evaluate(...)
+            -_get_metric(attack: RTTestCase)
+            +store_results()
+        }
+    }
+
+    package "chatbots" {
+        abstract class BaseChatbot {
+            +name: ChatbotName
+            +temperature: float
+            +top_p: float
+            +top_k: int | None
+            +max_tokens: int
+            {abstract} +query(user_prompt: str, ...): ChatbotResponse
+        }
+        class LangchainChatbot extends BaseChatbot {
+            +query(...)
+        }
+        class DummyChatbot extends BaseChatbot {
+            +query(...)
+        }
+        
+        package "rag" {
+            class DocumentLoader {
+                +load_and_split(): List
+            }
+            class VectorStore {
+                +add_documents(documents): List
+            }
+        }
+
+        class ChatbotStore {
+            {static} -_chatbots: Dict
+            {static} +add_chatbot(chatbot: BaseChatbot)
+            {static} +remove_chatbot(name: ChatbotName)
+            {static} +get_chatbots(): Dict
+            {static} +get_chatbot(name: ChatbotName): BaseChatbot
+        }
+
+        package "tools" {
+            class "ImageTool" as Tools {
+                +generate_image(description: str): str
+            }
+        }
+    }
+
+    package "util" {
+        class CSVLoader {
+            {static} +CSV_DOCUMENTS_FOLDER: Path
+            {static} +load_prompts_from_csv(file_path: str, categories: List[str], severity: Severity): List[Tuple]
+        }
+    }
+
+    package "guardrails" {
+        abstract class BaseGuardrail {
+            +name: str
+            {abstract} +eval_attack(user_prompt: str): DetectionElement
+            {abstract} +eval_model_response(model_response: str): DetectionElement
+        }
+        class PromptHardeningGuardrail extends BaseGuardrail
+        
+        class GuardrailRunner {
+            +guardrails: List[BaseGuardrail]
+            +run(enhanced_attack: str, ...): Dict
+        }
+    }
+
+    package "custom_attack_techniques" {
+        class AttackListEnhancer {
+            {static} +ENHANCEMENTS: List[AttackEnhancement]
+            {static} +enhance(attacks: List[RTTestCase], enhancements: List[AttackEnhancement] | None): List[EnhancedAttack]
+        }
+
+        class AttackEnhancement <<dataclass>> {
+            +name: str
+            +transform: Callable
+        }
+    }
+
+    package "deepteam" <<External>> {
+        class RTTestCase {
+            +input: str
+            +actual_output: str
+            +score: float
+            +reason: str
+        }
+    }
+}
+
+Test "1" *-- "n" BaseTestCase
+Test "1" *-- "n" TestCaseResult
+BaseTestCase ..> BaseChatbot : uses
+BaseTestCase ..> GuardrailRunner : uses
+BaseTestCase ..> CSVLoader : uses
+TestCaseResult "1" *-- "n" Attack
+Attack "1" *-- "1" PromptVariants
+Attack "1" *-- "n" ChatbotResponseEvaluation
+ChatbotResponseEvaluation "1" *-- "1" ChatbotResponse
+ChatbotResponse "1" *-- "1" ToolInfo
+ChatbotResponse "1" *-- "1" ModelConfig
+ChatbotResponse "1" *-- "1" RagContext
+ChatbotResponseEvaluation "1" *-- "n" DetectionResult
+DetectionResult "1" *-- "2" DetectionElement
+GuardrailRunner "1" *-- "n" BaseGuardrail
+LangchainChatbot "1" *-- "n" Tools : uses
+Test "1" ..> ChatbotStore : registers chatbots in
+BaseTestCase ..> ChatbotStore : retrieves chatbots from
+BaseTestCase ..> AttackListEnhancer : uses
+AttackListEnhancer "1" *-- "n" AttackEnhancement
+AttackListEnhancer ..> EnhancedAttack : produces
+EnhancedAttack "1" *-- "1" RTTestCase
+
+@enduml

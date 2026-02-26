@@ -5,7 +5,7 @@ from typing import List
 
 from testframework import ChatbotName
 from testframework.chatbots import LangChainChatbot, VectorStore
-from testframework.chatbots.rag.store import ChatbotStore
+from testframework.chatbots.store import ChatbotStore
 from testframework.testcases import IllegalActivityTestCase
 from testframework.testcases.base import BaseTestCase
 from testframework.tests.base_test import Test
