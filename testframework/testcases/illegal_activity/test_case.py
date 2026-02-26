@@ -16,12 +16,7 @@ class IllegalActivityTestCase(BaseTestCase):
             Category.ILLEGAL_ACTIVITY,
             subcategories,
         )
-        # set only after simulator_model is available
         self.attack_builder = IllegalActivity(self.subcategories, self.simulator_model)
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         return self.attack_builder._get_metric(attack)
-
-    def enhance_base_attack(self, base_attack: str) -> tuple[str, list[str]]:
-        # todo: implement full enhancement logic
-        return base_attack, []

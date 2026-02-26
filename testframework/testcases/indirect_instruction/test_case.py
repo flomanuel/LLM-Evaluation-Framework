@@ -22,8 +22,5 @@ class IndirectInstructionTestCase(BaseTestCase):
     def _get_metric(self, attack: RTTestCase = None) -> BaseRedTeamingMetric:
         return self.attack_builder._get_metric()
 
-    def enhance_base_attack(self, base_attack: str) -> tuple[str, list[str]]:
-        return base_attack, []
-
 # todo: set "is_rag" to "false" for the custom attacks that use the poisoned documents.
 # also: check the logic in "langchain_chatbot.py". Maybe the is_rag flag is not necessary anymore.

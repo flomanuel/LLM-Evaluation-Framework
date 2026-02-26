@@ -7,16 +7,17 @@ from pathlib import Path
 from typing import Dict, List
 
 from deepeval.models import DeepEvalBaseLLM, OllamaModel
-from deepteam.metrics import BaseRedTeamingMetric # type: ignore
+from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from deepteam.test_case import RTTestCase
 from deepteam.vulnerabilities import BaseVulnerability
 from loguru import logger
 from testframework.chatbots.base import BaseChatbot
 from testframework.chatbots.rag.store import ChatbotStore
+from testframework.custom_attack_techniques import AttackListEnhancer
 from testframework.enums import Category, ChatbotName, Severity
 from testframework.guardrails.runner import GuardrailRunner
 from testframework.models import TestCaseResult, Attack, DetectionResult, PromptVariants, ChatbotResponseEvaluation, \
-    TestErrorInfo
+    TestErrorInfo, EnhancedAttack
 from testframework.storage import save_test_case_result
 
 
@@ -58,10 +59,11 @@ class BaseTestCase(ABC):
         generation_error: TestErrorInfo | None = None
 
         if self.attack_builder:
-            attacks: List[RTTestCase] = []
+            enhanced_attacks: List[EnhancedAttack] = []
             try:
-                attacks = self.attack_builder.simulate_attacks()
+                attacks: List[RTTestCase] = self.attack_builder.simulate_attacks()
                 logger.info(f"Generated {len(attacks)} attacks for {self.category.value}")
+                enhanced_attacks = AttackListEnhancer.enhance(attacks)
             except Exception as e:
                 generation_error = TestErrorInfo.from_exception(e)
                 logger.error(
@@ -70,7 +72,7 @@ class BaseTestCase(ABC):
                 )
 
             chatbots: Dict[ChatbotName, BaseChatbot] = ChatbotStore.get_chatbots()
-            for attack in attacks:
+            for attack in enhanced_attacks:
                 attack_result = self._execute_single_attack(attack, chatbots)
                 attack_results[str(uuid.uuid4())] = attack_result
 
@@ -86,39 +88,40 @@ class BaseTestCase(ABC):
 
     def _execute_single_attack(
             self,
-            attack: RTTestCase,
+            attack: EnhancedAttack,
             chatbots: Dict[ChatbotName, BaseChatbot]
     ) -> Attack:
         """Execute a single attack against all chatbots.
 
         Args:
-            attack: The RTTestCase attack to execute.
+            attack: Enhanced attack descriptor.
             chatbots: Dictionary of chatbots to test against.
 
         Returns:
             Attack results with responses and evaluations.
         """
-        base_attack: str = str(attack.input)
-        enhanced_attack, techniques = self.enhance_base_attack(attack.input)
-        attack.input = enhanced_attack
+        base_attack = attack.baseline_input
+        techniques = attack.techniques
+        attack_case = attack.attack_case
+        attack_case.input = attack.enhanced_input
         bot_responses: dict[ChatbotName, str] = {}
         bot_responses_eval: dict[ChatbotName, ChatbotResponseEvaluation] = {}
 
-        query_kwargs = self._build_query_kwargs(attack)
+        query_kwargs = self._build_query_kwargs(attack_case)
 
         for name, chatbot in chatbots.items():
             bot_responses_eval[name] = self._query_and_evaluate(
-                chatbot, name, attack, query_kwargs, bot_responses
+                chatbot, name, attack_case, query_kwargs, bot_responses
             )
 
         protection: Dict[str, Dict[ChatbotName, DetectionResult]] = self.guardrail_runner.run(
-            attack.input,
+            attack_case.input,
             bot_responses
         )
 
         return Attack(
             self.category, self.subcategories, self.severity,
-            PromptVariants(base_attack, attack.input),
+            PromptVariants(base_attack, attack_case.input),
             bot_responses_eval, protection, techniques
         )
 
@@ -182,15 +185,6 @@ class BaseTestCase(ABC):
         if self.run_folder is None:
             return None
         return save_test_case_result(self.results, self.run_folder)
-
-    @abstractmethod
-    def enhance_base_attack(self, base_attack: str) -> tuple[str, List[str]]:
-        """Enhance the base attack with a technique.
-
-        Returns:
-            A tuple of (enhanced_attack, technique_names).
-        """
-        raise NotImplementedError
 
     @staticmethod
     def _build_query_kwargs(attack: RTTestCase) -> dict:

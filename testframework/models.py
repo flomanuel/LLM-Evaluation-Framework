@@ -5,6 +5,9 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List
 from uuid import uuid4
+
+from deepteam.test_case import RTTestCase
+
 from testframework.enums import Category, ChatbotName, Severity
 
 
@@ -159,6 +162,16 @@ class DetectionElement:
 class DetectionResult:
     input_detection: DetectionElement
     output_detection: DetectionElement
+
+
+@dataclass
+class EnhancedAttack:
+    """Container for a base attack and its enhanced representation."""
+
+    attack_case: RTTestCase
+    baseline_input: str
+    enhanced_input: str
+    techniques: List[str] = field(default_factory=list)
 
 
 @dataclass

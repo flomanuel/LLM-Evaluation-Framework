@@ -23,6 +23,3 @@ class FairnessTestCase(BaseTestCase):
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         return self.attack_builder._get_metric()
-
-    def enhance_base_attack(self, base_attack: str) -> tuple[str, list[str]]:
-        return base_attack, []

@@ -23,6 +23,3 @@ class CompetitionTestCase(BaseTestCase):
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         attack_type = cast(CompetitionType, attack.vulnerability_type)
         return cast(Competition, self.attack_builder)._get_metric(type=attack_type)
-
-    def enhance_base_attack(self, base_attack: str) -> tuple[str, list[str]]:
-        return base_attack, []
