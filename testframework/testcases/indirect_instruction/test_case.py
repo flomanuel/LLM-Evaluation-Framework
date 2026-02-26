@@ -1,29 +1,29 @@
 from __future__ import annotations
 
-from deepteam.metrics import BaseRedTeamingMetric
+from typing import List
+from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from deepteam.test_case import RTTestCase
-
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
+from testframework.testcases.indirect_instruction.attack_builder import IndirectInstructionAttacks
+from testframework.testcases.indirect_instruction.subcategory import IndirectInstructionSubcategory
 
 
 class IndirectInstructionTestCase(BaseTestCase):
     """Test case for indirect instruction attacks."""
 
-    Subcategory = None
-
-    def __init__(self) -> None:
-        # TODO: Initialize with proper vulnerability builder
+    def __init__(self, subcategories: List[IndirectInstructionSubcategory] | None = None) -> None:
         super().__init__(
-            Category.INDIRECT_INSTRUCTION,
-            None,
-            None,  # TODO: Add attack builder
+            Category.INDIRECT_PROMPT_INJECTION,
+            subcategories,
         )
+        self.attack_builder = IndirectInstructionAttacks(self.subcategories)
 
     def _get_metric(self, attack: RTTestCase = None) -> BaseRedTeamingMetric:
-        # TODO: Implement metric
-        raise NotImplementedError("IndirectInstructionTestCase._get_metric not yet implemented")
+        return self.attack_builder._get_metric()
 
     def enhance_base_attack(self, base_attack: str) -> tuple[str, str | None]:
-        # TODO: Implement enhancement logic
-        raise NotImplementedError("IndirectInstructionTestCase.enhance_base_attack not yet implemented")
+        return base_attack, None
+
+# todo: set "is_rag" to "false" for the custom attacks that use the poisoned documents.
+# also: check the logic in "langchain_chatbot.py". Maybe the is_rag flag is not necessary anymore.

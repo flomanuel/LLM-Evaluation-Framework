@@ -157,7 +157,7 @@ wheels = [
 
 [[package]]
 name = "bandit"
-version = "1.9.3"
+version = "1.9.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
@@ -165,9 +165,9 @@ dependencies = [
     { name = "rich" },
     { name = "stevedore" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/89/76/a7f3e639b78601118aaa4a394db2c66ae2597fbd8c39644c32874ed11e0c/bandit-1.9.3.tar.gz", hash = "sha256:ade4b9b7786f89ef6fc7344a52b34558caec5da74cb90373aed01de88472f774", size = 4242154, upload-time = "2026-01-19T04:05:22.802Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/aa/c3/0cb80dfe0f3076e5da7e4c5ad8e57bac6ac357ff4a6406205501cade4965/bandit-1.9.4.tar.gz", hash = "sha256:b589e5de2afe70bd4d53fa0c1da6199f4085af666fde00e8a034f152a52cd628", size = 4242677, upload-time = "2026-02-25T06:44:15.503Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e0/0b/8bdc52111c83e2dc2f97403dc87c0830b8989d9ae45732b34b686326fb2c/bandit-1.9.3-py3-none-any.whl", hash = "sha256:4745917c88d2246def79748bde5e08b9d5e9b92f877863d43fab70cd8814ce6a", size = 134451, upload-time = "2026-01-19T04:05:20.938Z" },
+    { url = "https://files.pythonhosted.org/packages/05/a4/a26d5b25671d27e03afb5401a0be5899d94ff8fab6a698b1ac5be3ec29ef/bandit-1.9.4-py3-none-any.whl", hash = "sha256:f89ffa663767f5a0585ea075f01020207e966a9c0f2b9ef56a57c7963a3f6f8e", size = 134741, upload-time = "2026-02-25T06:44:13.694Z" },
 ]
 
 [[package]]
@@ -240,7 +240,7 @@ wheels = [
 
 [[package]]
 name = "deepeval"
-version = "3.8.6"
+version = "3.8.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -272,9 +272,9 @@ dependencies = [
     { name = "typer" },
     { name = "wheel" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/63/73/f134388793a0600b017c812533ca9d4885f07f14f22c0be4a708044db8a5/deepeval-3.8.6.tar.gz", hash = "sha256:67fb3526a494f15036f52a1cd9c95011290293390c26465dd162f11bfecc1b3c", size = 597669, upload-time = "2026-02-23T07:38:55.135Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f9/17/3f6651e1f75ab481f01f13465eb1934275442c9893d052d295287e8ea052/deepeval-3.8.8.tar.gz", hash = "sha256:389c1742f02121525ecfe40c3d613f76fd418ad0ac0b843df715a9b460b5e679", size = 598358, upload-time = "2026-02-26T10:45:12.677Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3b/e8/1b23a7ba8a5508da6bebcfda1326995e02b057fa9a210be7815168b34c6e/deepeval-3.8.6-py3-none-any.whl", hash = "sha256:2e33b716fb4b1270c5c81cd6e5a00209ef8a4450208125b506fe43fcea2547cd", size = 823411, upload-time = "2026-02-23T07:38:52.897Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/d3/803fed251684361d4db489f34248ee6b1f7223b7435a81271848b88b701a/deepeval-3.8.8-py3-none-any.whl", hash = "sha256:32a188a478abeeede896dcd524ac142d1c16948bfd023ce4457e6790ebe4689b", size = 824094, upload-time = "2026-02-26T10:45:10.235Z" },
 ]
 
 [[package]]
@@ -997,7 +997,7 @@ wheels = [
 
 [[package]]
 name = "openai"
-version = "2.23.0"
+version = "2.24.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -1009,9 +1009,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/61/4b/dc1d84b8237205ebe48a1b1c9c3a8e1ab9fd08b30811b6d787196df58fd6/openai-2.23.0.tar.gz", hash = "sha256:7d24cc8087d5e8eed58e98aaa823391d39d12f9a9a2755770f67c7bb2004d94c", size = 657323, upload-time = "2026-02-24T03:20:20.323Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/55/13/17e87641b89b74552ed408a92b231283786523edddc95f3545809fab673c/openai-2.24.0.tar.gz", hash = "sha256:1e5769f540dbd01cb33bc4716a23e67b9d695161a734aff9c5f925e2bf99a673", size = 658717, upload-time = "2026-02-24T20:02:07.958Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1d/5f/bcdf0fb510c24f021e485f920677da363cd59d6e0310171bf2cad6e052b5/openai-2.23.0-py3-none-any.whl", hash = "sha256:1041d40bebf845053fda1946104f8bf9c3e2df957a41c3878c55c72c352630e9", size = 1118971, upload-time = "2026-02-24T03:20:18.708Z" },
+    { url = "https://files.pythonhosted.org/packages/c9/30/844dc675ee6902579b8eef01ed23917cc9319a1c9c0c14ec6e39340c96d0/openai-2.24.0-py3-none-any.whl", hash = "sha256:fed30480d7d6c884303287bde864980a4b137b60553ffbcf9ab4a233b7a73d94", size = 1120122, upload-time = "2026-02-24T20:02:05.669Z" },
 ]
 
 [[package]]
@@ -1474,11 +1474,11 @@ wheels = [
 
 [[package]]
 name = "pypdf"
-version = "6.7.2"
+version = "6.7.3"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/fe/b2/335465d6cff28a772ace8a58beb168f125c2e1d8f7a31527da180f4d89a1/pypdf-6.7.2.tar.gz", hash = "sha256:82a1a48de500ceea59a52a7d979f5095927ef802e4e4fac25ab862a73468acbb", size = 5302986, upload-time = "2026-02-22T11:33:30.776Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/53/9b/63e767042fc852384dc71e5ff6f990ee4e1b165b1526cf3f9c23a4eebb47/pypdf-6.7.3.tar.gz", hash = "sha256:eca55c78d0ec7baa06f9288e2be5c4e8242d5cbb62c7a4b94f2716f8e50076d2", size = 5303304, upload-time = "2026-02-24T17:23:11.42Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/df/df/38b06d6e74646a4281856920a11efb431559bdeb643bf1e192bff5e29082/pypdf-6.7.2-py3-none-any.whl", hash = "sha256:331b63cd66f63138f152a700565b3e0cebdf4ec8bec3b7594b2522418782f1f3", size = 331245, upload-time = "2026-02-22T11:33:29.204Z" },
+    { url = "https://files.pythonhosted.org/packages/b0/90/3308a9b8b46c1424181fdf3f4580d2b423c5471425799e7fc62f92d183f4/pypdf-6.7.3-py3-none-any.whl", hash = "sha256:cd25ac508f20b554a9fafd825186e3ba29591a69b78c156783c5d8a2d63a1c0a", size = 331263, upload-time = "2026-02-24T17:23:09.932Z" },
 ]
 
 [[package]]
@@ -1830,8 +1830,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bandit", marker = "extra == 'dev'", specifier = "~=1.9.3" },
-    { name = "deepeval", specifier = "~=3.8.6" },
+    { name = "bandit", marker = "extra == 'dev'", specifier = "~=1.9.4" },
+    { name = "deepeval", specifier = "~=3.8.8" },
     { name = "deepteam", specifier = "~=1.0.5" },
     { name = "flake8", marker = "extra == 'dev'", specifier = "~=7.3.0" },
     { name = "flake8-docstrings", marker = "extra == 'dev'", specifier = "~=1.7.0" },
@@ -1843,11 +1843,11 @@ requires-dist = [
     { name = "langchain-text-splitters", specifier = "~=1.1.1" },
     { name = "loguru", specifier = "~=0.7.0" },
     { name = "ollama", specifier = "~=0.6.1" },
-    { name = "openai", specifier = "~=2.23.0" },
+    { name = "openai", specifier = "~=2.24.0" },
     { name = "opentelemetry-exporter-otlp", specifier = "~=1.39.1" },
     { name = "psycopg", extras = ["binary"], specifier = "~=3.3.3" },
     { name = "pylint", marker = "extra == 'dev'", specifier = "~=4.0.5" },
-    { name = "pypdf", specifier = "~=6.7.2" },
+    { name = "pypdf", specifier = "~=6.7.3" },
     { name = "python-dotenv", specifier = "~=1.2.1" },
 ]
 provides-extras = ["dev"]

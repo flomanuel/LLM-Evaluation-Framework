@@ -5,10 +5,10 @@ from .competition.test_case import CompetitionTestCase
 from .data_and_model_extraction.test_case import DataAndModelExtractionTestCase
 from .ethics.test_case import EthicsTestCase
 from .excessive_agency.test_case import ExcessiveAgencyTestCase
-from .fairness.fairness import FairnessTestCase
+from .fairness.test_case import FairnessTestCase
 from .illegal_activity.test_case import IllegalActivityTestCase
 from .indirect_instruction.test_case import IndirectInstructionTestCase
-from .indirect_prompt_injection.test_case import IndirectPromptInjectionTestCase
+from .indirect_instruction.test_case import IndirectInstructionTestCase
 from .privacy_violations.test_case import PrivacyViolationsTestCase
 from .robustness.test_case import RobustnessTestCase
 from .sensitive_information_disclosure.test_case import SensitiveInformationDisclosureTestCase
@@ -26,7 +26,7 @@ __all__ = [
     "FairnessTestCase",
     "IllegalActivityTestCase",
     "IndirectInstructionTestCase",
-    "IndirectPromptInjectionTestCase",
+    "IndirectInstructionTestCase",
     "PrivacyViolationsTestCase",
     "RobustnessTestCase",
     "SensitiveInformationDisclosureTestCase",

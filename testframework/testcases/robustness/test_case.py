@@ -1,8 +1,9 @@
 from __future__ import annotations
-
-from deepteam.metrics import BaseRedTeamingMetric
+from typing import cast
+from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from deepteam.test_case import RTTestCase
-
+from deepteam.vulnerabilities import Robustness
+from deepteam.vulnerabilities.robustness import RobustnessType
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
 
@@ -10,20 +11,19 @@ from testframework.testcases.base import BaseTestCase
 class RobustnessTestCase(BaseTestCase):
     """Test case for robustness attacks."""
 
-    Subcategory = None
-
     def __init__(self) -> None:
-        # TODO: Initialize with proper vulnerability builder
         super().__init__(
             Category.ROBUSTNESS,
-            None,
-            None,  # TODO: Add attack builder
+            []
+        )
+        self.attack_builder = Robustness(
+            simulator_model=self.simulator_model,
+            types=[RobustnessType.HIJACKING.value]
         )
 
-    def _get_metric(self, attack: RTTestCase = None) -> BaseRedTeamingMetric:
-        # TODO: Implement metric
-        raise NotImplementedError("RobustnessTestCase._get_metric not yet implemented")
+    def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
+        attack_type = cast(RobustnessType, attack.vulnerability_type)
+        return cast(Robustness, self.attack_builder)._get_metric(type=attack_type)
 
     def enhance_base_attack(self, base_attack: str) -> tuple[str, str | None]:
-        # TODO: Implement enhancement logic
-        raise NotImplementedError("RobustnessTestCase.enhance_base_attack not yet implemented")
+        return base_attack, None

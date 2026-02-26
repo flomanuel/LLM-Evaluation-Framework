@@ -1,8 +1,9 @@
-from testframework.testcases.illegal_activity.test_case import IllegalActivityTestCase, Subcategory
 from testframework.testcases.illegal_activity.attack_builder import IllegalActivity
+from testframework.testcases.illegal_activity.subcategory import IllegalActivitySubcategory
+from testframework.testcases.illegal_activity.test_case import IllegalActivityTestCase
 
 __all__ = [
-    "Subcategory",
+    "IllegalActivity",
+    "IllegalActivitySubcategory",
     "IllegalActivityTestCase",
-    "IllegalActivity"
 ]

@@ -1,6 +1,6 @@
 import csv
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 from testframework.enums import Severity
 
@@ -12,16 +12,19 @@ class CSVLoader():
         pass
 
     @staticmethod
-    def load_prompts_from_csv(file_path: str, categories: List[str] = [], severity: Severity = Severity.UNSAFE) -> List[str]: 
-        """Loads prompts from a csv that followd the format 'prompt,severity,category,tool_check,tool_check_condition,remote_atttack_generation,document'
+    def load_prompts_from_csv(file_path: str, categories: List[str] = [], severity: Severity = Severity.UNSAFE) -> List[Tuple[str, str | None]]:
+        """Loads prompts from a csv that follows the format 'prompt,severity,category,tool_check,tool_check_condition,remote_attack_generation,document'
         where the column category contains a string that concatenates applicable categories via ; as a delimiter.
 
         Args:
-            file_path (str): relative file path to the CSV-file (root is `<project_root>/_propmt_files`)
-            categories (str): categories to filter the prompts
-            severity (str): wehther the prompt should return harmful or benign prompts. Defaults to harmful prompts.
+            file_path (str): relative file path to the CSV-file (root is `<project_root>/_prompt_files`)
+            categories (List[str]): categories to filter the prompts
+            severity (Severity): whether the prompt should return harmful or benign prompts. Defaults to harmful prompts.
+
+        Returns:
+            List[Tuple[str, str | None]]: List of (prompt, document_path) tuples. document_path is None if empty.
         """
-        prompts: List[str] = []
+        prompts: List[Tuple[str, str | None]] = []
         path = CSVLoader._build_full_path(file_path)
         with open(path) as csvfile:
             csv_file = csv.reader(csvfile, quotechar='#')
@@ -29,8 +32,9 @@ class CSVLoader():
                 row_prompt = row[0]
                 row_severity = row[1]
                 row_categories = row[2]
-                if row_severity == severity.value and any(category in row_categories for category in categories):
-                    prompts.append(row_prompt)
+                row_document = row[6] if len(row) > 6 and row[6].strip() else None
+                if row_severity == severity.value and (not categories or any(category in row_categories for category in categories)):
+                    prompts.append((row_prompt, row_document))
         return prompts
 
     @staticmethod

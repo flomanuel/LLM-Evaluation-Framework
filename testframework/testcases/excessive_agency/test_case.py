@@ -1,29 +1,23 @@
 from __future__ import annotations
-
-from deepteam.metrics import BaseRedTeamingMetric
+from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from deepteam.test_case import RTTestCase
-
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
+from testframework.testcases.excessive_agency.attack_builder import ExcessiveAgencyAttacks
 
 
 class ExcessiveAgencyTestCase(BaseTestCase):
     """Test case for excessive agency attacks."""
 
-    Subcategory = None
-
     def __init__(self) -> None:
-        # TODO: Initialize with proper vulnerability builder
         super().__init__(
             Category.EXCESSIVE_AGENCY,
-            None,
-            None,  # TODO: Add attack builder
+            []
         )
+        self.attack_builder = ExcessiveAgencyAttacks(self.subcategories)
 
     def _get_metric(self, attack: RTTestCase = None) -> BaseRedTeamingMetric:
-        # TODO: Implement metric
-        raise NotImplementedError("ExcessiveAgencyTestCase._get_metric not yet implemented")
+        return self.attack_builder._get_metric()
 
     def enhance_base_attack(self, base_attack: str) -> tuple[str, str | None]:
-        # TODO: Implement enhancement logic
-        raise NotImplementedError("ExcessiveAgencyTestCase.enhance_base_attack not yet implemented")
+        return base_attack, None

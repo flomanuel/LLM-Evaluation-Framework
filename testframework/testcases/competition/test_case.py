@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from typing import cast
 from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
+from deepteam.vulnerabilities import Competition
+from deepteam.vulnerabilities.competition import CompetitionType
 
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
@@ -10,20 +13,16 @@ from testframework.testcases.base import BaseTestCase
 class CompetitionTestCase(BaseTestCase):
     """Test case for competition-related attacks."""
 
-    Subcategory = None
-
     def __init__(self) -> None:
-        # TODO: Initialize with proper vulnerability builder
         super().__init__(
             Category.COMPETITION,
-            None,
-            None,  # TODO: Add attack builder
+            [],
         )
+        self.attack_builder = Competition(simulator_model=self.simulator_model)
 
-    def _get_metric(self, attack: RTTestCase = None) -> BaseRedTeamingMetric:
-        # TODO: Implement metric
-        raise NotImplementedError("CompetitionTestCase._get_metric not yet implemented")
+    def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
+        attack_type = cast(CompetitionType, attack.vulnerability_type)
+        return cast(Competition, self.attack_builder)._get_metric(type=attack_type)
 
     def enhance_base_attack(self, base_attack: str) -> tuple[str, str | None]:
-        # TODO: Implement enhancement logic
-        raise NotImplementedError("CompetitionTestCase.enhance_base_attack not yet implemented")
+        return base_attack, None

@@ -1,43 +1,25 @@
 from __future__ import annotations
-
-from enum import Enum
-
-from deepteam.metrics import BaseRedTeamingMetric
+from typing import List
+from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from deepteam.test_case import RTTestCase
-
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
+from testframework.testcases.ethics.attack_builder import EthicsAttacks
+from testframework.testcases.ethics.subcategory import EthicsSubcategory
 
 
 class EthicsTestCase(BaseTestCase):
     """Test case for ethics-related attacks."""
 
-    class Subcategory(str, Enum):
-        """Subcategories for ethics attacks."""
-        BANKING = "banking"
-        HARM_PREVENTION = "harm-prevention"
-        MORAL_INTEGRITY = "moral-integrity"
-
-    # TODO: Map to deepteam types when available
-    SUBCATEGORY_TO_TYPE: dict[Subcategory, str] = {
-        Subcategory.BANKING: "banking",
-        Subcategory.HARM_PREVENTION: "harm_prevention",
-        Subcategory.MORAL_INTEGRITY: "moral_integrity",
-    }
-
-    def __init__(self, subcategory: Subcategory | None = None) -> None:
-        self._subcategory = subcategory
-        # TODO: Initialize with proper vulnerability builder
+    def __init__(self, subcategories: List[EthicsSubcategory] | None = None) -> None:
         super().__init__(
             Category.ETHICS,
-            subcategory,
-            None,  # TODO: Add attack builder
+            subcategories if subcategories else list(EthicsSubcategory),
         )
+        self.attack_builder = EthicsAttacks(self.subcategories, self.simulator_model)
 
-    def _get_metric(self, attack: RTTestCase = None) -> BaseRedTeamingMetric:
-        # TODO: Implement metric
-        raise NotImplementedError("EthicsTestCase._get_metric not yet implemented")
+    def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
+        return self.attack_builder._get_metric(attack)
 
     def enhance_base_attack(self, base_attack: str) -> tuple[str, str | None]:
-        # TODO: Implement enhancement logic
-        raise NotImplementedError("EthicsTestCase.enhance_base_attack not yet implemented")
+        return base_attack, None

@@ -1,66 +1,79 @@
 from enum import Enum
 from typing import Dict, List, cast
-from deepteam.vulnerabilities.illegal_activity import IllegalActivityType # type: ignore
-from deepteam.vulnerabilities import BaseVulnerability, IllegalActivity # type: ignore
+from deepteam.vulnerabilities.illegal_activity import IllegalActivityType  # type: ignore
+from deepteam.vulnerabilities import BaseVulnerability, IllegalActivity as DeepTeamIllegalActivity  # type: ignore
 from deepeval.models import DeepEvalBaseLLM
-from deepteam.metrics import BaseRedTeamingMetric # type: ignore
+from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from deepteam.test_case import RTTestCase
-from testframework.testcases.illegal_activity.test_case import Subcategory
+from testframework.testcases.illegal_activity.subcategory import IllegalActivitySubcategory
 from testframework.util.csv_loader import CSVLoader
+
 
 class IllegalActivity(BaseVulnerability):
     def __init__(
-        self,
-        types: List[Enum],
-        simulator_model: DeepEvalBaseLLM,
-        async_mode: bool = True,
-        verbose_mode: bool = True,
-        ):
+            self,
+            types: List[Enum],
+            simulator_model: DeepEvalBaseLLM,
+            async_mode: bool = True,
+            verbose_mode: bool = True,
+    ):
         self.types = types
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self.simulator_model = simulator_model
-        self.default_attack_builder:BaseVulnerability | None  = None
+        self.default_attack_builder: BaseVulnerability | None = None
         super().__init__(types)
 
-    def subcategory_to_illegal_activity_type(self, category: Subcategory) -> str | None:
-            map: Dict[Subcategory,str] = {
-                Subcategory.WEAPONS: IllegalActivityType.WEAPONS.value,
-                Subcategory.CHILD_EXPLOITATION : IllegalActivityType.CHILD_EXPLOITATION.value,
-                Subcategory.ILLEGAL_DRUGS: IllegalActivityType.ILLEGAL_DRUGS.value,
-                Subcategory.VIOLENT_CRIME: IllegalActivityType.VIOLENT_CRIME.value,
-                Subcategory.NONVIOLENT_CRIME: IllegalActivityType.NON_VIOLENT_CRIME.value,
-                Subcategory.SEX_CRIME: IllegalActivityType.SEX_CRIME.value,
-                Subcategory.CYBERCRIME: IllegalActivityType.CYBERCRIME.value,
-            }
-            return map.get(category)
+    def subcategory_to_illegal_activity_type(self, category: IllegalActivitySubcategory) -> str | None:
+        map: Dict[IllegalActivitySubcategory, str] = {
+            IllegalActivitySubcategory.WEAPONS: IllegalActivityType.WEAPONS.value,
+            IllegalActivitySubcategory.CHILD_EXPLOITATION: IllegalActivityType.CHILD_EXPLOITATION.value,
+            IllegalActivitySubcategory.ILLEGAL_DRUGS: IllegalActivityType.ILLEGAL_DRUGS.value,
+            IllegalActivitySubcategory.VIOLENT_CRIME: IllegalActivityType.VIOLENT_CRIME.value,
+            IllegalActivitySubcategory.NONVIOLENT_CRIME: IllegalActivityType.NON_VIOLENT_CRIME.value,
+            IllegalActivitySubcategory.SEX_CRIME: IllegalActivityType.SEX_CRIME.value,
+            IllegalActivitySubcategory.CYBERCRIME: IllegalActivityType.CYBERCRIME.value,
+        }
+        return map.get(category)
 
     def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
         attacks: List[RTTestCase] = []
-        if Subcategory.WEAPONS in self.types:
+        if IllegalActivitySubcategory.WEAPONS in self.types:
             attacks.extend(
                 RTTestCase(
                     vulnerability=self.get_name(),
-                    vulnerability_type=Subcategory.WEAPONS,
+                    vulnerability_type=IllegalActivityType.WEAPONS,
                     input=prompt)
-                for prompt in CSVLoader.load_prompts_from_csv(file_path="2_schaedlich_manuell.csv", categories=["illegal-activity_weapons"])
+                for prompt, _ in CSVLoader.load_prompts_from_csv(
+                    file_path="2_schaedlich_manuell_erstellt_basic.csv",
+                    categories=["illegal-activity_weapons"]
+                )
             )
-        elif Subcategory.CHILD_EXPLOITATION in self.types:
+        if IllegalActivitySubcategory.CHILD_EXPLOITATION in self.types:
             attacks.extend(
                 RTTestCase(
                     vulnerability=self.get_name(),
-                    vulnerability_type=Subcategory.CHILD_EXPLOITATION,
+                    vulnerability_type=IllegalActivityType.CHILD_EXPLOITATION,
                     input=prompt)
-                for prompt in CSVLoader.load_prompts_from_csv(file_path="2_schaedlich_manuell.csv", categories=["illegal-activity_child-exploitation"])
+                for prompt, _ in CSVLoader.load_prompts_from_csv(
+                    file_path="2_schaedlich_manuell_erstellt_basic.csv",
+                    categories=["illegal-activity_child-exploitation"]
+                )
             )
-        deep_team_types: List[str | None] = [self.subcategory_to_illegal_activity_type(category) for category in self.get_types()]
-        self.default_attack_builder = IllegalActivity(simulator_model=self.simulator_model, types=deep_team_types)
+        deep_team_types: List[str | None] = [self.subcategory_to_illegal_activity_type(category) for category in
+                                             self.get_types()]
+        if deep_team_types:
+            self.default_attack_builder = DeepTeamIllegalActivity(simulator_model=self.simulator_model,
+                                                                  types=deep_team_types)
+        else:
+            self.default_attack_builder = DeepTeamIllegalActivity(simulator_model=self.simulator_model)
         attacks.extend(self.default_attack_builder.simulate_attacks())
         return attacks
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         attack_type = cast(IllegalActivityType, attack.vulnerability_type)
-        return cast(IllegalActivity, self.default_attack_builder)._get_metric(type=attack_type)  # pylint: disable=protected-access
+        return cast(DeepTeamIllegalActivity, self.default_attack_builder)._get_metric(
+            type=attack_type)  # pylint: disable=protected-access
 
     def get_name(self) -> str:
         return "IllegalActivity"
