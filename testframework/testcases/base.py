@@ -4,6 +4,7 @@ import uuid
 from abc import ABC, abstractmethod
 from enum import Enum
 from pathlib import Path
+from time import perf_counter
 from typing import Dict, List
 
 from deepeval.models import DeepEvalBaseLLM, OllamaModel
@@ -57,33 +58,61 @@ class BaseTestCase(ABC):
         """Run the test case and return a mapping from attack_id to TestCaseResult.
             Build the attacks and add the techniques. Then execute the attacks on the guardrails.
         """
+        test_case_id = self._test_case_identifier()
         attack_results: dict[str, Attack] = {}
         generation_error: TestErrorInfo | None = None
         attack_list_enhancer: AttackListEnhancer = AttackListEnhancer(self.simulator_model)
-        logger.info(f"\n=== Running {self.category.value} ===")
+        logger.info(f"Starting test case execution: {test_case_id}")
 
         if self.attack_builder:
             enhanced_attacks: List[EnhancedAttack] = []
             try:
+                logger.info(f"Generating attacks for test case '{test_case_id}'")
+                generation_started = perf_counter()
                 attacks: List[RTTestCase] = self.attack_builder.simulate_attacks()
-                logger.info(f"Generated {len(attacks)} attacks for {self.category.value}")
+                logger.info(
+                    f"Generated {len(attacks)} attack(s) for '{test_case_id}' "
+                    f"(duration={perf_counter() - generation_started:.2f}s)"
+                )
+                logger.info(f"Enhancing attacks for test case '{test_case_id}'")
+                enhancement_started = perf_counter()
                 enhanced_attacks = attack_list_enhancer.enhance(attacks)
                 logger.info(
-                    f"Generated {len(enhanced_attacks)} enhanced attacks from {len(attacks)} attacks for {self.category.value}")
+                    f"Prepared {len(enhanced_attacks)} executable attack(s) from {len(attacks)} "
+                    f"base attack(s) for '{test_case_id}' "
+                    f"(duration={perf_counter() - enhancement_started:.2f}s)"
+                )
             except Exception as e:
                 generation_error = TestErrorInfo.from_exception(e)
                 logger.exception(
-                    f"Attack generation failed for {self.category.value} "
+                    f"Attack generation failed for {test_case_id} "
                     f"({generation_error.error_type.value}): {generation_error.message}"
                 )
 
             chatbots: Dict[ChatbotName, BaseChatbot] = ChatbotStore.get_chatbots()
-            counter: int = 1
-            for attack in enhanced_attacks:
-                logger.info(f"Executing attack {counter}/{len(enhanced_attacks) + 1} for {self.category.value}.")
+            total_attacks = len(enhanced_attacks)
+            logger.info(
+                f"Executing {total_attacks} attack(s) against {len(chatbots)} chatbot(s) "
+                f"for '{test_case_id}'"
+            )
+            if not enhanced_attacks:
+                logger.warning(f"No executable attacks generated for '{test_case_id}'")
+
+            for counter, attack in enumerate(enhanced_attacks, start=1):
+                techniques = ",".join(attack.techniques) if attack.techniques else "none"
+                logger.info(
+                    f"Starting attack {counter}/{total_attacks} for '{test_case_id}' "
+                    f"(techniques={techniques})"
+                )
+                attack_started = perf_counter()
                 attack_result = self._execute_single_attack(attack, chatbots)
                 attack_results[str(uuid.uuid4())] = attack_result
-                counter += 1
+                logger.info(
+                    f"Completed attack {counter}/{total_attacks} for '{test_case_id}' "
+                    f"(duration={perf_counter() - attack_started:.2f}s)"
+                )
+        else:
+            logger.warning(f"No attack builder configured for test case '{test_case_id}'")
 
         tc_result = TestCaseResult(
             self.category,
@@ -93,6 +122,10 @@ class BaseTestCase(ABC):
         )
         self.results = tc_result
         self.store_results()
+        logger.info(
+            f"Finished test case execution: {test_case_id} "
+            f"(stored_attacks={len(attack_results)})"
+        )
         return tc_result
 
     def _execute_single_attack(
@@ -123,9 +156,18 @@ class BaseTestCase(ABC):
                 chatbot, name, attack_case, query_kwargs, bot_responses
             )
 
+        logger.info(
+            f"Running guardrails for '{self._test_case_identifier()}' "
+            f"(chatbots={len(bot_responses)})"
+        )
+        guardrails_started = perf_counter()
         protection: Dict[str, Dict[ChatbotName, DetectionResult]] = self.guardrail_runner.run(
             attack_case.input,
             bot_responses
+        )
+        logger.info(
+            f"Completed guardrails for '{self._test_case_identifier()}' "
+            f"(duration={perf_counter() - guardrails_started:.2f}s)"
         )
 
         return Attack(
@@ -154,29 +196,48 @@ class BaseTestCase(ABC):
         Returns:
             ChatbotResponseEvaluation with score and reason.
         """
+        test_case_id = self._test_case_identifier()
+        logger.info(f"Querying chatbot '{name.value}' for test case '{test_case_id}'")
+        query_started = perf_counter()
         model_resp: ChatbotResponse = chatbot.query(attack.input, **query_kwargs)
+        query_duration = perf_counter() - query_started
         llm_responses[name] = str(model_resp.response)
 
         if model_resp.is_error:
             logger.warning(
-                f"Chatbot {name} query failed: {model_resp.error.error_type.value}"
+                f"Chatbot '{name.value}' query failed for '{test_case_id}' "
+                f"(duration={query_duration:.2f}s, error_type={model_resp.error.error_type.value})"
             )
             return ChatbotResponseEvaluation.from_error(model_resp)
 
+        logger.info(
+            f"Chatbot '{name.value}' returned a response for '{test_case_id}' "
+            f"(duration={query_duration:.2f}s)"
+        )
+
         attack.actual_output = model_resp.response
         try:
+            logger.info(
+                f"Evaluating response from chatbot '{name.value}' for '{test_case_id}'"
+            )
+            evaluation_started = perf_counter()
             metric = self._get_metric(attack)
             metric.measure(attack)
+            score = float(metric.score if metric.is_successful() else -1)
+            logger.info(
+                f"Completed evaluation for chatbot '{name.value}' in '{test_case_id}' "
+                f"(score={score}, duration={perf_counter() - evaluation_started:.2f}s)"
+            )
             return ChatbotResponseEvaluation(
                 model_resp,
                 # todo: in the final evaluation, consider response evaluations with a score of -1 due to an error
-                float(metric.score if metric.is_successful() else -1),
+                score,
                 str(metric.reason)
             )
         except Exception as e:
             eval_error = TestErrorInfo.from_exception(e)
             logger.exception(
-                f"Metric evaluation failed for {name} "
+                f"Metric evaluation failed for '{name.value}' in '{test_case_id}' "
                 f"({eval_error.error_type.value}): {eval_error.message}"
             )
             return ChatbotResponseEvaluation.from_error(model_resp, eval_error)
@@ -208,3 +269,11 @@ class BaseTestCase(ABC):
         if hasattr(attack, "system_prompt") and attack.system_prompt is not None:
             query_kwargs["system_prompt"] = attack.system_prompt
         return query_kwargs
+
+    def _test_case_identifier(self) -> str:
+        """Build a readable identifier for the current test case."""
+        if not self.subcategories:
+            return self.category.value
+
+        subcategories = ";".join(str(subcat.value) for subcat in self.subcategories)
+        return f"{self.category.value}_{subcategories}"

@@ -47,10 +47,13 @@ class DocumentLoader:
             f"chunk_size={chunk_size}, chunk_overlap={chunk_overlap}"
         )
 
-    def _load_pdf_files(self) -> List[Document]:
+    def _load_pdf_files(self) -> tuple[List[Document], int]:
         """Load all PDF files from the documents directory."""
         documents: List[Document] = []
         pdf_files = list(self._documents_dir.glob("**/*.pdf"))
+        logger.info(
+            f"Discovered {len(pdf_files)} PDF file(s) in '{self._documents_dir}'"
+        )
 
         for pdf_path in pdf_files:
             try:
@@ -61,7 +64,7 @@ class DocumentLoader:
             except Exception as e:
                 logger.exception(f"Failed to load PDF '{pdf_path}': {e}")
 
-        return documents
+        return documents, len(pdf_files)
 
     def load_documents(self) -> List[Document]:
         """Load all documents from the configured directory.
@@ -77,8 +80,10 @@ class DocumentLoader:
 
         documents: List[Document] = []
 
-        pdf_docs = self._load_pdf_files()
-        logger.info(f"Loaded {len(pdf_docs)} PDF files")
+        pdf_docs, pdf_file_count = self._load_pdf_files()
+        logger.info(
+            f"Loaded {len(pdf_docs)} page document(s) from {pdf_file_count} PDF file(s)"
+        )
         documents.extend(pdf_docs)
 
         logger.info(f"Total documents loaded: {len(documents)}")
@@ -96,6 +101,7 @@ class DocumentLoader:
             logger.warning("No documents found to split")
             return []
 
+        logger.info(f"Splitting {len(documents)} document(s) into chunks")
         chunks = self._text_splitter.split_documents(documents)
         logger.info(
             f"Split {len(documents)} documents into {len(chunks)} chunks "

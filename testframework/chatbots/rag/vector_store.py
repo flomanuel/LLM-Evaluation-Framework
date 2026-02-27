@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from typing import List
+from urllib.parse import urlsplit
 
 from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
@@ -44,6 +45,10 @@ class VectorStore:
             use_jsonb=True,
         )
 
+        logger.info(
+            f"Initialized vector store (collection={self._collection_name}, "
+            f"target={self._connection_target()})"
+        )
         logger.debug(
             f"VectorStore initialized with collection '{self._collection_name}' "
             f"using embedding model '{self.EMBEDDING_MODEL}'"
@@ -68,8 +73,13 @@ class VectorStore:
         Returns:
             List of document IDs.
         """
+        logger.info(
+            f"Adding {len(documents)} document chunk(s) to collection '{self._collection_name}'"
+        )
         ids = self._vector_store.add_documents(documents)
-        logger.info(f"Added {len(documents)} documents to vector store")
+        logger.info(
+            f"Added {len(documents)} document chunk(s) to collection '{self._collection_name}'"
+        )
         return ids
 
     def similarity_search(self, query: str, k: int = 4) -> List[Document]:
@@ -95,3 +105,11 @@ class VectorStore:
     def embedding_model_name(self) -> str:
         """Get the name of the embedding model."""
         return self.EMBEDDING_MODEL
+
+    def _connection_target(self) -> str:
+        """Return a sanitized host/port/database summary for logging."""
+        parsed = urlsplit(self._connection_string)
+        host = parsed.hostname or "unknown-host"
+        port = parsed.port or 5432
+        database = parsed.path.lstrip("/") or "unknown-db"
+        return f"{host}:{port}/{database}"

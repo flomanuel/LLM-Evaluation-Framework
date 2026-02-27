@@ -84,9 +84,15 @@ class ChatbotResponse:
         return self.error is not None
 
     @classmethod
-    def from_error(cls, error: TestErrorInfo, system_prompt: str = "") -> "ChatbotResponse":
+    def from_error(
+            cls,
+            error: TestErrorInfo,
+            system_prompt: str = "",
+            prompt: str = "",
+    ) -> "ChatbotResponse":
         """Create an error ChatbotResponse."""
         return cls(
+            prompt=prompt,
             response="",
             system_prompt=system_prompt,
             tool=ToolInfo(tool_called=False),

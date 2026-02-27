@@ -1,4 +1,5 @@
 from __future__ import annotations
+from time import perf_counter
 from typing import Dict
 from loguru import logger
 from testframework import ChatbotName
@@ -28,9 +29,15 @@ class GuardrailRunner:
             vulnerabilities and relevant metadata of the analysis.
         """
         result: Dict[str, Dict[ChatbotName, DetectionResult]] = {}
+        logger.info(
+            f"Running {len(self.guardrails)} guardrail(s) "
+            f"for {len(chatbot_responses)} chatbot response(s)"
+        )
         for guardrail in self.guardrails:
             key: str = guardrail.name
             result[key] = {}
+            guardrail_started = perf_counter()
+            logger.info(f"Starting guardrail '{guardrail.name}'")
 
             enhanced_attack_evaluation = self._safe_eval_attack(guardrail, enhanced_attack)
 
@@ -42,6 +49,11 @@ class GuardrailRunner:
                 result[key][chatbot] = DetectionResult(
                     enhanced_attack_evaluation, response_evaluation
                 )
+            logger.info(
+                f"Completed guardrail '{guardrail.name}' "
+                f"(duration={perf_counter() - guardrail_started:.2f}s)"
+            )
+        logger.info("Guardrail evaluation completed")
         return result
 
     def _safe_eval_attack(self, guardrail, attack: str) -> DetectionElement:

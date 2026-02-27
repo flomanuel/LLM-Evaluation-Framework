@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from time import perf_counter
 from typing import List
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.documents import Document
@@ -210,17 +211,34 @@ Question: {user_prompt}"""
             If an error occurs, returns a ChatbotResponse with an error info set.
         """
         effective_system_prompt = system_prompt or self.DEFAULT_SYSTEM_PROMPT
+        logger.info(
+            f"Starting chatbot query (chatbot={self.name.value}, model={self._model_name}, "
+            f"is_rag={is_rag}, file_path={file_path}, prompt_chars={len(user_prompt)})"
+        )
+        query_started = perf_counter()
 
         try:
-            return self._execute_query(
+            response = self._execute_query(
                 user_prompt, is_rag, file_path, effective_system_prompt
             )
+            logger.info(
+                f"Completed chatbot query (chatbot={self.name.value}, model={self._model_name}, "
+                f"tool_called={response.tool.tool_called}, prompt_tokens={response.prompt_tokens}, "
+                f"response_tokens={response.response_tokens}, duration={perf_counter() - query_started:.2f}s)"
+            )
+            return response
         except Exception as e:
             error_info = TestErrorInfo.from_exception(e)
             logger.exception(
-                f"LLM query failed ({error_info.error_type.value}): {error_info.message}"
+                f"LLM query failed (chatbot={self.name.value}, model={self._model_name}, "
+                f"duration={perf_counter() - query_started:.2f}s, "
+                f"error_type={error_info.error_type.value}): {error_info.message}"
             )
-            return ChatbotResponse.from_error(error_info, effective_system_prompt)
+            return ChatbotResponse.from_error(
+                error_info,
+                effective_system_prompt,
+                user_prompt,
+            )
 
     def _execute_query(
             self,
@@ -235,13 +253,23 @@ Question: {user_prompt}"""
         """
         document_content: str | None = None
         if file_path is not None:
+            logger.info(
+                f"Loading attack document for chatbot '{self.name.value}' "
+                f"(file_path={file_path})"
+            )
             document_content = self._load_document(file_path)
             logger.debug(f"Loaded document from '{file_path}'")
 
         context_docs: List[Document] = []
         if is_rag and self._vector_store is not None:
+            logger.info(
+                f"Retrieving RAG context for chatbot '{self.name.value}' "
+                f"(top_k={self._rag_k})"
+            )
             context_docs = self._retrieve_context(user_prompt)
-            logger.debug(f"Retrieved {len(context_docs)} documents for RAG context")
+            logger.info(
+                f"Retrieved {len(context_docs)} RAG document(s) for chatbot '{self.name.value}'"
+            )
 
         if document_content is not None:
             enhanced_prompt = self._build_prompt_with_document(user_prompt, document_content)
@@ -253,7 +281,15 @@ Question: {user_prompt}"""
             HumanMessage(content=enhanced_prompt),
         ]
 
+        logger.info(
+            f"Calling LLM backend (chatbot={self.name.value}, model={self._model_name})"
+        )
+        invoke_started = perf_counter()
         response = self._llm_with_tools.invoke(messages)
+        logger.info(
+            f"LLM backend responded (chatbot={self.name.value}, model={self._model_name}, "
+            f"duration={perf_counter() - invoke_started:.2f}s)"
+        )
 
         tool_called = False
         tool_call_params = None
@@ -261,6 +297,10 @@ Question: {user_prompt}"""
         if response.tool_calls:
             tool_call = response.tool_calls[0]
             tool_called = True
+            logger.info(
+                f"Executing tool call for chatbot '{self.name.value}' "
+                f"(tool={tool_call['name']})"
+            )
             tool_call_params = json.dumps({
                 "tool_name": tool_call["name"],
                 "args": tool_call["args"],

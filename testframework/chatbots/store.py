@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Dict
 
+from loguru import logger
 from testframework.chatbots.base import BaseChatbot
 from testframework import ChatbotName
 
@@ -14,10 +15,12 @@ class ChatbotStore:
     @staticmethod
     def add_chatbot(chatbot: BaseChatbot) -> None:
         ChatbotStore._chatbots[chatbot.name] = chatbot
+        logger.info(f"Registered chatbot '{chatbot.name.value}'")
 
     @staticmethod
     def remove_chatbot(name: ChatbotName) -> None:
         ChatbotStore._chatbots.pop(name, None)
+        logger.info(f"Removed chatbot '{name.value}'")
 
     @staticmethod
     def get_chatbots() -> Dict[ChatbotName, BaseChatbot]:

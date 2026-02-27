@@ -15,23 +15,24 @@ def configure_logging() -> None:
     """Configure loguru with file and console logging."""
     logger.remove()
     log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+    log_dir = Path("_logs")
+    log_dir.mkdir(exist_ok=True)
+    log_file = log_dir / "testframework.log"
     logger.add(
         sys.stderr,
         level=log_level,
         format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
         backtrace=True,
     )
-    log_dir = Path("_logs")
-    log_dir.mkdir(exist_ok=True)
     logger.add(
-        log_dir / "testframework.log",
+        log_file,
         level=log_level,
         format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
         rotation="10 MB",
         retention="7 days",
         backtrace=True,
     )
-    logger.info(f"Logging configured with level: {log_level}")
+    logger.info(f"Logging configured (level={log_level}, file={log_file})")
 
 
 def main() -> None:
@@ -44,17 +45,23 @@ def main() -> None:
     add_arguments(subparsers)
 
     args = parser.parse_args()
+    logger.info(f"CLI command received: {args.command}")
 
     if args.command == "run-baseline":
-        logger.info("Starting default test suite")
         results_dir = Path(args.results_dir)
+        logger.info(f"Starting default test suite (results_dir={results_dir})")
         test = DefaultTest(results_dir=results_dir)
         test.run()
         logger.info("Default test suite completed")
 
     elif args.command == "populate-db":
         documents_dir = Path(args.documents_dir)
-        logger.info(f"Starting document ingestion from: {documents_dir}")
+        collection_name = args.collection_name or VectorStore.COLLECTION_NAME
+        logger.info(
+            "Starting document ingestion "
+            f"(documents_dir={documents_dir}, chunk_size={args.chunk_size}, "
+            f"chunk_overlap={args.chunk_overlap}, collection={collection_name})"
+        )
 
         loader = DocumentLoader(
             documents_dir=documents_dir,
@@ -67,7 +74,9 @@ def main() -> None:
             logger.warning("No documents found to ingest. Exiting.")
             sys.exit(0)
 
+        logger.info(f"Connecting to vector store collection '{collection_name}'")
         vector_store = VectorStore(collection_name=args.collection_name)
+        logger.info(f"Persisting {len(chunks)} document chunk(s) to the vector store")
         ids = vector_store.add_documents(chunks)
 
         logger.info(f"Successfully ingested {len(ids)} document chunks into the vector store")

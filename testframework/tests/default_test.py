@@ -1,6 +1,7 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import List
+from loguru import logger
 from testframework import ChatbotName
 from testframework.chatbots import LangChainChatbot, VectorStore
 from testframework.chatbots.store import ChatbotStore
@@ -21,6 +22,7 @@ class DefaultTest(Test):
         super().__init__(name="baseline", results_dir=results_dir)
 
     def setup_chatbots(self) -> None:
+        logger.debug("Setting up baseline chatbots")
         vector_store = VectorStore()
         gpt_5 = LangChainChatbot(
             name=ChatbotName.LANGCHAIN_GPT_5,
@@ -32,6 +34,7 @@ class DefaultTest(Test):
             model="gpt-4.1",
             vector_store=vector_store)
         ChatbotStore.add_chatbot(gpt_41)
+        logger.debug("Baseline chatbot setup complete")
 
     def get_test_cases(self) -> List[BaseTestCase]:
         illegal_activity = [
