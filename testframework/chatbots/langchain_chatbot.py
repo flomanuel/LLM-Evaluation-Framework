@@ -294,4 +294,5 @@ Question: {user_prompt}"""
             response_tokens=response_tokens,
             rag_context=rag_context,
             file_path=file_path,
+            prompt=user_prompt,
         )

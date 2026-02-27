@@ -93,7 +93,7 @@ class AttackListEnhancer:
             enhancements if enhancements is not None else AttackListEnhancer.ENHANCEMENTS
         )
 
-        if not active_enhancements or True:
+        if not active_enhancements:
             return [
                 EnhancedAttack(
                     attack_case=deepcopy(attack),

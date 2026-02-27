@@ -68,6 +68,7 @@ class ToolInfo:
 
 @dataclass
 class ChatbotResponse:
+    prompt: str
     response: str
     system_prompt: str
     tool: ToolInfo

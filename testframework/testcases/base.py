@@ -60,6 +60,7 @@ class BaseTestCase(ABC):
         attack_results: dict[str, Attack] = {}
         generation_error: TestErrorInfo | None = None
         attack_list_enhancer: AttackListEnhancer = AttackListEnhancer(self.simulator_model)
+        logger.info(f"\n=== Running {self.category.value} ===")
 
         if self.attack_builder:
             enhanced_attacks: List[EnhancedAttack] = []
