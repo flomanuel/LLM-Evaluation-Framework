@@ -77,9 +77,12 @@ class BaseTestCase(ABC):
                 )
 
             chatbots: Dict[ChatbotName, BaseChatbot] = ChatbotStore.get_chatbots()
+            counter: int = 1
             for attack in enhanced_attacks:
+                logger.info(f"Executing attack {counter}/{len(enhanced_attacks) + 1} for {self.category.value}.")
                 attack_result = self._execute_single_attack(attack, chatbots)
                 attack_results[str(uuid.uuid4())] = attack_result
+                counter += 1
 
         tc_result = TestCaseResult(
             self.category,

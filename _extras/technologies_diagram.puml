@@ -38,7 +38,7 @@ rectangle "Project Technology Stack" {
     rectangle "Persistence & Local Infrastructure" <<Category>> {
         [PostgreSQL] as Postgres
         [pgvector image (pg16)] as Pgvector
-        [psycopg[binary] ~=3.3.3] as Psycopg
+        [psycopg (binary) ~=3.3.3] as Psycopg
         [Docker Compose] as Docker
         [pgAdmin 4] as PgAdmin
     }
