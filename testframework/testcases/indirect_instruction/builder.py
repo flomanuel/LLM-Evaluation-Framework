@@ -47,7 +47,8 @@ class IndirectInstructionAttacks(BaseVulnerability):
             for prompt, document_path in csv_data:
                 attack = RTTestCase(
                     vulnerability=self.get_name(),
-                    input=prompt
+                    input=prompt,
+                    vulnerability_type=IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS
                 )
                 if document_path:
                     attack.file_path = document_path

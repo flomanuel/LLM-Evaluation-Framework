@@ -124,7 +124,7 @@ class BaseTestCase(ABC):
         )
 
         return Attack(
-            self.category, self.subcategories, self.severity,
+            self.category, attack.attack_case.vulnerability_type, self.severity,
             PromptVariants(base_attack, attack_case.input),
             bot_responses_eval, protection, techniques
         )

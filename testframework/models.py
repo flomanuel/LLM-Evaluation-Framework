@@ -167,7 +167,7 @@ class EnhancedAttack:
 @dataclass
 class Attack:
     category: str
-    subcategories: List[Enum]
+    subcategories: Enum | None
     severity: Severity
     prompt: PromptVariants
     llm_responses: Dict[ChatbotName, ChatbotResponseEvaluation]
