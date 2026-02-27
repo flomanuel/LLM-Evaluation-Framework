@@ -286,9 +286,17 @@ Question: {user_prompt}"""
             prompt_tokens = response.usage_metadata.get("input_tokens", -1)
             response_tokens = response.usage_metadata.get("output_tokens", -1)
 
-        resp_text = response.content[1].get("text") if response.content[1].get("type") == "text" else response.content[
-            0].get("text") if \
-            response.content[0].get("type") == "text" else ""
+        resp_text = ""
+        if isinstance(response.content, str):
+            resp_text = response.content
+        elif isinstance(response.content, list):
+            text_parts: List[str] = []
+            for block in response.content:
+                if isinstance(block, dict) and block.get("type") in ["text", "output_text", "refusal"]:
+                    text = block.get("text")
+                    if text:
+                        text_parts.append(text)
+            resp_text = "\n".join(text_parts)
         return ChatbotResponse(
             response=resp_text,
             system_prompt=effective_system_prompt,

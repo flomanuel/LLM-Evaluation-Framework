@@ -1,65 +1,79 @@
 @startuml
-skinparam componentStyle uml2
+!theme plain
+skinparam componentStyle rectangle
 skinparam rectangle {
-    BackgroundColor<<Category>> #D1E5F4
-    BorderColor<<Category>> #5D8AA8
+    BackgroundColor<<Category>> #E8EEF5
+    BorderColor<<Category>> #5A6B7A
     FontStyle bold
 }
 
-title LLM Chatbot Protection Framework - Technology Stack
+title LLM Chatbot Protection Framework - Source-Aligned Technology Stack
 
 rectangle "Project Technology Stack" {
 
-    rectangle "Development & Tools" <<Category>> {
-        [<img:placeholder_python.png>\nPython 3.14] as Python
-        [<img:placeholder_uv.png>\nUV (Package Manager)] as UV
-        [<img:placeholder_github.png>\nGitHub (Repository)] as GitHub
-        [<img:placeholder_plantuml.png>\nPlantUML (Documentation)] as PlantUML
+    rectangle "Runtime & Core Utilities" <<Category>> {
+        [Python ~=3.13] as Python
+        [argparse (stdlib CLI)] as Argparse
+        [python-dotenv ~=1.2.1] as Dotenv
+        [Loguru ~=0.7.0] as Loguru
     }
 
-    rectangle "AI & LLM Frameworks" <<Category>> {
-        [<img:placeholder_langchain.png>\nLangChain] as LangChain
-        [<img:placeholder_openai.png>\nOpenAI API] as OpenAI
-        [<img:placeholder_ollama.png>\nOllama (Local LLMs)] as Ollama
-        [<img:placeholder_deepteam.png>\nDeepTeam (Adversarial Data)] as DeepTeam
-        [<img:placeholder_deepeval.png>\nDeepEval (Unit Testing)] as DeepEval
-        [<img:placeholder_langchain_tools.png>\nLangChain Tools] as LCTools
-        [<img:placeholder_csv.png>\nCSV (Adversarial Prompts)\n- Severity & Category\n- Tool Checks & Conditions\n- Remote Generation Flags\n- PDF Document Links] as CSV
+    rectangle "LLM, Evaluation, and Attack Generation" <<Category>> {
+        [OpenAI SDK ~=2.24.0] as OpenAISDK
+        [OpenAI API] as OpenAIAPI
+        [Ollama SDK ~=0.6.1] as Ollama
+        [DeepTeam ~=1.0.5] as DeepTeam
+        [DeepEval ~=3.8.8] as DeepEval
     }
 
-    rectangle "Infrastructure & Persistence" <<Category>> {
-        [<img:placeholder_docker.png>\nDocker & Docker Compose] as Docker
-        [<img:placeholder_postgres.png>\nPostgres + pgvector] as Postgres
-        [<img:placeholder_pgadmin.png>\npgAdmin (DB Management)] as pgAdmin
-        [<img:placeholder_vectorstore.png>\nVector Store (RAG)] as VectorStore
+    rectangle "Chatbot Orchestration & RAG" <<Category>> {
+        [LangChain ~=1.2.10] as LangChain
+        [langchain-openai ~=1.1.10] as LangChainOpenAI
+        [langchain-postgres ~=0.0.17] as LangChainPostgres
+        [langchain-community ~=0.4.1] as LangChainCommunity
+        [langchain-text-splitters ~=1.1.1] as LangChainSplitters
+        [pypdf ~=6.7.3] as PyPDF
     }
 
-    rectangle "Security & Quality" <<Category>> {
-        [<img:placeholder_bandit.png>\nBandit (Security Scanning)] as Bandit
-        [<img:placeholder_pylint.png>\nPylint (Static Analysis)] as Pylint
-        [<img:placeholder_flake8.png>\nFlake8 (Code Style)] as Flake8
+    rectangle "Persistence & Local Infrastructure" <<Category>> {
+        [PostgreSQL] as Postgres
+        [pgvector image (pg16)] as Pgvector
+        [psycopg[binary] ~=3.3.3] as Psycopg
+        [Docker Compose] as Docker
+        [pgAdmin 4] as PgAdmin
     }
 
-    rectangle "Observability & Utilities" <<Category>> {
-        [<img:placeholder_loguru.png>\nLoguru (Logging)] as Loguru
-        [<img:placeholder_dotenv.png>\npython-dotenv] as Dotenv
-        [<img:placeholder_pypdf.png>\npypdf (PDF Ingestion)] as PyPDF
+    rectangle "Developer Tooling" <<Category>> {
+        [uv] as UV
+        [PlantUML] as PlantUML
+        [Flake8 ~=7.3.0] as Flake8
+        [Pylint ~=4.0.5] as Pylint
+        [Bandit ~=1.9.4] as Bandit
+        [OpenTelemetry OTLP ~=1.39.1\n(declared dependency)] as OTLP
     }
-
 }
 
-' Relationships
-Python ..> UV : managed by
-GitHub ..> Python : hosts project code
-UV ..> Python : manages environment
+Python ..> Argparse : stdlib CLI
+Python ..> Dotenv : environment loading
+Python ..> Loguru : logging
 
-Docker ..> Postgres : orchestrates
-Docker ..> pgAdmin : orchestrates
-Postgres ..> VectorStore : implementation
-LangChain ..> OpenAI : uses
-LangChain ..> Ollama : uses
-DeepTeam ..> DeepEval : uses
-LangChain ..> LCTools : integrates
-DeepTeam ..> CSV : extended by
-CSV ..> PyPDF : links to documents
+DeepTeam ..> DeepEval : model abstractions + metrics
+DeepEval ..> Ollama : local simulator usage
+
+LangChain ..> LangChainOpenAI : ChatOpenAI + embeddings
+LangChain ..> LangChainPostgres : PGVector integration
+LangChain ..> LangChainCommunity : PyPDFLoader
+LangChain ..> LangChainSplitters : chunking
+LangChainCommunity ..> PyPDF : PDF parsing
+LangChainOpenAI ..> OpenAIAPI : remote calls
+OpenAISDK ..> OpenAIAPI : API client dependency
+
+LangChainPostgres ..> Psycopg : database driver
+LangChainPostgres ..> Postgres : vector persistence
+Postgres ..> Pgvector : vector extension image
+Docker ..> Postgres : local service
+Docker ..> PgAdmin : local service
+
+UV ..> Python : environment + dependency management
+
 @enduml
