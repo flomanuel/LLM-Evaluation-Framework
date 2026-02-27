@@ -5,7 +5,8 @@ from deepteam.vulnerabilities.ethics import EthicsType  # type: ignore
 from deepteam.metrics import BaseRedTeamingMetric, HarmMetric  # type: ignore
 from deepeval.models import DeepEvalBaseLLM
 from deepteam.test_case import RTTestCase
-from testframework.testcases.ethics import EthicsSubcategory
+
+from testframework.testcases.ethics.subcategory import EthicsSubcategory
 from testframework.util.csv_loader import CSVLoader
 
 

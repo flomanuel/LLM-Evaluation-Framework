@@ -1,10 +1,7 @@
 from __future__ import annotations
-
 from typing import List
-
 from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from deepteam.test_case import RTTestCase
-
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
 from testframework.testcases.toxicity.builder import ToxicityAttacks

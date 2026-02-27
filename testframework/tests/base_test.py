@@ -5,12 +5,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List
 from uuid import uuid4
-
 from loguru import logger
-
 from testframework.models import TestRunResult, TestRunTimestamp, TestCaseResult
 from testframework.storage import save_test_run, get_run_folder
-from testframework.testcases import BaseTestCase
+from testframework.testcases.base import BaseTestCase
 
 
 class Test(ABC):

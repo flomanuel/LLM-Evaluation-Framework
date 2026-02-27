@@ -46,7 +46,6 @@ class BaseTestCase(ABC):
         effective_timeout = timeout
         self.simulator_model = OllamaModel(
             model="aqualaguna/gemma-3-27b-it-abliterated-GGUF:q2_k",
-            temperature=1.0,
             generation_kwargs={
                 "timeout": effective_timeout,
             }

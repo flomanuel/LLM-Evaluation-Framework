@@ -3,8 +3,7 @@ from deepteam.vulnerabilities import BaseVulnerability
 from deepteam.metrics import BaseRedTeamingMetric, FairnessMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepteam.test_case import RTTestCase
-
-from testframework.testcases.fairness import FairnessSubcategory
+from testframework.testcases.fairness.subcategory import FairnessSubcategory
 from testframework.util.csv_loader import CSVLoader
 
 

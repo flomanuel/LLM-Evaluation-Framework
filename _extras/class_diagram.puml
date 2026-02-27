@@ -50,7 +50,6 @@ package "testframework" {
             +response: str
             +system_prompt: str
             +tool: ToolInfo
-            +llm_params: ModelConfig
             +prompt_tokens: int
             +response_tokens: int
             +rag_context: RagContext | None
@@ -63,13 +62,6 @@ package "testframework" {
         class ToolInfo {
             +tool_called: bool
             +tool_call_params: str | None
-        }
-
-        class ModelConfig {
-            +temperature: float | None
-            +top_p: float | None
-            +top_k: int | None
-            +max_tokens: int | None
         }
 
         class RagContext {
@@ -142,10 +134,6 @@ package "testframework" {
     package "chatbots" {
         abstract class BaseChatbot {
             +name: ChatbotName
-            +temperature: float
-            +top_p: float
-            +top_k: int | None
-            +max_tokens: int
             {abstract} +query(user_prompt: str, ...): ChatbotResponse
         }
         class LangchainChatbot extends BaseChatbot {
@@ -232,7 +220,6 @@ Attack "1" *-- "1" PromptVariants
 Attack "1" *-- "n" ChatbotResponseEvaluation
 ChatbotResponseEvaluation "1" *-- "1" ChatbotResponse
 ChatbotResponse "1" *-- "1" ToolInfo
-ChatbotResponse "1" *-- "1" ModelConfig
 ChatbotResponse "1" *-- "1" RagContext
 ChatbotResponseEvaluation "1" *-- "n" DetectionResult
 DetectionResult "1" *-- "2" DetectionElement

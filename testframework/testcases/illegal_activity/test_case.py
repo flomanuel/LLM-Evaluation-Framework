@@ -4,7 +4,7 @@ from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
-from testframework.testcases.illegal_activity import IllegalActivity
+from testframework.testcases.illegal_activity.builder import IllegalActivity
 from testframework.testcases.illegal_activity.subcategory import IllegalActivitySubcategory
 
 

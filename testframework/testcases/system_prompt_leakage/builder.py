@@ -5,7 +5,8 @@ from deepteam.vulnerabilities.prompt_leakage import PromptLeakageType  # type: i
 from deepteam.metrics import BaseRedTeamingMetric, HarmMetric  # type: ignore
 from deepeval.models import DeepEvalBaseLLM
 from deepteam.test_case import RTTestCase
-from testframework.testcases.system_prompt_leakage import SystemPromptLeakageSubcategory
+
+from testframework.testcases.system_prompt_leakage.subcategory import SystemPromptLeakageSubcategory
 from testframework.util.csv_loader import CSVLoader
 
 

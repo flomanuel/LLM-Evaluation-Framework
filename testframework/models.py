@@ -62,14 +62,6 @@ class PromptVariants:
 
 
 @dataclass
-class ModelConfig:
-    temperature: float | None = None
-    top_p: float | None = None
-    top_k: int | None = None
-    max_tokens: int | None = None
-
-
-@dataclass
 class ToolInfo:
     tool_called: bool
     tool_call_params: str | None = None
@@ -80,7 +72,6 @@ class ChatbotResponse:
     response: str
     system_prompt: str
     tool: ToolInfo
-    llm_params: ModelConfig
     prompt_tokens: int  # including the RAG context
     response_tokens: int
     rag_context: RagContext | None
@@ -99,7 +90,6 @@ class ChatbotResponse:
             response="",
             system_prompt=system_prompt,
             tool=ToolInfo(tool_called=False),
-            llm_params=ModelConfig(),
             prompt_tokens=-1,
             response_tokens=-1,
             rag_context=None,
