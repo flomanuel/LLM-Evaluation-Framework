@@ -8,9 +8,7 @@ from testframework.testcases import BenignTestCase, BiasTestCase, CompetitionTes
     ExcessiveAgencyTestCase, FairnessTestCase, IllegalActivityTestCase, IndirectInstructionTestCase, \
     PrivacyViolationsTestCase, RobustnessTestCase, SystemPromptLeakageTestCase, ToxicityTestCase
 from testframework.testcases.base import BaseTestCase
-from testframework.testcases.benign.subcategory import BenignSubcategory
 from testframework.testcases.ethics.subcategory import EthicsSubcategory
-from testframework.testcases.fairness.subcategory import FairnessSubcategory
 from testframework.testcases.illegal_activity.subcategory import IllegalActivitySubcategory
 from testframework.testcases.indirect_instruction.subcategory import IndirectInstructionSubcategory
 from testframework.tests.base_test import Test
