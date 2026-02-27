@@ -7,7 +7,7 @@ from deepteam.test_case import RTTestCase
 
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
-from testframework.testcases.toxicity.attack_builder import ToxicityAttacks
+from testframework.testcases.toxicity.builder import ToxicityAttacks
 from testframework.testcases.toxicity.subcategory import ToxicitySubcategory
 
 
@@ -19,7 +19,7 @@ class ToxicityTestCase(BaseTestCase):
             Category.TOXICITY,
             subcategories,
         )
-        self.attack_builder = ToxicityAttacks(self.subcategories, self.simulator_model)
+        self.attack_builder = ToxicityAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         return self.attack_builder._get_metric(attack)

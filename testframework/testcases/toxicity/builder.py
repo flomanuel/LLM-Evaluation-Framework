@@ -15,6 +15,7 @@ class ToxicityAttacks(BaseVulnerability):
             self,
             types: List[Enum],
             simulator_model: DeepEvalBaseLLM | None = None,
+            evaluation_model: DeepEvalBaseLLM | None = None,
             async_mode: bool = True,
             verbose_mode: bool = True,
     ):
@@ -22,6 +23,7 @@ class ToxicityAttacks(BaseVulnerability):
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self.simulator_model = simulator_model
+        self.evaluation_model = evaluation_model
         self.toxicity_attack_builder: Toxicity | None = None
         self.personal_safety_attack_builder: PersonalSafety | None = None
         super().__init__(types)
@@ -29,11 +31,13 @@ class ToxicityAttacks(BaseVulnerability):
     def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
         attacks: List[RTTestCase] = []
         self.toxicity_attack_builder = Toxicity(
-            simulator_model=self.simulator_model
+            simulator_model=self.simulator_model,
+            evaluation_model=self.evaluation_model
         )
         attacks.extend(self.toxicity_attack_builder.simulate_attacks())
         self.personal_safety_attack_builder = PersonalSafety(
             simulator_model=self.simulator_model,
+            evaluation_model=self.evaluation_model,
             types=[PersonalSafetyType.BULLYING.value]
         )
         attacks.extend(self.personal_safety_attack_builder.simulate_attacks())

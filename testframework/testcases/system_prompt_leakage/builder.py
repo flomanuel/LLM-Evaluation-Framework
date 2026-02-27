@@ -16,6 +16,7 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
             self,
             types: List[Enum] = None,
             simulator_model: DeepEvalBaseLLM | None = None,
+            evaluation_model: DeepEvalBaseLLM | None = None,
             async_mode: bool = True,
             verbose_mode: bool = True,
     ):
@@ -24,6 +25,7 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self.simulator_model = simulator_model
+        self.evaluation_model = evaluation_model
         self.default_attack_builder: BaseVulnerability | None = None
         super().__init__(types)
 
@@ -56,6 +58,7 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
         if deep_team_types:
             self.default_attack_builder = PromptLeakage(
                 simulator_model=self.simulator_model,
+                evaluation_model=self.evaluation_model,
                 types=deep_team_types
             )
             attacks.extend(self.default_attack_builder.simulate_attacks())
@@ -66,7 +69,7 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
         if self.default_attack_builder:
             attack_type = cast(PromptLeakageType, attack.vulnerability_type)
             return cast(PromptLeakage, self.default_attack_builder)._get_metric(type=attack_type)
-        return HarmMetric(harm_category="system-prompt-leakage")
+        return HarmMetric(harm_category="system-prompt-leakage", model=self.evaluation_model)
 
     def get_name(self) -> str:
         return "SystemPromptLeakage"

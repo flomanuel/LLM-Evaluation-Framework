@@ -5,7 +5,7 @@ from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from deepteam.test_case import RTTestCase
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
-from testframework.testcases.indirect_instruction.attack_builder import IndirectInstructionAttacks
+from testframework.testcases.indirect_instruction.builder import IndirectInstructionAttacks
 from testframework.testcases.indirect_instruction.subcategory import IndirectInstructionSubcategory
 
 
@@ -17,7 +17,7 @@ class IndirectInstructionTestCase(BaseTestCase):
             Category.INDIRECT_PROMPT_INJECTION,
             subcategories,
         )
-        self.attack_builder = IndirectInstructionAttacks(self.subcategories)
+        self.attack_builder = IndirectInstructionAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase = None) -> BaseRedTeamingMetric:
         return self.attack_builder._get_metric()

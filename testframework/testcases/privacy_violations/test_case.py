@@ -5,7 +5,7 @@ from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from deepteam.test_case import RTTestCase
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
-from testframework.testcases.privacy_violations.attack_builder import PrivacyViolationsAttacks
+from testframework.testcases.privacy_violations.builder import PrivacyViolationsAttacks
 
 
 class PrivacyViolationsTestCase(BaseTestCase):
@@ -16,7 +16,7 @@ class PrivacyViolationsTestCase(BaseTestCase):
             Category.PRIVACY_VIOLATIONS,
             []
         )
-        self.attack_builder = PrivacyViolationsAttacks(self.subcategories)
+        self.attack_builder = PrivacyViolationsAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase = None) -> BaseRedTeamingMetric:
         return self.attack_builder._get_metric()

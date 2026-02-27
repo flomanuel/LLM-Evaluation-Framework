@@ -7,7 +7,7 @@ from deepteam.test_case import RTTestCase
 
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
-from testframework.testcases.fairness.attack_builder import FairnessAttacks
+from testframework.testcases.fairness.builder import FairnessAttacks
 from testframework.testcases.fairness.subcategory import FairnessSubcategory
 
 
@@ -19,7 +19,7 @@ class FairnessTestCase(BaseTestCase):
             Category.FAIRNESS,
             subcategories if subcategories else list(FairnessSubcategory),
         )
-        self.attack_builder = FairnessAttacks(self.subcategories, self.simulator_model)
+        self.attack_builder = FairnessAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         return self.attack_builder._get_metric()

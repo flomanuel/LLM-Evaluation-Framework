@@ -18,8 +18,8 @@ class CompetitionTestCase(BaseTestCase):
             Category.COMPETITION,
             [],
         )
-        self.attack_builder = Competition(simulator_model=self.simulator_model)
+        self.attack_builder = Competition(simulator_model=self.simulator_model, evaluation_model=self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         attack_type = cast(CompetitionType, attack.vulnerability_type)
-        return cast(Competition, self.attack_builder)._get_metric(type=attack_type)
+        return cast(Competition, self.attack_builder)._get_metric(type=attack_type) # pylint: disable=protected-access

@@ -20,9 +20,8 @@ class BiasTestCase(BaseTestCase):
             [],
         )
         # set only after simulator_model is available
-        self.attack_builder = Bias(simulator_model=self.simulator_model)
+        self.attack_builder = Bias(simulator_model=self.simulator_model, evaluation_model=self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         attack_type = cast(BiasType, attack.vulnerability_type)
-        return cast(Bias, self.attack_builder)._get_metric(
-            type=attack_type)  # pylint: disable=protected-access
+        return cast(Bias, self.attack_builder)._get_metric(type=attack_type)  # pylint: disable=protected-access

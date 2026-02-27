@@ -16,7 +16,7 @@ class IllegalActivityTestCase(BaseTestCase):
             Category.ILLEGAL_ACTIVITY,
             subcategories,
         )
-        self.attack_builder = IllegalActivity(self.subcategories, self.simulator_model)
+        self.attack_builder = IllegalActivity(self.subcategories, self.simulator_model, self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         return self.attack_builder._get_metric(attack)

@@ -18,6 +18,7 @@ class RobustnessTestCase(BaseTestCase):
         )
         self.attack_builder = Robustness(
             simulator_model=self.simulator_model,
+            evaluation_model=self.evaluation_model,
             types=[RobustnessType.HIJACKING.value]
         )
 

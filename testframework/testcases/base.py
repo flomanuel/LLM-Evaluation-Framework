@@ -26,7 +26,8 @@ class BaseTestCase(ABC):
 
     results: TestCaseResult
     run_folder: Path | None = None
-    simulator_model: DeepEvalBaseLLM
+    simulator_model: DeepEvalBaseLLM | str
+    evaluation_model: DeepEvalBaseLLM | str
 
     def __init__(self,
                  category: Category,
@@ -50,6 +51,7 @@ class BaseTestCase(ABC):
                 "timeout": effective_timeout,
             }
         )
+        self.evaluation_model = "gpt-4o"
 
     def execute(self) -> TestCaseResult:
         """Run the test case and return a mapping from attack_id to TestCaseResult.

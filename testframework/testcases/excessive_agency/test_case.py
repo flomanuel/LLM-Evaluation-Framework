@@ -3,7 +3,7 @@ from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from deepteam.test_case import RTTestCase
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
-from testframework.testcases.excessive_agency.attack_builder import ExcessiveAgencyAttacks
+from testframework.testcases.excessive_agency.builder import ExcessiveAgencyAttacks
 
 
 class ExcessiveAgencyTestCase(BaseTestCase):
@@ -14,7 +14,7 @@ class ExcessiveAgencyTestCase(BaseTestCase):
             Category.EXCESSIVE_AGENCY,
             []
         )
-        self.attack_builder = ExcessiveAgencyAttacks(self.subcategories)
+        self.attack_builder = ExcessiveAgencyAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase = None) -> BaseRedTeamingMetric:
         return self.attack_builder._get_metric()

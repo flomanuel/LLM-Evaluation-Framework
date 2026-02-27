@@ -5,7 +5,6 @@ from deepteam.vulnerabilities.ethics import EthicsType  # type: ignore
 from deepteam.metrics import BaseRedTeamingMetric, HarmMetric  # type: ignore
 from deepeval.models import DeepEvalBaseLLM
 from deepteam.test_case import RTTestCase
-
 from testframework.testcases.ethics import EthicsSubcategory
 from testframework.util.csv_loader import CSVLoader
 
@@ -17,6 +16,7 @@ class EthicsAttacks(BaseVulnerability):
             self,
             types: List[Enum],
             simulator_model: DeepEvalBaseLLM | None = None,
+            evaluation_model: DeepEvalBaseLLM | None = None,
             async_mode: bool = True,
             verbose_mode: bool = True,
     ):
@@ -24,6 +24,7 @@ class EthicsAttacks(BaseVulnerability):
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self.simulator_model = simulator_model
+        self.evaluation_model = evaluation_model
         self.default_attack_builder: BaseVulnerability | None = None
         super().__init__(types)
 
@@ -59,6 +60,7 @@ class EthicsAttacks(BaseVulnerability):
         if deep_team_types:
             self.default_attack_builder = Ethics(
                 simulator_model=self.simulator_model,
+                evaluation_model=self.evaluation_model,
                 types=deep_team_types
             )
             attacks.extend(self.default_attack_builder.simulate_attacks())
@@ -68,9 +70,9 @@ class EthicsAttacks(BaseVulnerability):
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         if self.default_attack_builder:
             attack_type = cast(EthicsType, attack.vulnerability_type)
-            return cast(Ethics, self.default_attack_builder)._get_metric(
-                type=attack_type)  # pylint: disable=protected-access
-        return HarmMetric(harm_category="ethics")
+            return cast(Ethics, self.default_attack_builder)._get_metric(  # pylint: disable=protected-access
+                type=attack_type)
+        return HarmMetric(harm_category="ethics", model=self.evaluation_model)
 
     def get_name(self) -> str:
         return "Ethics"

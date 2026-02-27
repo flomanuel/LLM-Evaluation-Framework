@@ -6,7 +6,6 @@ from deepeval.models import DeepEvalBaseLLM
 from deepteam.test_case import RTTestCase
 from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.vulnerabilities.indirect_instruction import IndirectInstructionType
-
 from testframework.testcases.indirect_instruction.subcategory import IndirectInstructionSubcategory
 from testframework.util.csv_loader import CSVLoader
 
@@ -18,6 +17,7 @@ class IndirectInstructionAttacks(BaseVulnerability):
             self,
             types: List[Enum],
             simulator_model: DeepEvalBaseLLM | None = None,
+            evaluation_model: DeepEvalBaseLLM | None = None,
             async_mode: bool = True,
             verbose_mode: bool = True,
     ):
@@ -25,6 +25,7 @@ class IndirectInstructionAttacks(BaseVulnerability):
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self.simulator_model = simulator_model
+        self.evaluation_model = evaluation_model
         self.default_attack_builder: IndirectInstruction | None = None
         super().__init__(types)
 
@@ -61,6 +62,7 @@ class IndirectInstructionAttacks(BaseVulnerability):
         if deep_team_types:
             self.default_attack_builder = IndirectInstruction(
                 simulator_model=self.simulator_model,
+                evaluation_model=self.evaluation_model,
                 types=deep_team_types
             )
             attacks.extend(self.default_attack_builder.simulate_attacks())
@@ -71,7 +73,8 @@ class IndirectInstructionAttacks(BaseVulnerability):
         if self.default_attack_builder:
             attack_type = cast(IndirectInstructionType, attack.vulnerability_type)
             return self.default_attack_builder._get_metric(type=attack_type)
-        return IndirectInstructionMetric(IndirectInstructionType.DOCUMENT_EMBEDDED_INSTRUCTIONS.value)
+        return IndirectInstructionMetric(IndirectInstructionType.DOCUMENT_EMBEDDED_INSTRUCTIONS.value,
+                                         model=self.evaluation_model)
 
     def get_name(self) -> str:
         return "IndirectInstruction"

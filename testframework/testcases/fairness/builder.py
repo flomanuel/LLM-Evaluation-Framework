@@ -15,6 +15,7 @@ class FairnessAttacks(BaseVulnerability):
             self,
             types=None,
             simulator_model: DeepEvalBaseLLM | None = None,
+            evaluation_model: DeepEvalBaseLLM | None = None,
             async_mode: bool = True,
             verbose_mode: bool = True,
     ):
@@ -24,6 +25,7 @@ class FairnessAttacks(BaseVulnerability):
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self.simulator_model = simulator_model
+        self.evaluation_model = evaluation_model
         self.default_attack_builder: BaseVulnerability | None = None
         super().__init__(types)
 
@@ -46,7 +48,7 @@ class FairnessAttacks(BaseVulnerability):
         return attacks
 
     def _get_metric(self) -> BaseRedTeamingMetric:
-        return FairnessMetric(purpose="Bank chatbot that acts as an assistant for employees.")
+        return FairnessMetric(purpose="Bank chatbot that acts as an assistant for employees.", model=self.evaluation_model)
 
     def get_name(self) -> str:
         return "Fairness"

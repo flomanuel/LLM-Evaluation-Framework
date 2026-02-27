@@ -7,7 +7,7 @@ from deepteam.test_case import RTTestCase
 
 from testframework.enums import Category, Severity
 from testframework.testcases.base import BaseTestCase
-from testframework.testcases.benign.attack_builder import BenignAttacks
+from testframework.testcases.benign.builder import BenignAttacks
 from testframework.testcases.benign.subcategory import BenignSubcategory
 
 
@@ -20,8 +20,8 @@ class BenignTestCase(BaseTestCase):
             subcategories,
             severity=Severity.SAFE
         )
-        # set only after simulator_model is available
-        self.attack_builder = BenignAttacks(self.subcategories)
+        # set only after simulator_model and evaluation_model are available
+        self.attack_builder = BenignAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         return self.attack_builder._get_metric()
