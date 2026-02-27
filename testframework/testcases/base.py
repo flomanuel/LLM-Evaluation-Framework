@@ -59,13 +59,16 @@ class BaseTestCase(ABC):
         """
         attack_results: dict[str, Attack] = {}
         generation_error: TestErrorInfo | None = None
+        attack_list_enhancer: AttackListEnhancer = AttackListEnhancer(self.simulator_model)
 
         if self.attack_builder:
             enhanced_attacks: List[EnhancedAttack] = []
             try:
                 attacks: List[RTTestCase] = self.attack_builder.simulate_attacks()
                 logger.info(f"Generated {len(attacks)} attacks for {self.category.value}")
-                enhanced_attacks = AttackListEnhancer.enhance(attacks)
+                enhanced_attacks = attack_list_enhancer.enhance(attacks)
+                logger.info(
+                    f"Generated {len(enhanced_attacks)} enhanced attacks from {len(attacks)} attacks for {self.category.value}")
             except Exception as e:
                 generation_error = TestErrorInfo.from_exception(e)
                 logger.error(

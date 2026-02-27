@@ -10,7 +10,7 @@ from testframework.models import TestRunResult, TestCaseResult
 
 def get_run_folder(run_id: str, timestamp: datetime, base_dir: Path | None = None) -> Path:
     """Get the folder path for a test run."""
-    base = base_dir or Path("runs")
+    base = base_dir or Path("_runs")
     ts = timestamp.strftime("%Y%m%d_%H%M%S")
     return base / f"{ts}_{run_id}"
 

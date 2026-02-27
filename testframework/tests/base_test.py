@@ -18,7 +18,7 @@ class Test(ABC):
 
     def __init__(self, name: str, results_dir: Path | None = None) -> None:
         self.name = name
-        self.results_dir = results_dir or Path("runs")
+        self.results_dir = results_dir or Path("_runs")
         self.test_case_results: List[TestCaseResult] = []
 
     @abstractmethod

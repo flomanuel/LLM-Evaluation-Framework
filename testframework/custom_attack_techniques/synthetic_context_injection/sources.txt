@@ -1,0 +1,2 @@
+Copied from "https://github.com/confident-ai/deepteam/tree/main/deepteam/attacks/single_turn/synthetic_context_injection" since it is not available in the package version 1.05.
+Last access: 2026-02-27, 12:12 (MEZ)

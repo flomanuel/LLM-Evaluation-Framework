@@ -81,7 +81,7 @@ def add_arguments(subparsers: _SubParsersAction[ArgumentParser]):
     run_baseline_parser.add_argument(
         "--results-dir",
         type=str,
-        default="runs",
+        default="_runs",
         help="Directory to store test run results.",
     )
 
