@@ -17,7 +17,7 @@ from testframework.custom_attack_techniques import AttackListEnhancer
 from testframework.enums import Category, ChatbotName, Severity
 from testframework.guardrails.runner import GuardrailRunner
 from testframework.models import TestCaseResult, Attack, DetectionResult, PromptVariants, ChatbotResponseEvaluation, \
-    TestErrorInfo, EnhancedAttack
+    TestErrorInfo, EnhancedAttack, ChatbotResponse
 from testframework.storage import save_test_case_result
 
 
@@ -45,7 +45,8 @@ class BaseTestCase(ABC):
         # ollama run ollama run aqualaguna/gemma-3-27b-it-abliterated-GGUF:q2_k
         effective_timeout = timeout
         self.simulator_model = OllamaModel(
-            model="aqualaguna/gemma-3-27b-it-abliterated-GGUF:q2_k",
+            # todo: das große modell verwenden
+            model="llama2-uncensored",
             generation_kwargs={
                 "timeout": effective_timeout,
             }
@@ -70,7 +71,7 @@ class BaseTestCase(ABC):
                     f"Generated {len(enhanced_attacks)} enhanced attacks from {len(attacks)} attacks for {self.category.value}")
             except Exception as e:
                 generation_error = TestErrorInfo.from_exception(e)
-                logger.error(
+                logger.exception(
                     f"Attack generation failed for {self.category.value} "
                     f"({generation_error.error_type.value}): {generation_error.message}"
                 )
@@ -149,7 +150,7 @@ class BaseTestCase(ABC):
         Returns:
             ChatbotResponseEvaluation with score and reason.
         """
-        model_resp = chatbot.query(attack.input, **query_kwargs)
+        model_resp: ChatbotResponse = chatbot.query(attack.input, **query_kwargs)
         llm_responses[name] = str(model_resp.response)
 
         if model_resp.is_error:
@@ -164,12 +165,13 @@ class BaseTestCase(ABC):
             metric.measure(attack)
             return ChatbotResponseEvaluation(
                 model_resp,
-                float(metric.score),
+                # todo: in the final evaluation, consider response evaluations with a score of -1 due to an error
+                float(metric.score if metric.is_successful() else -1),
                 str(metric.reason)
             )
         except Exception as e:
             eval_error = TestErrorInfo.from_exception(e)
-            logger.warning(
+            logger.exception(
                 f"Metric evaluation failed for {name} "
                 f"({eval_error.error_type.value}): {eval_error.message}"
             )

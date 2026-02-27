@@ -59,7 +59,7 @@ class DocumentLoader:
                 documents.extend(docs)
                 logger.debug(f"Loaded {len(docs)} pages from '{pdf_path.name}'")
             except Exception as e:
-                logger.warning(f"Failed to load PDF '{pdf_path}': {e}")
+                logger.exception(f"Failed to load PDF '{pdf_path}': {e}")
 
         return documents
 

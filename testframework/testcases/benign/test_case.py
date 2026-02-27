@@ -14,7 +14,7 @@ from testframework.testcases.benign.subcategory import BenignSubcategory
 class BenignTestCase(BaseTestCase):
     """Test case for benign/safe prompts."""
 
-    def __init__(self, subcategories: List[BenignSubcategory] | None = None) -> None:
+    def __init__(self, subcategories: List[BenignSubcategory] = []) -> None:
         super().__init__(
             Category.BENIGN,
             subcategories,

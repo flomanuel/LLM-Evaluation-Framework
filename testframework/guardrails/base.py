@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+from testframework import ChatbotName
 from testframework.models import DetectionElement
 
 
@@ -18,5 +19,5 @@ class BaseGuardrail(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def eval_model_response(self, model_response: str) -> DetectionElement:
+    def eval_model_response(self, model_response: str, chatbot: ChatbotName) -> DetectionElement:
         raise NotImplementedError

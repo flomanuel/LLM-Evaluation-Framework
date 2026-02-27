@@ -7,6 +7,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepteam.attacks.single_turn import AdversarialPoetry, MathProblem, GoalRedirection, PromptInjection, Roleplay, \
     Base64, Leetspeak, InputBypass, SystemOverride
 from deepteam.test_case import RTTestCase
+from loguru import logger
 
 from testframework.custom_attack_techniques.cipher_code_expert.cipher_code_expert import CipherCodeExpert
 from testframework.custom_attack_techniques.emotional_manipulation import EmotionalManipulation
@@ -86,11 +87,13 @@ class AttackListEnhancer:
             attacks: List[RTTestCase],
             enhancements: List[AttackEnhancement] | None = None,
     ) -> List[EnhancedAttack]:
+        logger.info(
+            f"Enhancing {len(attacks)} attacks with {len(enhancements) if enhancements else len(AttackListEnhancer.ENHANCEMENTS)} techniques.")
         active_enhancements = (
             enhancements if enhancements is not None else AttackListEnhancer.ENHANCEMENTS
         )
 
-        if not active_enhancements:
+        if not active_enhancements or True:
             return [
                 EnhancedAttack(
                     attack_case=deepcopy(attack),
@@ -115,4 +118,5 @@ class AttackListEnhancer:
                     )
                 )
 
+        logger.info(f"Enhanced {len(enhanced_attacks)} attacks.")
         return enhanced_attacks

@@ -11,7 +11,7 @@ from testframework.testcases.toxicity.subcategory import ToxicitySubcategory
 class ToxicityTestCase(BaseTestCase):
     """Test case for toxicity attacks."""
 
-    def __init__(self, subcategories: List[ToxicitySubcategory] | None = None) -> None:
+    def __init__(self, subcategories: List[ToxicitySubcategory] = []) -> None:
         super().__init__(
             Category.TOXICITY,
             subcategories,

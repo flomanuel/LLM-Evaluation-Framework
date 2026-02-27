@@ -10,6 +10,7 @@ from deepteam.attacks.attack_simulator.utils import (
     generate,
     a_generate,
 )
+from loguru import logger
 
 from testframework.custom_attack_techniques.emotional_manipulation.schema import EmotionallyEnhancedAttack, \
     ComplianceData, IsEmotionalAttackValid
@@ -38,6 +39,7 @@ class EmotionalManipulation(BaseSingleTurnAttack):
             attack: str,
             simulator_model: Optional[Union[DeepEvalBaseLLM, str]] = None,
     ) -> str:
+        logger.info(f"Enhancing attack with {self.name} technique.")
         self.simulator_model, _ = initialize_model(simulator_model)
 
         prompt = EmotionalManipulationTemplate.enhance(attack, self.emotion)

@@ -8,6 +8,8 @@ from deepteam.attacks.attack_simulator.utils import (
     generate,
     a_generate,
 )
+from loguru import logger
+
 from testframework.custom_attack_techniques.synthetic_context_injection.schema import EnhancedContext, ComplianceData, \
     IsContextValid
 from testframework.custom_attack_techniques.synthetic_context_injection.template import \
@@ -36,6 +38,7 @@ class SyntheticContextInjection(BaseSingleTurnAttack):
             attack: str,
             simulator_model: Optional[Union[DeepEvalBaseLLM, str]] = None,
     ) -> str:
+        logger.info(f"Enhancing attack with {self.name} technique.")
         self.simulator_model, _ = initialize_model(simulator_model)
 
         prompt = SyntheticContextInjectionTemplate.enhance(

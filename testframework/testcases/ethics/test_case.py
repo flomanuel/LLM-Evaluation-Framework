@@ -11,7 +11,7 @@ from testframework.testcases.ethics.subcategory import EthicsSubcategory
 class EthicsTestCase(BaseTestCase):
     """Test case for ethics-related attacks."""
 
-    def __init__(self, subcategories: List[EthicsSubcategory] | None = None) -> None:
+    def __init__(self, subcategories: List[EthicsSubcategory] = []) -> None:
         super().__init__(
             Category.ETHICS,
             subcategories if subcategories else list(EthicsSubcategory),

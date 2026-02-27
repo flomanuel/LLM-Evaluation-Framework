@@ -11,12 +11,13 @@ from testframework.testcases.system_prompt_leakage.subcategory import SystemProm
 class SystemPromptLeakageTestCase(BaseTestCase):
     """Test case for system prompt leakage attacks."""
 
-    def __init__(self, subcategories: List[SystemPromptLeakageSubcategory] | None = None) -> None:
+    def __init__(self, subcategories: List[SystemPromptLeakageSubcategory] = []) -> None:
         super().__init__(
             Category.SYSTEM_PROMPT_LEAKAGE,
             subcategories
         )
-        self.attack_builder = SystemPromptLeakageAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
+        self.attack_builder = SystemPromptLeakageAttacks(self.subcategories, self.simulator_model,
+                                                         self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         return self.attack_builder._get_metric(attack)

@@ -23,7 +23,7 @@ class GuardrailRunner:
         Analyzes a given attack string against the chatbot's responses by iterating over the guardrails.
 
         :param chatbot_responses: The responses for each chatbot in the test case (Chatbot-ID -> Response).
-        :param enhanced_attack: The adversarial attack (RAG + attack + attack technique)
+        :param enhanced_attack: The adversarial attack (attack and attack technique)
         :return: A `DetectionResult` object encapsulating the details of detected
             vulnerabilities and relevant metadata of the analysis.
         """
@@ -35,7 +35,10 @@ class GuardrailRunner:
             enhanced_attack_evaluation = self._safe_eval_attack(guardrail, enhanced_attack)
 
             for chatbot, response in chatbot_responses.items():
-                response_evaluation = self._safe_eval_response(guardrail, response)
+                if isinstance(guardrail, PromptHardeningGuardrail):
+                    response_evaluation = self._safe_eval_response(guardrail, enhanced_attack, chatbot)
+                else:
+                    response_evaluation = self._safe_eval_response(guardrail, response, chatbot)
                 result[key][chatbot] = DetectionResult(
                     enhanced_attack_evaluation, response_evaluation
                 )
@@ -55,13 +58,13 @@ class GuardrailRunner:
             return guardrail.eval_attack(attack)
         except Exception as e:
             error = TestErrorInfo.from_exception(e)
-            logger.warning(
+            logger.exception(
                 f"Guardrail '{guardrail.name}' attack evaluation failed "
                 f"({error.error_type.value}): {error.message}"
             )
             return DetectionElement.from_error(error)
 
-    def _safe_eval_response(self, guardrail, response: str) -> DetectionElement:
+    def _safe_eval_response(self, guardrail, response: str, chatbot: ChatbotName) -> DetectionElement:
         """Evaluate a response, catching any errors.
 
         Args:
@@ -72,10 +75,10 @@ class GuardrailRunner:
             DetectionElement with results or error info.
         """
         try:
-            return guardrail.eval_model_response(response)
+            return guardrail.eval_model_response(response, chatbot)
         except Exception as e:
             error = TestErrorInfo.from_exception(e)
-            logger.warning(
+            logger.exception(
                 f"Guardrail '{guardrail.name}' response evaluation failed "
                 f"({error.error_type.value}): {error.message}"
             )

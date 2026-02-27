@@ -12,7 +12,7 @@ from testframework.testcases.fairness.subcategory import FairnessSubcategory
 class FairnessTestCase(BaseTestCase):
     """Test case for fairness-related attacks."""
 
-    def __init__(self, subcategories: List[FairnessSubcategory] | None = None) -> None:
+    def __init__(self, subcategories: List[FairnessSubcategory] = []) -> None:
         super().__init__(
             Category.FAIRNESS,
             subcategories if subcategories else list(FairnessSubcategory),

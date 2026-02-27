@@ -4,15 +4,16 @@ from typing import List, Tuple
 
 from testframework.enums import Severity
 
-class CSVLoader():
 
+class CSVLoader():
     CSV_DOCUMENTS_FOLDER: Path = Path(__file__).resolve().parents[2] / "_prompt_files"
-    
+
     def __init__(self) -> None:
         pass
 
     @staticmethod
-    def load_prompts_from_csv(file_path: str, categories: List[str] = [], severity: Severity = Severity.UNSAFE) -> List[Tuple[str, str | None]]:
+    def load_prompts_from_csv(file_path: str, categories: List[str] = [], severity: Severity = Severity.UNSAFE) -> List[
+        Tuple[str, str | None]]:
         """Loads prompts from a csv that follows the format 'prompt,severity,category,tool_check,tool_check_condition,remote_attack_generation,document'
         where the column category contains a string that concatenates applicable categories via ; as a delimiter.
 
@@ -26,14 +27,15 @@ class CSVLoader():
         """
         prompts: List[Tuple[str, str | None]] = []
         path = CSVLoader._build_full_path(file_path)
-        with open(path) as csvfile:
-            csv_file = csv.reader(csvfile, quotechar='#')
+        with open(path, encoding="UTF-8") as csvfile:
+            csv_file = csv.reader(csvfile)
             for row in csv_file:
                 row_prompt = row[0]
                 row_severity = row[1]
                 row_categories = row[2]
                 row_document = row[6] if len(row) > 6 and row[6].strip() else None
-                if row_severity == severity.value and (not categories or any(category in row_categories for category in categories)):
+                if row_severity == severity.value and (
+                        not categories or any(category in row_categories for category in categories)):
                     prompts.append((row_prompt, row_document))
         return prompts
 

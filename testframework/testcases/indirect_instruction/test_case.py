@@ -12,7 +12,7 @@ from testframework.testcases.indirect_instruction.subcategory import IndirectIns
 class IndirectInstructionTestCase(BaseTestCase):
     """Test case for indirect instruction attacks."""
 
-    def __init__(self, subcategories: List[IndirectInstructionSubcategory] | None = None) -> None:
+    def __init__(self, subcategories: List[IndirectInstructionSubcategory] = []) -> None:
         super().__init__(
             Category.INDIRECT_PROMPT_INJECTION,
             subcategories,

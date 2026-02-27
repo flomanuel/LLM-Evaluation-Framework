@@ -50,9 +50,8 @@ class TimestampRange:
 
 @dataclass
 class RagContext:
-    embedding_vector: float | None = None
-    embedding_model: str | None = None
-    nodes: List[str] = field(default_factory=list)
+    embedding_model: str | None
+    nodes: List[str]
 
 
 @dataclass
@@ -124,7 +123,7 @@ class ChatbotResponseEvaluation:
 @dataclass
 class DetectionElement:
     success: bool
-    detected_type: Category | None
+    detected_type: Category | str | None
     severity: float
     judge_raw_response: str
     timestamp: TimestampRange
@@ -146,6 +145,12 @@ class DetectionElement:
             timestamp=TimestampRange(start=error.timestamp, end=error.timestamp),
             error=error,
         )
+
+
+@dataclass
+class PromptHardeningDetectionElement(DetectionElement):
+    """Detection element for prompt hardening."""
+    chatbot_response: ChatbotResponse | None = None
 
 
 @dataclass

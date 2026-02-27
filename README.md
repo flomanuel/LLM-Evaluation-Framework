@@ -60,11 +60,11 @@ See the `testframework` package for details on extending chatbots, guardrails, a
 
 ## Populate the database with documents from _documents folder
 
-llm-test-baseline populate-db
+uv run llm-test-baseline populate-db
 
 ## Custom options
 
-llm-test-baseline populate-db --documents-dir _rag_documents --chunk-size 1000 --chunk-overlap 200 --collection-name
+uv run llm-test-baseline populate-db --documents-dir _rag_documents --chunk-size 1000 --chunk-overlap 200 --collection-name
 my_collection
 
 # Interpreting the results
