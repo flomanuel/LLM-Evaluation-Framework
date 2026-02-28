@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import Callable, List
 
 from deepeval.models import DeepEvalBaseLLM
+from dotenv import load_dotenv
 from deepteam.attacks.single_turn import AdversarialPoetry, MathProblem, GoalRedirection, PromptInjection, Roleplay, \
     Base64, Leetspeak, InputBypass, SystemOverride
 from deepteam.test_case import RTTestCase
@@ -189,6 +190,7 @@ class AttackListEnhancer:
     @classmethod
     def _load_error_threshold_percent(cls) -> float:
         """Read and normalize the failed enhancement threshold from the environment."""
+        load_dotenv(override=False)
         raw_threshold = os.getenv(
             cls.ERROR_THRESHOLD_ENV_VAR,
             str(cls.DEFAULT_ERROR_THRESHOLD_PERCENT),
