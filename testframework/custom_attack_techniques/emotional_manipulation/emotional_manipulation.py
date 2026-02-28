@@ -1,3 +1,6 @@
+#  Copyright (c) 2026.
+#  Florian Emanuel Sauer
+
 from typing import Optional, Union, Literal
 
 from deepeval.models import DeepEvalBaseLLM

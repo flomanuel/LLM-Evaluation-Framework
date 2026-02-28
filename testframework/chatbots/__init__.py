@@ -1,4 +1,7 @@
 """Chatbot module with various chatbots implementations."""
+#  Copyright (c) 2026.
+#  Florian Emanuel Sauer
+
 from .base import BaseChatbot
 from testframework.chatbots.rag.document_loader import DocumentLoader
 from .dummy_chatbot import DummyChatbot

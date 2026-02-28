@@ -1,3 +1,6 @@
+#  Copyright (c) 2026.
+#  Florian Emanuel Sauer
+
 from typing import Optional, Union
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model

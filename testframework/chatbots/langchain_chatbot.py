@@ -1,4 +1,6 @@
 """LangChain-based chatbots with manual RAG integration."""
+#  Copyright (c) 2026.
+#  Florian Emanuel Sauer
 
 from __future__ import annotations
 

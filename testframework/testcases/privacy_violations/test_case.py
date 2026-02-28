@@ -1,3 +1,6 @@
+#  Copyright (c) 2026.
+#  Florian Emanuel Sauer
+
 from __future__ import annotations
 from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from deepteam.test_case import RTTestCase

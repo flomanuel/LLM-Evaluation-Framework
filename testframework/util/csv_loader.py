@@ -1,3 +1,6 @@
+#  Copyright (c) 2026.
+#  Florian Emanuel Sauer
+
 import csv
 from pathlib import Path
 from typing import List, Tuple

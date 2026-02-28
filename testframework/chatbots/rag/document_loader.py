@@ -1,5 +1,8 @@
 """Document loader module for RAG ingestion."""
 
+#  Copyright (c) 2026.
+#  Florian Emanuel Sauer
+
 from __future__ import annotations
 
 from pathlib import Path

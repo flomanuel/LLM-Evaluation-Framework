@@ -1,3 +1,6 @@
+#  Copyright (c) 2026.
+#  Florian Emanuel Sauer
+
 from deepteam.attacks.base_attack import Exploitability
 from deepteam.attacks.single_turn import BaseSingleTurnAttack
 from deepteam.utils import create_progress, add_pbar, update_pbar

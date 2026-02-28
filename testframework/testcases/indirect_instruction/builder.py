@@ -1,3 +1,6 @@
+#  Copyright (c) 2026.
+#  Florian Emanuel Sauer
+
 from enum import Enum
 from typing import List, Dict, cast
 from deepteam.vulnerabilities import BaseVulnerability, IndirectInstruction

@@ -1,4 +1,7 @@
 """Dummy image generation tool."""
+#  Copyright (c) 2026.
+#  Florian Emanuel Sauer
+
 from langchain_core.tools import tool
 
 

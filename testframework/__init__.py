@@ -1,3 +1,6 @@
+#  Copyright (c) 2026.
+#  Florian Emanuel Sauer
+
 from .enums import Category, ChatbotName
 from .models import LLMErrorType, TestErrorInfo
 

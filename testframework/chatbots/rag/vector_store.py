@@ -1,5 +1,8 @@
 """Vector store module using PostgreSQL with pgvector for RAG."""
 
+#  Copyright (c) 2026.
+#  Florian Emanuel Sauer
+
 from __future__ import annotations
 
 import os

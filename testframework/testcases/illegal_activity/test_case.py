@@ -1,3 +1,6 @@
+#  Copyright (c) 2026.
+#  Florian Emanuel Sauer
+
 from __future__ import annotations
 from typing import List
 from deepteam.metrics import BaseRedTeamingMetric
