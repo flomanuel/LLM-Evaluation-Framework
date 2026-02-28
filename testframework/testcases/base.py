@@ -21,7 +21,7 @@ from testframework.custom_attack_techniques import AttackListEnhancer
 from testframework.enums import Category, ChatbotName, Severity
 from testframework.guardrails.runner import GuardrailRunner
 from testframework.models import TestCaseResult, Attack, DetectionResult, PromptVariants, ChatbotResponseEvaluation, \
-    TestErrorInfo, EnhancedAttack, ChatbotResponse
+    TestErrorInfo, EnhancedAttack, ChatbotResponse, AttackEnhancementResult, LLMErrorType
 from testframework.storage import save_test_case_result
 
 
@@ -64,11 +64,13 @@ class BaseTestCase(ABC):
         test_case_id = self._test_case_identifier()
         attack_results: dict[str, Attack] = {}
         generation_error: TestErrorInfo | None = None
+        enhancement_error: TestErrorInfo | None = None
         attack_list_enhancer: AttackListEnhancer = AttackListEnhancer(self.simulator_model)
         logger.info(f"Starting test case execution: {test_case_id}")
 
         if self.attack_builder:
             enhanced_attacks: List[EnhancedAttack] = []
+            enhancement_result: AttackEnhancementResult | None = None
             try:
                 logger.info(f"Generating attacks for test case '{test_case_id}'")
                 generation_started = perf_counter()
@@ -79,9 +81,10 @@ class BaseTestCase(ABC):
                 )
                 logger.info(f"Enhancing attacks for test case '{test_case_id}'")
                 enhancement_started = perf_counter()
-                enhanced_attacks = attack_list_enhancer.enhance(attacks)
+                enhancement_result = attack_list_enhancer.enhance(attacks)
+                enhanced_attacks = enhancement_result.enhanced_attacks
                 logger.info(
-                    f"Prepared {len(enhanced_attacks)} executable attack(s) from {len(attacks)} "
+                    f"Prepared {len(enhanced_attacks)} enhanced attack(s) from {len(attacks)} "
                     f"base attack(s) for '{test_case_id}' "
                     f"(duration={perf_counter() - enhancement_started:.2f}s)"
                 )
@@ -92,19 +95,49 @@ class BaseTestCase(ABC):
                     f"({generation_error.error_type.value}): {generation_error.message}"
                 )
 
-            chatbots: Dict[ChatbotName, BaseChatbot] = ChatbotStore.get_chatbots()
             executable_attacks = sum(1 for attack in enhanced_attacks if not attack.is_error)
             skipped_attacks = len(enhanced_attacks) - executable_attacks
-            logger.info(
-                f"Executing {executable_attacks} attack(s) against {len(chatbots)} chatbot(s) "
-                f"for '{test_case_id}'"
-            )
             if not enhanced_attacks:
                 logger.warning(f"No executable attacks generated for '{test_case_id}'")
             elif skipped_attacks:
                 logger.warning(
                     f"Skipping {skipped_attacks} attack(s) for '{test_case_id}' "
                     f"because prompt enhancement failed"
+                )
+
+            skip_chatbot_execution = (
+                enhancement_result is not None
+                and enhancement_result.threshold_exceeded
+            )
+            if skip_chatbot_execution and enhancement_result is not None:
+                enhancement_error = TestErrorInfo(
+                    error_type=LLMErrorType.THRESHOLD_EXCEEDED,
+                    message=(
+                        "Skipped chatbot execution because the failed enhancement "
+                        f"rate ({enhancement_result.invalid_percentage:.2f}%) exceeded "
+                        f"the configured threshold "
+                        f"({enhancement_result.error_threshold_percent:.2f}%)."
+                    ),
+                )
+                logger.warning(
+                    f"Stopping test case '{test_case_id}' before chatbot execution "
+                    f"because the failed enhancement rate exceeded the configured "
+                    f"threshold (failed={enhancement_result.failed_attack_count}, "
+                    f"planned={enhancement_result.planned_attack_count}, "
+                    f"error_rate={enhancement_result.invalid_percentage:.2f}%, "
+                    f"threshold={enhancement_result.error_threshold_percent:.2f}%)"
+                )
+                if executable_attacks:
+                    logger.warning(
+                        f"Skipping {executable_attacks} otherwise executable attack(s) "
+                        f"for '{test_case_id}' because the enhancement error threshold "
+                        f"was exceeded"
+                    )
+            else:
+                chatbots = ChatbotStore.get_chatbots()
+                logger.info(
+                    f"Executing {executable_attacks} attack(s) against {len(chatbots)} chatbot(s) "
+                    f"for '{test_case_id}'"
                 )
 
             total_attacks = len(enhanced_attacks)
@@ -128,6 +161,8 @@ class BaseTestCase(ABC):
                         attack_error,
                     )
                     continue
+                if skip_chatbot_execution:
+                    continue
 
                 logger.info(
                     f"Starting attack {counter}/{total_attacks} for '{test_case_id}' "
@@ -144,10 +179,11 @@ class BaseTestCase(ABC):
             logger.warning(f"No attack builder configured for test case '{test_case_id}'")
 
         tc_result = TestCaseResult(
-            self.category,
-            self.subcategories if self.subcategories else [],
-            attack_results,
-            generation_error
+            category=self.category,
+            subcategories=self.subcategories if self.subcategories else [],
+            attacks=attack_results,
+            generation_error=generation_error,
+            enhancement_error=enhancement_error,
         )
         self.results = tc_result
         self.store_results()

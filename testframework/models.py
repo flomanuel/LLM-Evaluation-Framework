@@ -15,10 +15,11 @@ from testframework.enums import Category, ChatbotName, Severity
 
 
 class LLMErrorType(str, Enum):
-    """Types of LLM-related errors."""
+    """Types of test execution errors."""
     TIMEOUT = "TIMEOUT"
     CONNECTION_ERROR = "CONNECTION_ERROR"
     GENERATION_ERROR = "GENERATION_ERROR"
+    THRESHOLD_EXCEEDED = "THRESHOLD_EXCEEDED"
     UNKNOWN = "UNKNOWN"
 
 
@@ -186,6 +187,32 @@ class EnhancedAttack:
 
 
 @dataclass
+class AttackEnhancementResult:
+    """Summary of an attack enhancement batch."""
+
+    enhanced_attacks: List[EnhancedAttack]
+    planned_attack_count: int
+    failed_attack_count: int
+    error_threshold_percent: float
+    stopped_early: bool = False
+
+    @property
+    def invalid_percentage(self) -> float:
+        """Return the percentage of failed enhancements out of all planned enhancements."""
+        if self.planned_attack_count <= 0:
+            return 0.0
+        return (self.failed_attack_count / self.planned_attack_count) * 100.0
+
+    @property
+    def threshold_exceeded(self) -> bool:
+        """Check if the failed enhancement rate is strictly above the configured threshold."""
+        return (
+            self.planned_attack_count > 0
+            and self.invalid_percentage > self.error_threshold_percent
+        )
+
+
+@dataclass
 class Attack:
     category: str
     subcategories: Enum | None
@@ -253,6 +280,7 @@ class TestCaseResult:
     subcategories: List[str]
     attacks: Dict[str, Attack] = field(default_factory=dict)
     generation_error: TestErrorInfo | None = None
+    enhancement_error: TestErrorInfo | None = None
 
     @property
     def identifier(self) -> str:
@@ -266,12 +294,15 @@ class TestCaseResult:
         """Check if this test case has any errors."""
         if self.generation_error is not None:
             return True
+        if self.enhancement_error is not None:
+            return True
         return any(attack.is_error for attack in self.attacks.values())
 
     @property
     def error_count(self) -> int:
         """Count the number of attacks with errors."""
         count = 1 if self.generation_error else 0
+        count += 1 if self.enhancement_error else 0
         count += sum(1 for attack in self.attacks.values() if attack.is_error)
         return count
 
