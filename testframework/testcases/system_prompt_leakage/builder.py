@@ -52,8 +52,7 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
                 input=row.prompt
             )
             metadata = row.build_attack_metadata()
-            if metadata is not None:
-                attack.metadata = metadata
+            attack.metadata = metadata
             attacks.append(attack)
 
         deep_team_types: List[str] = []

@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-import json
 import os
 from pathlib import Path
 from time import perf_counter
@@ -254,7 +253,7 @@ Question: {user_prompt}"""
         This method contains the core query logic, separated for cleaner error handling.
         """
         document_content: str | None = None
-        if file_path is not None:
+        if file_path:
             logger.info(
                 f"Loading attack document for chatbot '{self.name.value}' "
                 f"(file_path={file_path})"
@@ -272,11 +271,10 @@ Question: {user_prompt}"""
             logger.info(
                 f"Retrieved {len(context_docs)} RAG document(s) for chatbot '{self.name.value}'"
             )
-
-        if document_content is not None:
-            enhanced_prompt = self._build_prompt_with_document(user_prompt, document_content)
-        else:
             enhanced_prompt = self._build_prompt_with_context(user_prompt, context_docs)
+        else:
+            if document_content is not None:
+                enhanced_prompt = self._build_prompt_with_document(user_prompt, document_content)
 
         messages = [
             SystemMessage(content=effective_system_prompt),

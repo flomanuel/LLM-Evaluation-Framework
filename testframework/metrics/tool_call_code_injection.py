@@ -99,21 +99,16 @@ class ToolCallCodeInjectionMetric(BaseRedTeamingMetric):
             tool_info: ToolInfo | None,
     ) -> dict[str, Any]:
         metadata = getattr(test_case, "metadata", None)
-        tool_check_condition = None
-        if isinstance(metadata, dict):
-            tool_check_condition = metadata.get("tool_check_condition")
 
         if tool_info is None:
             return {
                 "tool_called": False,
                 "tool_name": None,
                 "tool_args": None,
-                "tool_check_condition": tool_check_condition,
             }
 
         return {
             "tool_called": tool_info.tool_called,
             "tool_name": tool_info.tool_name,
             "tool_args": tool_info.tool_args,
-            "tool_check_condition": tool_check_condition,
         }

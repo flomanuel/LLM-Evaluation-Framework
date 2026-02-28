@@ -7,17 +7,13 @@ import os
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Callable, List
-
 from deepeval.models import DeepEvalBaseLLM
 from dotenv import load_dotenv
 from deepteam.attacks.single_turn import AdversarialPoetry, MathProblem, GoalRedirection, PromptInjection, Roleplay, \
-    Base64, Leetspeak, InputBypass, SystemOverride
+    Base64, Leetspeak
 from deepteam.test_case import RTTestCase
 from loguru import logger
-
 from testframework.custom_attack_techniques.cipher_code_expert.cipher_code_expert import CipherCodeExpert
-from testframework.custom_attack_techniques.emotional_manipulation import EmotionalManipulation
-from testframework.custom_attack_techniques.synthetic_context_injection import SyntheticContextInjection
 from testframework.models import AttackEnhancementResult, EnhancedAttack, TestErrorInfo
 
 
@@ -49,45 +45,24 @@ class AttackListEnhancer:
             transform=lambda prompt, model: MathProblem().enhance(prompt, simulator_model=model)
         ),
         AttackEnhancement(
-            name=GoalRedirection.name,
-            transform=lambda prompt, model: GoalRedirection().enhance(prompt)
-        ),
-        AttackEnhancement(
-            name=PromptInjection.name,
-            transform=lambda prompt, model: PromptInjection().enhance(prompt)
-        ),
-        AttackEnhancement(
             name=Roleplay.name,
             transform=lambda prompt, model: Roleplay().enhance(prompt, simulator_model=model)
         ),
         AttackEnhancement(
-            name=EmotionalManipulation.name,
-            transform=lambda prompt, model: EmotionalManipulation().enhance(prompt, simulator_model=model)
-        ),
-        AttackEnhancement(
-            name=SyntheticContextInjection.name,
-            transform=lambda prompt, model: SyntheticContextInjection(
-                "Bank chatbot used internally by the employees.").enhance(prompt, simulator_model=model)
+            name=GoalRedirection.name,
+            transform=lambda prompt, model: GoalRedirection().enhance(prompt)
         ),
         AttackEnhancement(
             name=CipherCodeExpert.name,
             transform=lambda prompt, model: CipherCodeExpert().enhance(prompt)
         ),
         AttackEnhancement(
-            name=Base64.name,
-            transform=lambda prompt, model: Base64().enhance(prompt)
+            name=f"{Base64.name}/{PromptInjection.name}",
+            transform=lambda prompt, model: PromptInjection().enhance(Base64().enhance(prompt))
         ),
         AttackEnhancement(
             name=Leetspeak.name,
             transform=lambda prompt, model: Leetspeak().enhance(prompt)
-        ),
-        AttackEnhancement(
-            name=InputBypass.name,
-            transform=lambda prompt, model: InputBypass().enhance(prompt)
-        ),
-        AttackEnhancement(
-            name=SystemOverride.name,
-            transform=lambda prompt, model: SystemOverride().enhance(prompt)
         ),
     ]
 
@@ -106,6 +81,7 @@ class AttackListEnhancer:
         )
         error_threshold_percent = self._load_error_threshold_percent()
 
+        # todo: remove `or True`
         if not active_enhancements:
             return AttackEnhancementResult(
                 enhanced_attacks=[
@@ -125,16 +101,25 @@ class AttackListEnhancer:
         planned_attack_count = len(attacks) * len(active_enhancements)
         failed_attack_count = 0
         for attack in attacks:
-            baseline_input = str(attack.input)
+            is_doc_embedding_attack = attack.vulnerability_type == "document-embedded-instructions"
+            # simulate document injection by adding the injection defined in the prompt
+            if is_doc_embedding_attack:
+                raw_prompts: List[str] = str(attack.input).split("#")
+                user_prompt = raw_prompts[0] if len(raw_prompts) > 0 else ""
+                baseline_input = raw_prompts[1] if len(raw_prompts) > 1 else ""
+            else:
+                user_prompt = ""
+                baseline_input = str(attack.input)
             for enhancement in active_enhancements:
+                logger.info(f"Applying enhancement '{enhancement.name}'")
                 cloned_attack = deepcopy(attack)
                 try:
                     enhanced_input = enhancement.transform(baseline_input, self.simulator_model)
                     enhanced_attacks.append(
                         EnhancedAttack(
                             attack_case=cloned_attack,
-                            baseline_input=baseline_input,
-                            enhanced_input=enhanced_input,
+                            baseline_input=baseline_input if not user_prompt else user_prompt,
+                            enhanced_input=f"{user_prompt}\n{enhanced_input}" if user_prompt else enhanced_input,
                             techniques=[enhancement.name],
                         )
                     )

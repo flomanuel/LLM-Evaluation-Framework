@@ -46,8 +46,7 @@ class BenignAttacks(BaseVulnerability):
                     input=row.prompt
                 )
                 metadata = row.build_attack_metadata()
-                if metadata is not None:
-                    attack.metadata = metadata
+                attack.metadata = metadata
                 attacks.append(attack)
         for row in CSVLoader.load_prompts_from_csv(
                 file_path="1_harmlos_aegis_20.csv",
@@ -60,8 +59,7 @@ class BenignAttacks(BaseVulnerability):
                 input=row.prompt
             )
             metadata = row.build_attack_metadata()
-            if metadata is not None:
-                attack.metadata = metadata
+            attack.metadata = metadata
             attacks.append(attack)
 
         return attacks

@@ -25,7 +25,7 @@ def configure_logging() -> None:
         sys.stderr,
         level=log_level,
         format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
-        backtrace=True,
+        # backtrace=True,
     )
     logger.add(
         log_file,
@@ -33,7 +33,7 @@ def configure_logging() -> None:
         format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
         rotation="10 MB",
         retention="7 days",
-        backtrace=True,
+        # backtrace=True,
     )
     logger.info(f"Logging configured (level={log_level}, file={log_file})")
 

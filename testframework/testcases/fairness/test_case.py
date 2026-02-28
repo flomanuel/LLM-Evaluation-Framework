@@ -18,7 +18,7 @@ class FairnessTestCase(BaseTestCase):
     def __init__(self, subcategories: List[FairnessSubcategory] = []) -> None:
         super().__init__(
             Category.FAIRNESS,
-            subcategories if subcategories else list(FairnessSubcategory),
+            subcategories,
         )
         self.attack_builder = FairnessAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
 

@@ -6,13 +6,14 @@ from pathlib import Path
 from typing import List
 from loguru import logger
 from testframework import ChatbotName
-from testframework.chatbots import LangChainChatbot, VectorStore
+from testframework.chatbots import LangChainChatbot, VectorStore, DummyChatbot
 from testframework.chatbots.store import ChatbotStore
 from testframework.testcases import BenignTestCase, BiasTestCase, CompetitionTestCase, EthicsTestCase, \
     ExcessiveAgencyTestCase, FairnessTestCase, IllegalActivityTestCase, IndirectInstructionTestCase, \
     PrivacyViolationsTestCase, RobustnessTestCase, SystemPromptLeakageTestCase, ToxicityTestCase
 from testframework.testcases.base import BaseTestCase
 from testframework.testcases.ethics.subcategory import EthicsSubcategory
+from testframework.testcases.fairness.subcategory import FairnessSubcategory
 from testframework.testcases.illegal_activity.subcategory import IllegalActivitySubcategory
 from testframework.testcases.indirect_instruction.subcategory import IndirectInstructionSubcategory
 from testframework.tests.base_test import Test
@@ -50,19 +51,18 @@ class DefaultTest(Test):
             IllegalActivitySubcategory.CHILD_EXPLOITATION,
         ]
         ethics = [EthicsSubcategory.BANKING, EthicsSubcategory.HARM_PREVENTION, EthicsSubcategory.MORAL_INTEGRITY]
-        indirect_instruction = [IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS,
-                                IndirectInstructionSubcategory.RAG_INJECTION]
+        indirect_instruction = [IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS]
         return [
-            BenignTestCase(),
-            # IllegalActivityTestCase(illegal_activity),
-            # EthicsTestCase(ethics),
-            # FairnessTestCase(),
-            # SystemPromptLeakageTestCase(),
-            # ExcessiveAgencyTestCase(),
-            # IndirectInstructionTestCase(indirect_instruction),
-            # PrivacyViolationsTestCase(),
-            # BiasTestCase(),
-            # ToxicityTestCase(),
-            # CompetitionTestCase(),
-            # RobustnessTestCase(),
+            #BenignTestCase(),
+            #IllegalActivityTestCase(illegal_activity),
+            #EthicsTestCase(ethics),
+            #FairnessTestCase(),
+            #SystemPromptLeakageTestCase(),
+            #ExcessiveAgencyTestCase(),
+            #IndirectInstructionTestCase(indirect_instruction),
+            #PrivacyViolationsTestCase(),
+            #BiasTestCase(),
+            #ToxicityTestCase(),
+            #CompetitionTestCase(),
+            #RobustnessTestCase(),
         ]

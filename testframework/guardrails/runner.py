@@ -15,7 +15,7 @@ class GuardrailRunner:
 
     def __init__(self) -> None:
         self.guardrails = [
-            PromptHardeningGuardrail()
+            # todo: setup all guardrails
         ]
 
     def run(

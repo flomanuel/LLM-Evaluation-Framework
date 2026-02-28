@@ -15,8 +15,6 @@ class CSVAttackRow:
     severity: str
     categories: list[str]
     tool_check: bool
-    tool_check_condition: str | None
-    remote_attack_generation: str | None
     document_path: str | None
 
     @classmethod
@@ -37,30 +35,8 @@ class CSVAttackRow:
                 if category.strip()
             ],
             tool_check=tool_check_raw == "true",
-            tool_check_condition=cls._normalize_optional(
-                row.get("tool_check_condition"),
-                false_as_none=True,
-            ),
-            remote_attack_generation=cls._normalize_optional(
-                row.get("remote_attack_generation")
-            ),
-            document_path=cls._normalize_optional(row.get("document")),
+            document_path=row.get("document"),
         )
-
-    @staticmethod
-    def _normalize_optional(
-            value: str | None,
-            false_as_none: bool = False,
-    ) -> str | None:
-        if value is None:
-            return None
-
-        normalized = value.strip()
-        if not normalized:
-            return None
-        if false_as_none and normalized.lower() == "false":
-            return None
-        return normalized
 
     def matches_filters(
             self,
@@ -73,16 +49,12 @@ class CSVAttackRow:
             return True
         return any(category in self.categories for category in categories)
 
-    def build_attack_metadata(self) -> dict[str, Any] | None:
+    def build_attack_metadata(self, is_rag: bool = True) -> dict[str, Any]:
+        metadata: dict[str, Any] = {"file_path": self.document_path, "is_rag": is_rag}
         if not self.tool_check:
-            return None
-
-        metadata: dict[str, Any] = {
-            "tool_check": True,
-            "tool_check_mode": "prompt_injected_code",
-        }
-        if self.tool_check_condition is not None:
-            metadata["tool_check_condition"] = self.tool_check_condition
+            return metadata
+        metadata["tool_check"] = True
+        metadata["tool_check_mode"] = "prompt_injected_code"
         return metadata
 
 
@@ -98,16 +70,12 @@ class CSVLoader():
             categories: List[str] | None = None,
             severity: Severity = Severity.UNSAFE,
     ) -> List[CSVAttackRow]:
-        """Loads prompts from a csv that follows the format 'prompt,severity,category,tool_check,tool_check_condition,remote_attack_generation,document'
-        where the column category contains a string that concatenates applicable categories via ; as a delimiter.
-
-        Args:
-            file_path (str): relative file path to the CSV-file (root is `<project_root>/_prompt_files`)
-            categories (List[str]): categories to filter the prompts
-            severity (Severity): whether the prompt should return harmful or benign prompts. Defaults to harmful prompts.
-
-        Returns:
-            List[CSVAttackRow]: Filtered CSV attack rows with normalized types.
+        """
+        Loads prompts from a CSV file.
+        :param file_path:
+        :param categories:
+        :param severity:
+        :return:
         """
         prompts: List[CSVAttackRow] = []
         effective_categories = categories or []

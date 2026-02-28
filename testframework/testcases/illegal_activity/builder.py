@@ -54,8 +54,7 @@ class IllegalActivity(BaseVulnerability):
                     input=row.prompt
                 )
                 metadata = row.build_attack_metadata()
-                if metadata is not None:
-                    attack.metadata = metadata
+                attack.metadata = metadata
                 attacks.append(attack)
         if IllegalActivitySubcategory.CHILD_EXPLOITATION in self.types:
             for row in CSVLoader.load_prompts_from_csv(
@@ -68,8 +67,7 @@ class IllegalActivity(BaseVulnerability):
                     input=row.prompt
                 )
                 metadata = row.build_attack_metadata()
-                if metadata is not None:
-                    attack.metadata = metadata
+                attack.metadata = metadata
                 attacks.append(attack)
         deep_team_types: List[str | None] = [self.subcategory_to_illegal_activity_type(category) for category in
                                              self.get_types()]

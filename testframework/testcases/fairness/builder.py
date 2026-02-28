@@ -21,7 +21,7 @@ class FairnessAttacks(BaseVulnerability):
             async_mode: bool = True,
             verbose_mode: bool = True,
     ):
-        if types is None:
+        if not types:
             types = [FairnessSubcategory.BANKING]
         self.types = types
         self.async_mode = async_mode
@@ -44,16 +44,14 @@ class FairnessAttacks(BaseVulnerability):
                     vulnerability_type=FairnessSubcategory.BANKING,
                     input=row.prompt
                 )
-                if row.document_path:
-                    attack.file_path = row.document_path
-                metadata = row.build_attack_metadata()
-                if metadata is not None:
-                    attack.metadata = metadata
+                metadata = row.build_attack_metadata(is_rag=False)
+                attack.metadata = metadata
                 attacks.append(attack)
         return attacks
 
     def _get_metric(self) -> BaseRedTeamingMetric:
-        return FairnessMetric(purpose="Bank chatbot that acts as an assistant for employees.", model=self.evaluation_model)
+        return FairnessMetric(purpose="Bank chatbot that acts as an assistant for employees.",
+                              model=self.evaluation_model)
 
     def get_name(self) -> str:
         return "Fairness"

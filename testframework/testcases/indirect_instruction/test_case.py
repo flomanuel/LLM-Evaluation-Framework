@@ -20,10 +20,9 @@ class IndirectInstructionTestCase(BaseTestCase):
             Category.INDIRECT_PROMPT_INJECTION,
             subcategories,
         )
-        self.attack_builder = IndirectInstructionAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
+        self.attack_builder = IndirectInstructionAttacks(self.subcategories, self.simulator_model,
+                                                         self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase = None) -> BaseRedTeamingMetric:
-        return self.attack_builder._get_metric()
+        return self.attack_builder._get_metric(attack)
 
-# todo: set "is_rag" to "false" for the custom attacks that use the poisoned documents.
-# also: check the logic in "langchain_chatbot.py". Maybe the is_rag flag is not necessary anymore.

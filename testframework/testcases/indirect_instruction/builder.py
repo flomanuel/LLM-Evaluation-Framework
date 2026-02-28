@@ -29,16 +29,7 @@ class IndirectInstructionAttacks(BaseVulnerability):
         self.verbose_mode = verbose_mode
         self.simulator_model = simulator_model
         self.evaluation_model = evaluation_model
-        self.default_attack_builder: IndirectInstruction | None = None
         super().__init__(types)
-
-    def subcategory_to_indirect_instruction_type(self, subcategory) -> str | None:
-        """Map IndirectInstructionSubcategory to DeepTeam IndirectInstructionType value."""
-        mapping: Dict[IndirectInstructionSubcategory, str] = {
-            IndirectInstructionSubcategory.RAG_INJECTION: IndirectInstructionType.RAG_INJECTION.value,
-            IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS: IndirectInstructionType.DOCUMENT_EMBEDDED_INSTRUCTIONS.value,
-        }
-        return mapping.get(subcategory)
 
     def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
         attacks: List[RTTestCase] = []
@@ -53,33 +44,13 @@ class IndirectInstructionAttacks(BaseVulnerability):
                     input=row.prompt,
                     vulnerability_type=IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS
                 )
-                if row.document_path:
-                    attack.file_path = row.document_path
-                metadata = row.build_attack_metadata()
-                if metadata is not None:
-                    attack.metadata = metadata
+                metadata = row.build_attack_metadata(is_rag=False)
+                attack.metadata = metadata
                 attacks.append(attack)
-
-        deep_team_types: List[str] = []
-        for subcategory in self.types:
-            mapped_type = self.subcategory_to_indirect_instruction_type(subcategory)
-            if mapped_type:
-                deep_team_types.append(mapped_type)
-
-        if deep_team_types:
-            self.default_attack_builder = IndirectInstruction(
-                simulator_model=self.simulator_model,
-                evaluation_model=self.evaluation_model,
-                types=deep_team_types
-            )
-            attacks.extend(self.default_attack_builder.simulate_attacks())
 
         return attacks
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
-        if self.default_attack_builder:
-            attack_type = cast(IndirectInstructionType, attack.vulnerability_type)
-            return self.default_attack_builder._get_metric(type=attack_type)
         return IndirectInstructionMetric(IndirectInstructionType.DOCUMENT_EMBEDDED_INSTRUCTIONS.value,
                                          model=self.evaluation_model)
 

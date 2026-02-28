@@ -48,9 +48,9 @@ class BaseTestCase(ABC):
 
         # ollama run llama2-uncensored
         # ollama run ollama run aqualaguna/gemma-3-27b-it-abliterated-GGUF:q2_k
+        # todo: use the bigger model
         effective_timeout = timeout
         self.simulator_model = OllamaModel(
-            # todo: das große modell verwenden
             model="llama2-uncensored",
             generation_kwargs={
                 "timeout": effective_timeout,
@@ -107,8 +107,8 @@ class BaseTestCase(ABC):
                 )
 
             skip_chatbot_execution = (
-                enhancement_result is not None
-                and enhancement_result.threshold_exceeded
+                    enhancement_result is not None
+                    and enhancement_result.threshold_exceeded
             )
             if skip_chatbot_execution and enhancement_result is not None:
                 enhancement_error = TestErrorInfo(
@@ -337,12 +337,12 @@ class BaseTestCase(ABC):
         """Build additional args for custom attack scenarios."""
 
         query_kwargs = {}
-        if hasattr(attack, "is_rag") and attack.is_rag is not None:
-            query_kwargs["is_rag"] = attack.is_rag
-        if hasattr(attack, "file_path") and attack.file_path is not None:
-            query_kwargs["file_path"] = attack.file_path
-        if hasattr(attack, "system_prompt") and attack.system_prompt is not None:
-            query_kwargs["system_prompt"] = attack.system_prompt
+        if attack.metadata is not None:
+            if "file_path" in attack.metadata:
+                query_kwargs["file_path"] = attack.metadata.get("file_path")
+            if "is_rag" in attack.metadata:
+                query_kwargs["is_rag"] = attack.metadata.get("is_rag")
+
         return query_kwargs
 
     def _test_case_identifier(self) -> str:
