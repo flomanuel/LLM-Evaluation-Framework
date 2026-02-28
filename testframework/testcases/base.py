@@ -90,16 +90,42 @@ class BaseTestCase(ABC):
                 )
 
             chatbots: Dict[ChatbotName, BaseChatbot] = ChatbotStore.get_chatbots()
-            total_attacks = len(enhanced_attacks)
+            executable_attacks = sum(1 for attack in enhanced_attacks if not attack.is_error)
+            skipped_attacks = len(enhanced_attacks) - executable_attacks
             logger.info(
-                f"Executing {total_attacks} attack(s) against {len(chatbots)} chatbot(s) "
+                f"Executing {executable_attacks} attack(s) against {len(chatbots)} chatbot(s) "
                 f"for '{test_case_id}'"
             )
             if not enhanced_attacks:
                 logger.warning(f"No executable attacks generated for '{test_case_id}'")
+            elif skipped_attacks:
+                logger.warning(
+                    f"Skipping {skipped_attacks} attack(s) for '{test_case_id}' "
+                    f"because prompt enhancement failed"
+                )
 
+            total_attacks = len(enhanced_attacks)
             for counter, attack in enumerate(enhanced_attacks, start=1):
                 techniques = ",".join(attack.techniques) if attack.techniques else "none"
+                if attack.is_error:
+                    attack_error = attack.error or TestErrorInfo.from_exception(
+                        RuntimeError("Attack enhancement failed without error details")
+                    )
+                    logger.warning(
+                        f"Skipping attack {counter}/{total_attacks} for '{test_case_id}' "
+                        f"(techniques={techniques}, error_type={attack_error.error_type.value})"
+                    )
+                    attack_results[str(uuid.uuid4())] = Attack.from_enhancement_error(
+                        self.category,
+                        self.subcategories if self.subcategories else [],
+                        self.severity,
+                        attack.baseline_input,
+                        attack.enhanced_input,
+                        attack.techniques,
+                        attack_error,
+                    )
+                    continue
+
                 logger.info(
                     f"Starting attack {counter}/{total_attacks} for '{test_case_id}' "
                     f"(techniques={techniques})"

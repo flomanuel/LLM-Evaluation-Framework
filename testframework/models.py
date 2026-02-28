@@ -174,6 +174,12 @@ class EnhancedAttack:
     baseline_input: str
     enhanced_input: str
     techniques: List[str] = field(default_factory=list)
+    error: TestErrorInfo | None = None
+
+    @property
+    def is_error(self) -> bool:
+        """Check if the enhancement for this attack failed."""
+        return self.error is not None
 
 
 @dataclass
@@ -211,6 +217,29 @@ class Attack:
             llm_responses={},
             protection={},
             techniques=[],
+            error=error,
+        )
+
+    @classmethod
+    def from_enhancement_error(
+            cls,
+            category: str,
+            subcategories: List[Enum] | None,
+            severity: Severity,
+            baseline_input: str,
+            enhanced_input: str,
+            techniques: List[str],
+            error: TestErrorInfo,
+    ) -> "Attack":
+        """Create an Attack representing a failed prompt enhancement."""
+        return cls(
+            category=category,
+            subcategories=subcategories if subcategories else [],
+            severity=severity,
+            prompt=PromptVariants(baseline=baseline_input, enhanced=enhanced_input),
+            llm_responses={},
+            protection={},
+            techniques=techniques,
             error=error,
         )
 

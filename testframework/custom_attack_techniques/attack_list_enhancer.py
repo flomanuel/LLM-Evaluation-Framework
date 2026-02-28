@@ -12,7 +12,7 @@ from loguru import logger
 from testframework.custom_attack_techniques.cipher_code_expert.cipher_code_expert import CipherCodeExpert
 from testframework.custom_attack_techniques.emotional_manipulation import EmotionalManipulation
 from testframework.custom_attack_techniques.synthetic_context_injection import SyntheticContextInjection
-from testframework.models import EnhancedAttack
+from testframework.models import EnhancedAttack, TestErrorInfo
 
 
 @dataclass(frozen=True)
@@ -108,15 +108,31 @@ class AttackListEnhancer:
             baseline_input = str(attack.input)
             for enhancement in active_enhancements:
                 cloned_attack = deepcopy(attack)
-                enhanced_input = enhancement.transform(baseline_input, self.simulator_model)
-                enhanced_attacks.append(
-                    EnhancedAttack(
-                        attack_case=cloned_attack,
-                        baseline_input=baseline_input,
-                        enhanced_input=enhanced_input,
-                        techniques=[enhancement.name],
+                try:
+                    enhanced_input = enhancement.transform(baseline_input, self.simulator_model)
+                    enhanced_attacks.append(
+                        EnhancedAttack(
+                            attack_case=cloned_attack,
+                            baseline_input=baseline_input,
+                            enhanced_input=enhanced_input,
+                            techniques=[enhancement.name],
+                        )
                     )
-                )
+                except Exception as exc:
+                    enhancement_error = TestErrorInfo.from_exception(exc)
+                    logger.exception(
+                        f"Enhancement '{enhancement.name}' failed "
+                        f"({enhancement_error.error_type.value}): {enhancement_error.message}"
+                    )
+                    enhanced_attacks.append(
+                        EnhancedAttack(
+                            attack_case=cloned_attack,
+                            baseline_input=baseline_input,
+                            enhanced_input=baseline_input,
+                            techniques=[enhancement.name],
+                            error=enhancement_error,
+                        )
+                    )
 
         logger.info(f"Enhanced {len(enhanced_attacks)} attacks.")
         return enhanced_attacks
