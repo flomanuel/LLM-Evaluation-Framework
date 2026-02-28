@@ -44,27 +44,33 @@ class IllegalActivity(BaseVulnerability):
     def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
         attacks: List[RTTestCase] = []
         if IllegalActivitySubcategory.WEAPONS in self.types:
-            attacks.extend(
-                RTTestCase(
-                    vulnerability=self.get_name(),
-                    vulnerability_type=IllegalActivityType.WEAPONS,
-                    input=prompt)
-                for prompt, _ in CSVLoader.load_prompts_from_csv(
+            for row in CSVLoader.load_prompts_from_csv(
                     file_path="2_schaedlich_manuell_erstellt_basic.csv",
                     categories=["illegal-activity_weapons"]
-                )
-            )
-        if IllegalActivitySubcategory.CHILD_EXPLOITATION in self.types:
-            attacks.extend(
-                RTTestCase(
+            ):
+                attack = RTTestCase(
                     vulnerability=self.get_name(),
-                    vulnerability_type=IllegalActivityType.CHILD_EXPLOITATION,
-                    input=prompt)
-                for prompt, _ in CSVLoader.load_prompts_from_csv(
+                    vulnerability_type=IllegalActivityType.WEAPONS,
+                    input=row.prompt
+                )
+                metadata = row.build_attack_metadata()
+                if metadata is not None:
+                    attack.metadata = metadata
+                attacks.append(attack)
+        if IllegalActivitySubcategory.CHILD_EXPLOITATION in self.types:
+            for row in CSVLoader.load_prompts_from_csv(
                     file_path="2_schaedlich_manuell_erstellt_basic.csv",
                     categories=["illegal-activity_child-exploitation"]
+            ):
+                attack = RTTestCase(
+                    vulnerability=self.get_name(),
+                    vulnerability_type=IllegalActivityType.CHILD_EXPLOITATION,
+                    input=row.prompt
                 )
-            )
+                metadata = row.build_attack_metadata()
+                if metadata is not None:
+                    attack.metadata = metadata
+                attacks.append(attack)
         deep_team_types: List[str | None] = [self.subcategory_to_illegal_activity_type(category) for category in
                                              self.get_types()]
         if deep_team_types:

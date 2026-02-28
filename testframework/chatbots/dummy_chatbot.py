@@ -29,7 +29,7 @@ class DummyChatbot(BaseChatbot):
             prompt=user_prompt,
             response=message,
             system_prompt=system_prompt or "",
-            tool=ToolInfo(tool_called=False, tool_call_params=None),
+            tool=ToolInfo(tool_called=False),
             prompt_tokens=-1,
             response_tokens=-1,
             rag_context=None,

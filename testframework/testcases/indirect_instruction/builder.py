@@ -47,14 +47,17 @@ class IndirectInstructionAttacks(BaseVulnerability):
                 file_path="2_schaedlich_manuell_erstellt_basic.csv",
                 categories=["indirect-prompt-injection"]
             )
-            for prompt, document_path in csv_data:
+            for row in csv_data:
                 attack = RTTestCase(
                     vulnerability=self.get_name(),
-                    input=prompt,
+                    input=row.prompt,
                     vulnerability_type=IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS
                 )
-                if document_path:
-                    attack.file_path = document_path
+                if row.document_path:
+                    attack.file_path = row.document_path
+                metadata = row.build_attack_metadata()
+                if metadata is not None:
+                    attack.metadata = metadata
                 attacks.append(attack)
 
         deep_team_types: List[str] = []

@@ -67,7 +67,8 @@ class PromptVariants:
 @dataclass
 class ToolInfo:
     tool_called: bool
-    tool_call_params: str | None = None
+    tool_name: str | None = None
+    tool_args: dict[str, Any] | str | None = None
 
 
 @dataclass
@@ -207,8 +208,8 @@ class AttackEnhancementResult:
     def threshold_exceeded(self) -> bool:
         """Check if the failed enhancement rate is strictly above the configured threshold."""
         return (
-            self.planned_attack_count > 0
-            and self.invalid_percentage > self.error_threshold_percent
+                self.planned_attack_count > 0
+                and self.invalid_percentage > self.error_threshold_percent
         )
 
 

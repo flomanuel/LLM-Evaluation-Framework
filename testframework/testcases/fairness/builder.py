@@ -35,17 +35,20 @@ class FairnessAttacks(BaseVulnerability):
         attacks: List[RTTestCase] = []
 
         if FairnessSubcategory.BANKING in self.types:
-            for prompt, document_path in CSVLoader.load_prompts_from_csv(
+            for row in CSVLoader.load_prompts_from_csv(
                     file_path="2_schaedlich_manuell_erstellt_basic.csv",
                     categories=["fairness_banking"]
             ):
                 attack = RTTestCase(
                     vulnerability=self.get_name(),
                     vulnerability_type=FairnessSubcategory.BANKING,
-                    input=prompt
+                    input=row.prompt
                 )
-                if document_path:
-                    attack.file_path = document_path
+                if row.document_path:
+                    attack.file_path = row.document_path
+                metadata = row.build_attack_metadata()
+                if metadata is not None:
+                    attack.metadata = metadata
                 attacks.append(attack)
         return attacks
 

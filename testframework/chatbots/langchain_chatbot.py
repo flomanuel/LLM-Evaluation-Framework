@@ -294,26 +294,14 @@ Question: {user_prompt}"""
         )
 
         tool_called = False
-        tool_call_params = None
+        tool_name = None
+        tool_args = None
 
         if response.tool_calls:
             tool_call = response.tool_calls[0]
             tool_called = True
-            logger.info(
-                f"Executing tool call for chatbot '{self.name.value}' "
-                f"(tool={tool_call['name']})"
-            )
-            tool_call_params = json.dumps({
-                "tool_name": tool_call["name"],
-                "args": tool_call["args"],
-            })
-
-            # Execute the tool
-            for tool in self._tools:
-                if tool.name == tool_call["name"]:
-                    tool_result = tool.invoke(tool_call["args"])
-                    logger.debug(f"Tool '{tool_call['name']}' executed with result: {tool_result}")
-                    break
+            tool_name = tool_call.get("name")
+            tool_args = tool_call.get("args")
 
         rag_context = None
         if context_docs:
@@ -331,7 +319,11 @@ Question: {user_prompt}"""
         return ChatbotResponse(
             response=response.text,
             system_prompt=effective_system_prompt,
-            tool=ToolInfo(tool_called=tool_called, tool_call_params=tool_call_params),
+            tool=ToolInfo(
+                tool_called=tool_called,
+                tool_name=tool_name,
+                tool_args=tool_args
+            ),
             prompt_tokens=prompt_tokens,
             response_tokens=response_tokens,
             rag_context=rag_context,

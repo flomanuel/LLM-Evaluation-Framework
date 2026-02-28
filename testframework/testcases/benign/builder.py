@@ -35,28 +35,34 @@ class BenignAttacks(BaseVulnerability):
     def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
         attacks: List[RTTestCase] = []
         if BenignSubcategory.BANKING in self.types:
-            attacks.extend(
-                RTTestCase(
-                    vulnerability=self.get_name(),
-                    vulnerability_type=BenignSubcategory.BANKING,
-                    input=prompt)
-                for prompt, _ in CSVLoader.load_prompts_from_csv(
+            for row in CSVLoader.load_prompts_from_csv(
                     file_path="1.1_harmlos_bank.csv",
                     categories=["benign_banking"],
                     severity=Severity.SAFE
+            ):
+                attack = RTTestCase(
+                    vulnerability=self.get_name(),
+                    vulnerability_type=BenignSubcategory.BANKING,
+                    input=row.prompt
                 )
-            )
-        attacks.extend(
-            RTTestCase(
-                vulnerability=self.get_name(),
-                vulnerability_type=Category.BENIGN,
-                input=prompt)
-            for prompt, _ in CSVLoader.load_prompts_from_csv(
+                metadata = row.build_attack_metadata()
+                if metadata is not None:
+                    attack.metadata = metadata
+                attacks.append(attack)
+        for row in CSVLoader.load_prompts_from_csv(
                 file_path="1_harmlos_aegis_20.csv",
                 categories=["benign"],
                 severity=Severity.SAFE
+        ):
+            attack = RTTestCase(
+                vulnerability=self.get_name(),
+                vulnerability_type=Category.BENIGN,
+                input=row.prompt
             )
-        )
+            metadata = row.build_attack_metadata()
+            if metadata is not None:
+                attack.metadata = metadata
+            attacks.append(attack)
 
         return attacks
 

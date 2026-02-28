@@ -2,10 +2,88 @@
 #  Florian Emanuel Sauer
 
 import csv
+from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Tuple
+from typing import Any, List, Mapping
 
 from testframework.enums import Severity
+
+
+@dataclass(frozen=True)
+class CSVAttackRow:
+    prompt: str
+    severity: str
+    categories: list[str]
+    tool_check: bool
+    tool_check_condition: str | None
+    remote_attack_generation: str | None
+    document_path: str | None
+
+    @classmethod
+    def from_csv_row(cls, row: Mapping[str, str | None]) -> "CSVAttackRow":
+        categories_raw = row.get("category") or ""
+        tool_check_raw = (row.get("tool_check") or "").strip().lower()
+        if tool_check_raw not in {"true", "false"}:
+            raise ValueError(
+                f"Unsupported tool_check value in CSV row: {row.get('tool_check')}"
+            )
+
+        return cls(
+            prompt=row.get("prompt") or "",
+            severity=(row.get("severity") or "").strip(),
+            categories=[
+                category.strip()
+                for category in categories_raw.split(";")
+                if category.strip()
+            ],
+            tool_check=tool_check_raw == "true",
+            tool_check_condition=cls._normalize_optional(
+                row.get("tool_check_condition"),
+                false_as_none=True,
+            ),
+            remote_attack_generation=cls._normalize_optional(
+                row.get("remote_attack_generation")
+            ),
+            document_path=cls._normalize_optional(row.get("document")),
+        )
+
+    @staticmethod
+    def _normalize_optional(
+            value: str | None,
+            false_as_none: bool = False,
+    ) -> str | None:
+        if value is None:
+            return None
+
+        normalized = value.strip()
+        if not normalized:
+            return None
+        if false_as_none and normalized.lower() == "false":
+            return None
+        return normalized
+
+    def matches_filters(
+            self,
+            categories: list[str],
+            severity: Severity,
+    ) -> bool:
+        if self.severity != severity.value:
+            return False
+        if not categories:
+            return True
+        return any(category in self.categories for category in categories)
+
+    def build_attack_metadata(self) -> dict[str, Any] | None:
+        if not self.tool_check:
+            return None
+
+        metadata: dict[str, Any] = {
+            "tool_check": True,
+            "tool_check_mode": "prompt_injected_code",
+        }
+        if self.tool_check_condition is not None:
+            metadata["tool_check_condition"] = self.tool_check_condition
+        return metadata
 
 
 class CSVLoader():
@@ -15,8 +93,11 @@ class CSVLoader():
         pass
 
     @staticmethod
-    def load_prompts_from_csv(file_path: str, categories: List[str] = [], severity: Severity = Severity.UNSAFE) -> List[
-        Tuple[str, str | None]]:
+    def load_prompts_from_csv(
+            file_path: str,
+            categories: List[str] | None = None,
+            severity: Severity = Severity.UNSAFE,
+    ) -> List[CSVAttackRow]:
         """Loads prompts from a csv that follows the format 'prompt,severity,category,tool_check,tool_check_condition,remote_attack_generation,document'
         where the column category contains a string that concatenates applicable categories via ; as a delimiter.
 
@@ -26,20 +107,17 @@ class CSVLoader():
             severity (Severity): whether the prompt should return harmful or benign prompts. Defaults to harmful prompts.
 
         Returns:
-            List[Tuple[str, str | None]]: List of (prompt, document_path) tuples. document_path is None if empty.
+            List[CSVAttackRow]: Filtered CSV attack rows with normalized types.
         """
-        prompts: List[Tuple[str, str | None]] = []
+        prompts: List[CSVAttackRow] = []
+        effective_categories = categories or []
         path = CSVLoader._build_full_path(file_path)
         with open(path, encoding="UTF-8") as csvfile:
-            csv_file = csv.reader(csvfile)
+            csv_file = csv.DictReader(csvfile)
             for row in csv_file:
-                row_prompt = row[0]
-                row_severity = row[1]
-                row_categories = row[2]
-                row_document = row[6] if len(row) > 6 and row[6].strip() else None
-                if row_severity == severity.value and (
-                        not categories or any(category in row_categories for category in categories)):
-                    prompts.append((row_prompt, row_document))
+                attack_row = CSVAttackRow.from_csv_row(row)
+                if attack_row.matches_filters(effective_categories, severity):
+                    prompts.append(attack_row)
         return prompts
 
     @staticmethod

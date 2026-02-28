@@ -44,16 +44,19 @@ class EthicsAttacks(BaseVulnerability):
         attacks: List[RTTestCase] = []
 
         if EthicsSubcategory.BANKING in self.types:
-            attacks.extend(
-                RTTestCase(
-                    vulnerability=self.get_name(),
-                    vulnerability_type=EthicsSubcategory.BANKING,
-                    input=prompt)
-                for prompt, _ in CSVLoader.load_prompts_from_csv(
+            for row in CSVLoader.load_prompts_from_csv(
                     file_path="2_schaedlich_manuell_erstellt_basic.csv",
                     categories=["ethics_banking"]
+            ):
+                attack = RTTestCase(
+                    vulnerability=self.get_name(),
+                    vulnerability_type=EthicsSubcategory.BANKING,
+                    input=row.prompt
                 )
-            )
+                metadata = row.build_attack_metadata()
+                if metadata is not None:
+                    attack.metadata = metadata
+                attacks.append(attack)
 
         deep_team_types: List[str] = []
         for subcategory in self.types:

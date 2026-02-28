@@ -31,15 +31,18 @@ class ExcessiveAgencyAttacks(BaseVulnerability):
 
     def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
         attacks: List[RTTestCase] = []
-        attacks.extend(
-            RTTestCase(
-                vulnerability=self.get_name(),
-                input=prompt)
-            for prompt, _ in CSVLoader.load_prompts_from_csv(
+        for row in CSVLoader.load_prompts_from_csv(
                 file_path="2_schaedlich_manuell_erstellt_basic.csv",
                 categories=["excessive-agency"]
+        ):
+            attack = RTTestCase(
+                vulnerability=self.get_name(),
+                input=row.prompt
             )
-        )
+            metadata = row.build_attack_metadata()
+            if metadata is not None:
+                attack.metadata = metadata
+            attacks.append(attack)
         return attacks
 
     def _get_metric(self) -> BaseRedTeamingMetric:

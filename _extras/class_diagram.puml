@@ -43,7 +43,6 @@ package "testframework" {
 
         class ToolInfo <<dataclass>> {
             +tool_called: bool
-            +tool_call_params: str?
         }
 
         class ChatbotResponse <<dataclass>> {

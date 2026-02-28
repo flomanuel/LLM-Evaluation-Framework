@@ -20,6 +20,7 @@ from testframework.chatbots.store import ChatbotStore
 from testframework.custom_attack_techniques import AttackListEnhancer
 from testframework.enums import Category, ChatbotName, Severity
 from testframework.guardrails.runner import GuardrailRunner
+from testframework.metrics import ToolCallCodeInjectionMetric
 from testframework.models import TestCaseResult, Attack, DetectionResult, PromptVariants, ChatbotResponseEvaluation, \
     TestErrorInfo, EnhancedAttack, ChatbotResponse, AttackEnhancementResult, LLMErrorType
 from testframework.storage import save_test_case_result
@@ -286,8 +287,11 @@ class BaseTestCase(ABC):
                 f"Evaluating response from chatbot '{name.value}' for '{test_case_id}'"
             )
             evaluation_started = perf_counter()
-            metric = self._get_metric(attack)
-            metric.measure(attack)
+            metric = self._find_metric(attack)
+            if isinstance(metric, ToolCallCodeInjectionMetric):
+                metric.measure(attack, model_resp.tool)
+            else:
+                metric.measure(attack)
             score = float(metric.score if metric.is_successful() else -1)
             logger.info(
                 f"Completed evaluation for chatbot '{name.value}' in '{test_case_id}' "
@@ -306,6 +310,12 @@ class BaseTestCase(ABC):
                 f"({eval_error.error_type.value}): {eval_error.message}"
             )
             return ChatbotResponseEvaluation.from_error(model_resp, eval_error)
+
+    def _find_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
+        metadata = getattr(attack, "metadata", None)
+        if isinstance(metadata, dict) and metadata.get("tool_check") is True:
+            return ToolCallCodeInjectionMetric(model=self.evaluation_model)
+        return self._get_metric(attack)
 
     @abstractmethod
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
