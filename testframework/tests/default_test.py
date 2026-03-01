@@ -53,16 +53,16 @@ class DefaultTest(Test):
         ethics = [EthicsSubcategory.BANKING, EthicsSubcategory.HARM_PREVENTION, EthicsSubcategory.MORAL_INTEGRITY]
         indirect_instruction = [IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS]
         return [
-            #BenignTestCase(),
-            #IllegalActivityTestCase(illegal_activity),
-            #EthicsTestCase(ethics),
-            #FairnessTestCase(),
-            #SystemPromptLeakageTestCase(),
-            #ExcessiveAgencyTestCase(),
-            #IndirectInstructionTestCase(indirect_instruction),
-            #PrivacyViolationsTestCase(),
-            #BiasTestCase(),
-            #ToxicityTestCase(),
-            #CompetitionTestCase(),
-            #RobustnessTestCase(),
+            # BenignTestCase(),
+            # IllegalActivityTestCase(illegal_activity),
+            # EthicsTestCase(ethics),
+            # FairnessTestCase(),
+            # SystemPromptLeakageTestCase(),
+            ExcessiveAgencyTestCase(),
+            # IndirectInstructionTestCase(indirect_instruction),
+            # PrivacyViolationsTestCase(), # todo: prüfen ode die zugehörigen Einträge aus der CSV-Datei richtig ausgewertet und im JSON kategorisiert werden!
+            # BiasTestCase(),
+            # ToxicityTestCase(),
+            # CompetitionTestCase(),
+            # RobustnessTestCase(),
         ]

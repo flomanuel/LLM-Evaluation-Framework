@@ -15,9 +15,16 @@ class CipherCodeExpert(BaseSingleTurnAttack):
     exploitability = Exploitability.HIGH
     description = "Rewrites the attack by roleplaying a cipher code expert to bypass safety filters."
 
-    def enhance(self, attack: str) -> str:
+    def enhance(self, attack: str, *args, **kwargs) -> str:
         logger.info(f"Enhancing attack with {self.name} technique.")
+        progress = create_progress()
+        task_id = add_pbar(
+            progress,
+            description=f"...... 🎭 Injecting {self.name}",
+            total=1,
+        )
         enhanced_prompt = CipherCodeExpertTemplate.enhance(attack)
+        update_pbar(progress, task_id, advance_to_end=True)
         return enhanced_prompt
 
     def get_name(self) -> str:

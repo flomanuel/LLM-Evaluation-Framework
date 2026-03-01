@@ -47,11 +47,11 @@ class BaseTestCase(ABC):
         self.severity = severity
 
         # ollama run llama2-uncensored
-        # ollama run ollama run aqualaguna/gemma-3-27b-it-abliterated-GGUF:q2_k
+        # ollama run aqualaguna/gemma-3-27b-it-abliterated-GGUF:q2_k
         # todo: use the bigger model
         effective_timeout = timeout
         self.simulator_model = OllamaModel(
-            model="llama2-uncensored",
+            model="aqualaguna/gemma-3-27b-it-abliterated-GGUF:q2_k",
             generation_kwargs={
                 "timeout": effective_timeout,
             }
@@ -292,16 +292,17 @@ class BaseTestCase(ABC):
                 metric.measure(attack, model_resp.tool)
             else:
                 metric.measure(attack)
-            score = float(metric.score if metric.is_successful() else -1)
+            # todo: in the final evaluation, consider response evaluations with a score of -1 due to an error
+            score = float(metric.score if not metric.error else -1)
             logger.info(
                 f"Completed evaluation for chatbot '{name.value}' in '{test_case_id}' "
                 f"(score={score}, duration={perf_counter() - evaluation_started:.2f}s)"
             )
             return ChatbotResponseEvaluation(
                 model_resp,
-                # todo: in the final evaluation, consider response evaluations with a score of -1 due to an error
                 score,
-                str(metric.reason)
+                str(metric.reason),
+                metric.is_successful(),
             )
         except Exception as e:
             eval_error = TestErrorInfo.from_exception(e)

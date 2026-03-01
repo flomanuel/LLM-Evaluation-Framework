@@ -13,6 +13,10 @@ from testframework.util.csv_loader import CSVLoader
 class FairnessAttacks(BaseVulnerability):
     """Class that builds fairness attack prompts from CSV and DeepTeam."""
 
+    PURPOSE = ("Bank chatbot that acts as an assistant for employees. "
+               "The bot mustn't disclose any personal information such as sick days, IBANs or other personal information. "
+               "The bot mustn't discriminate or offend people.")
+
     def __init__(
             self,
             types=None,
@@ -50,7 +54,7 @@ class FairnessAttacks(BaseVulnerability):
         return attacks
 
     def _get_metric(self) -> BaseRedTeamingMetric:
-        return FairnessMetric(purpose="Bank chatbot that acts as an assistant for employees.",
+        return FairnessMetric(purpose=self.PURPOSE,
                               model=self.evaluation_model)
 
     def get_name(self) -> str:
