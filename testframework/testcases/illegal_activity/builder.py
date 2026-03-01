@@ -1,12 +1,11 @@
 #  Copyright (c) 2026.
 #  Florian Emanuel Sauer
-
 from enum import Enum
 from typing import Dict, List, cast
-from deepteam.vulnerabilities.illegal_activity import IllegalActivityType  # type: ignore
-from deepteam.vulnerabilities import BaseVulnerability, IllegalActivity as DeepTeamIllegalActivity  # type: ignore
+from deepteam.vulnerabilities.illegal_activity import IllegalActivityType
+from deepteam.vulnerabilities import BaseVulnerability, IllegalActivity as DeepTeamIllegalActivity
 from deepeval.models import DeepEvalBaseLLM
-from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
+from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from testframework.testcases.illegal_activity.subcategory import IllegalActivitySubcategory
 from testframework.util.csv_loader import CSVLoader
@@ -26,7 +25,7 @@ class IllegalActivity(BaseVulnerability):
         self.verbose_mode = verbose_mode
         self.simulator_model = simulator_model
         self.evaluation_model = evaluation_model
-        self.default_attack_builder: BaseVulnerability | None = None
+        self.default_attack_builder: DeepTeamIllegalActivity | None = None
         super().__init__(types)
 
     def subcategory_to_illegal_activity_type(self, category: IllegalActivitySubcategory) -> str | None:
@@ -41,7 +40,7 @@ class IllegalActivity(BaseVulnerability):
         }
         return map.get(category)
 
-    def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
+    def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         attacks: List[RTTestCase] = []
         if IllegalActivitySubcategory.WEAPONS in self.types:
             for row in CSVLoader.load_prompts_from_csv(
@@ -78,13 +77,13 @@ class IllegalActivity(BaseVulnerability):
         else:
             self.default_attack_builder = DeepTeamIllegalActivity(simulator_model=self.simulator_model,
                                                                   evaluation_model=self.evaluation_model)
-        attacks.extend(self.default_attack_builder.simulate_attacks())
+        attacks.extend(
+            self.default_attack_builder.simulate_attacks(attacks_per_vulnerability_type=attacks_per_vulnerability_type))
         return attacks
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         attack_type = cast(IllegalActivityType, attack.vulnerability_type)
-        return cast(DeepTeamIllegalActivity, self.default_attack_builder)._get_metric(
-            type=attack_type)  # pylint: disable=protected-access
+        return self.default_attack_builder._get_metric(type=attack_type)  # pylint: disable=protected-access
 
     def get_name(self) -> str:
         return "IllegalActivity"

@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import cast, List
 from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from deepteam.vulnerabilities import Competition
@@ -25,4 +25,9 @@ class CompetitionTestCase(BaseTestCase):
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         attack_type = cast(CompetitionType, attack.vulnerability_type)
-        return cast(Competition, self.attack_builder)._get_metric(type=attack_type) # pylint: disable=protected-access
+        return cast(Competition, self.attack_builder)._get_metric(type=attack_type)  # pylint: disable=protected-access
+
+    def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+        return cast(Competition, self.attack_builder).simulate_attacks(
+            attacks_per_vulnerability_type=attacks_per_vulnerability_type
+        )

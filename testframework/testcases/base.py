@@ -3,13 +3,13 @@
 
 from __future__ import annotations
 
+import os
 import uuid
 from abc import ABC, abstractmethod
 from enum import Enum
 from pathlib import Path
 from time import perf_counter
 from typing import Dict, List
-
 from deepeval.models import DeepEvalBaseLLM, OllamaModel
 from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from deepteam.test_case import RTTestCase
@@ -58,6 +58,11 @@ class BaseTestCase(ABC):
         )
         self.evaluation_model = "gpt-4o"
 
+    @abstractmethod
+    def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+        """Simulate attacks for the test case."""
+        raise NotImplementedError
+
     def execute(self) -> TestCaseResult:
         """Run the test case and return a mapping from attack_id to TestCaseResult.
             Build the attacks and add the techniques. Then execute the attacks on the guardrails.
@@ -70,12 +75,14 @@ class BaseTestCase(ABC):
         logger.info(f"Starting test case execution: {test_case_id}")
 
         if self.attack_builder:
+            attacks_per_vulnerability_type = os.environ.get("ATTACKS_PER_VULNERABILITY_TYPE", 1)
             enhanced_attacks: List[EnhancedAttack] = []
             enhancement_result: AttackEnhancementResult | None = None
             try:
                 logger.info(f"Generating attacks for test case '{test_case_id}'")
                 generation_started = perf_counter()
-                attacks: List[RTTestCase] = self.attack_builder.simulate_attacks()
+                attacks: List[RTTestCase] = self.simulate_attacks(
+                    attacks_per_vulnerability_type=attacks_per_vulnerability_type)
                 logger.info(
                     f"Generated {len(attacks)} attack(s) for '{test_case_id}' "
                     f"(duration={perf_counter() - generation_started:.2f}s)"
@@ -199,15 +206,7 @@ class BaseTestCase(ABC):
             attack: EnhancedAttack,
             chatbots: Dict[ChatbotName, BaseChatbot]
     ) -> Attack:
-        """Execute a single attack against all chatbots.
-
-        Args:
-            attack: Enhanced attack descriptor.
-            chatbots: Dictionary of chatbots to test against.
-
-        Returns:
-            Attack results with responses and evaluations.
-        """
+        """Execute a single attack against all chatbots."""
         base_attack = attack.baseline_input
         techniques = attack.techniques
         attack_case = attack.attack_case
@@ -250,18 +249,7 @@ class BaseTestCase(ABC):
             query_kwargs: dict,
             llm_responses: dict[ChatbotName, str],
     ) -> ChatbotResponseEvaluation:
-        """Query a chatbot and evaluate the response.
-
-        Args:
-            chatbot: The chatbot to query.
-            name: The chatbot's name identifier.
-            attack: The attack test case.
-            query_kwargs: Additional query parameters.
-            llm_responses: Dictionary to store raw responses for guardrail checks.
-
-        Returns:
-            ChatbotResponseEvaluation with score and reason.
-        """
+        """Query a chatbot and evaluate the response."""
         test_case_id = self._test_case_identifier()
         logger.info(f"Querying chatbot '{name.value}' for test case '{test_case_id}'")
         query_started = perf_counter()
@@ -324,11 +312,7 @@ class BaseTestCase(ABC):
         raise NotImplementedError
 
     def store_results(self) -> Path | None:
-        """Store the test case results as a backup to the run folder.
-
-        Returns:
-            The path to the saved JSON file, or None if run_folder is not set.
-        """
+        """Store the test case results as a backup to the run folder."""
         if self.run_folder is None:
             return None
         return save_test_case_result(self.results, self.run_folder)

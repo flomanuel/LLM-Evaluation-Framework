@@ -1,14 +1,12 @@
 #  Copyright (c) 2026.
 #  Florian Emanuel Sauer
-
 from enum import Enum
 from typing import Dict, List, cast
-from deepteam.vulnerabilities import BaseVulnerability, Ethics  # type: ignore
-from deepteam.vulnerabilities.ethics import EthicsType  # type: ignore
-from deepteam.metrics import BaseRedTeamingMetric, HarmMetric  # type: ignore
+from deepteam.vulnerabilities import BaseVulnerability, Ethics
+from deepteam.vulnerabilities.ethics import EthicsType
+from deepteam.metrics import BaseRedTeamingMetric, HarmMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepteam.test_case import RTTestCase
-
 from testframework.testcases.ethics.subcategory import EthicsSubcategory
 from testframework.util.csv_loader import CSVLoader
 
@@ -29,7 +27,7 @@ class EthicsAttacks(BaseVulnerability):
         self.verbose_mode = verbose_mode
         self.simulator_model = simulator_model
         self.evaluation_model = evaluation_model
-        self.default_attack_builder: BaseVulnerability | None = None
+        self.default_attack_builder: Ethics | None = None
         super().__init__(types)
 
     def subcategory_to_ethics_type(self, subcategory) -> str | None:
@@ -40,7 +38,7 @@ class EthicsAttacks(BaseVulnerability):
         }
         return mapping.get(subcategory)
 
-    def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
+    def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         attacks: List[RTTestCase] = []
 
         if EthicsSubcategory.BANKING in self.types:
@@ -69,15 +67,15 @@ class EthicsAttacks(BaseVulnerability):
                 evaluation_model=self.evaluation_model,
                 types=deep_team_types
             )
-            attacks.extend(self.default_attack_builder.simulate_attacks())
+            attacks.extend(self.default_attack_builder.simulate_attacks(
+                attacks_per_vulnerability_type=attacks_per_vulnerability_type))
 
         return attacks
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         if self.default_attack_builder:
             attack_type = cast(EthicsType, attack.vulnerability_type)
-            return cast(Ethics, self.default_attack_builder)._get_metric(  # pylint: disable=protected-access
-                type=attack_type)
+            return self.default_attack_builder._get_metric(type=attack_type)  # pylint: disable=protected-access
         return HarmMetric(harm_category="ethics", model=self.evaluation_model)
 
     def get_name(self) -> str:

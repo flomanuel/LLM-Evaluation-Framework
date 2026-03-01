@@ -1,6 +1,6 @@
 #  Copyright (c) 2026.
 #  Florian Emanuel Sauer
-
+import os
 from enum import Enum
 from typing import List, cast
 from deepteam.vulnerabilities import BaseVulnerability, Toxicity, PersonalSafety
@@ -31,19 +31,21 @@ class ToxicityAttacks(BaseVulnerability):
         self.personal_safety_attack_builder: PersonalSafety | None = None
         super().__init__(types)
 
-    def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
+    def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         attacks: List[RTTestCase] = []
         self.toxicity_attack_builder = Toxicity(
             simulator_model=self.simulator_model,
             evaluation_model=self.evaluation_model
         )
-        attacks.extend(self.toxicity_attack_builder.simulate_attacks())
+        attacks.extend(self.toxicity_attack_builder.simulate_attacks(
+            attacks_per_vulnerability_type=attacks_per_vulnerability_type))
         self.personal_safety_attack_builder = PersonalSafety(
             simulator_model=self.simulator_model,
             evaluation_model=self.evaluation_model,
             types=[PersonalSafetyType.BULLYING.value]
         )
-        attacks.extend(self.personal_safety_attack_builder.simulate_attacks())
+        attacks.extend(self.personal_safety_attack_builder.simulate_attacks(
+            attacks_per_vulnerability_type=attacks_per_vulnerability_type))
         return attacks
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:

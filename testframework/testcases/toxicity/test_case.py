@@ -2,7 +2,7 @@
 #  Florian Emanuel Sauer
 
 from __future__ import annotations
-from typing import List
+from typing import List, cast
 from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from deepteam.test_case import RTTestCase
 from testframework.enums import Category
@@ -23,3 +23,7 @@ class ToxicityTestCase(BaseTestCase):
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         return self.attack_builder._get_metric(attack)
+
+    def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+        return cast(ToxicityAttacks, self.attack_builder).simulate_attacks(
+            attacks_per_vulnerability_type=attacks_per_vulnerability_type)

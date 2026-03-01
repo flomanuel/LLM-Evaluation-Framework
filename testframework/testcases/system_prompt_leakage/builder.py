@@ -1,6 +1,6 @@
 #  Copyright (c) 2026.
 #  Florian Emanuel Sauer
-
+import os
 from enum import Enum
 from typing import Dict, List, cast
 from deepteam.vulnerabilities import BaseVulnerability, PromptLeakage  # type: ignore
@@ -30,7 +30,7 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
         self.verbose_mode = verbose_mode
         self.simulator_model = simulator_model
         self.evaluation_model = evaluation_model
-        self.default_attack_builder: BaseVulnerability | None = None
+        self.default_attack_builder: PromptLeakage | None = None
         super().__init__(types)
 
     def subcategory_to_prompt_leakage_type(self, subcategory) -> str | None:
@@ -41,7 +41,7 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
         }
         return mapping.get(subcategory)
 
-    def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
+    def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         attacks: List[RTTestCase] = []
         for row in CSVLoader.load_prompts_from_csv(
                 file_path="2_schaedlich_manuell_erstellt_basic.csv",
@@ -62,12 +62,14 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
                 deep_team_types.append(mapped_type)
 
         if deep_team_types:
+            attacks_per_vulnerability_type = os.environ.get("ATTACKS_PER_VULNERABILITY_TYPE", 1)
             self.default_attack_builder = PromptLeakage(
                 simulator_model=self.simulator_model,
                 evaluation_model=self.evaluation_model,
                 types=deep_team_types
             )
-            attacks.extend(self.default_attack_builder.simulate_attacks())
+            attacks.extend(self.default_attack_builder.simulate_attacks(
+                attacks_per_vulnerability_type=attacks_per_vulnerability_type))
 
         return attacks
 

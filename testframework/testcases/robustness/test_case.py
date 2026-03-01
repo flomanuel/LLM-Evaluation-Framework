@@ -2,7 +2,7 @@
 #  Florian Emanuel Sauer
 
 from __future__ import annotations
-from typing import cast
+from typing import cast, List
 from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from deepteam.test_case import RTTestCase
 from deepteam.vulnerabilities import Robustness
@@ -28,3 +28,7 @@ class RobustnessTestCase(BaseTestCase):
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         attack_type = cast(RobustnessType, attack.vulnerability_type)
         return cast(Robustness, self.attack_builder)._get_metric(type=attack_type)
+
+    def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+        return cast(Robustness, self.attack_builder).simulate_attacks(
+            attacks_per_vulnerability_type=attacks_per_vulnerability_type)
