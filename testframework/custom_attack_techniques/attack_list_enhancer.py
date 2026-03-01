@@ -24,7 +24,7 @@ class AttackEnhancement:
 
     name: str
     transform: Callable[[str, DeepEvalBaseLLM | str], str]
-    cooldown: Callable[[], None]  # add a cooldown since techniques are generated locally
+    cooldown: Callable[[int], None]  # add a cooldown since techniques are generated locally
 
 
 class AttackListEnhancer:
@@ -33,6 +33,9 @@ class AttackListEnhancer:
 
     ERROR_THRESHOLD_ENV_VAR = "ENHANCED_ATTACK_ERROR_THRESHOLD_PERCENT"
     DEFAULT_ERROR_THRESHOLD_PERCENT = 100.0
+    MAX_RETRIES = 1
+    RETRY_COOLDOWN_SECONDS = 60
+    SUCCESS_COOLDOWN_SECONDS = 10
 
     def __init__(self, simulator_model: DeepEvalBaseLLM | str):
         self.simulator_model = simulator_model
@@ -41,37 +44,37 @@ class AttackListEnhancer:
         AttackEnhancement(
             name=AdversarialPoetry.name,
             transform=lambda prompt, model: AdversarialPoetry().enhance(attack=prompt, simulator_model=model),
-            cooldown=lambda a: time.sleep(10)
+            cooldown=lambda time: time.sleep(time)
         ),
         AttackEnhancement(
             name=MathProblem.name,
             transform=lambda prompt, model: MathProblem().enhance(prompt, simulator_model=model),
-            cooldown=lambda a: time.sleep(10)
+            cooldown=lambda sleep: time.sleep(sleep)
         ),
         AttackEnhancement(
             name=Roleplay.name,
             transform=lambda prompt, model: Roleplay().enhance(prompt, simulator_model=model),
-            cooldown=lambda a: time.sleep(10)
+            cooldown=lambda sleep: time.sleep(sleep)
         ),
         AttackEnhancement(
             name=GoalRedirection.name,
             transform=lambda prompt, model: GoalRedirection().enhance(prompt),
-            cooldown=lambda a: None
+            cooldown=lambda sleep: time.sleep(sleep)
         ),
         AttackEnhancement(
             name=CipherCodeExpert.name,
             transform=lambda prompt, model: CipherCodeExpert().enhance(prompt),
-            cooldown=lambda a: None
+            cooldown=lambda sleep: time.sleep(sleep)
         ),
         AttackEnhancement(
             name=f"{Base64.name}/{PromptInjection.name}",
             transform=lambda prompt, model: PromptInjection().enhance(Base64().enhance(prompt)),
-            cooldown=lambda a: None
+            cooldown=lambda sleep: time.sleep(sleep)
         ),
         AttackEnhancement(
             name=Leetspeak.name,
             transform=lambda prompt, model: Leetspeak().enhance(prompt),
-            cooldown=lambda a: None
+            cooldown=lambda sleep: time.sleep(sleep)
         ),
     ]
 
@@ -90,7 +93,6 @@ class AttackListEnhancer:
         )
         error_threshold_percent = self._load_error_threshold_percent()
 
-        # todo: remove `or True`
         if not active_enhancements:
             return AttackEnhancementResult(
                 enhanced_attacks=[
@@ -122,9 +124,11 @@ class AttackListEnhancer:
             for enhancement in active_enhancements:
                 logger.info(f"Applying enhancement '{enhancement.name}'")
                 cloned_attack = deepcopy(attack)
-                try:
-                    enhanced_input = enhancement.transform(baseline_input, self.simulator_model)
-                    enhancement.cooldown()
+                enhanced_input, enhancement_error = self._apply_enhancement_with_retry(
+                    enhancement=enhancement,
+                    baseline_input=baseline_input,
+                )
+                if enhancement_error is None:
                     enhanced_attacks.append(
                         EnhancedAttack(
                             attack_case=cloned_attack,
@@ -133,8 +137,7 @@ class AttackListEnhancer:
                             techniques=[enhancement.name],
                         )
                     )
-                except Exception as exc:
-                    enhancement_error = TestErrorInfo.from_exception(exc)
+                else:
                     failed_attack_count += 1
                     logger.error(
                         f"Enhancement '{enhancement.name}' failed "
@@ -181,6 +184,34 @@ class AttackListEnhancer:
             failed_attack_count=failed_attack_count,
             error_threshold_percent=error_threshold_percent,
         )
+
+    def _apply_enhancement_with_retry(
+            self,
+            enhancement: AttackEnhancement,
+            baseline_input: str,
+    ) -> tuple[str | None, TestErrorInfo | None]:
+        """Apply one enhancement and retry it once after a cooldown if it fails."""
+        max_attempts = self.MAX_RETRIES + 1
+        for attempt in range(1, max_attempts + 1):
+            try:
+                enhanced_input = enhancement.transform(baseline_input, self.simulator_model)
+                logger.info(
+                    f"Enhancement '{enhancement.name}' successful. Waiting {self.SUCCESS_COOLDOWN_SECONDS} seconds for cooldown.")
+                enhancement.cooldown(self.SUCCESS_COOLDOWN_SECONDS)
+                return enhanced_input, None
+            except Exception as exc:
+                enhancement_error = TestErrorInfo.from_exception(exc)
+                if attempt >= max_attempts:
+                    return None, enhancement_error
+
+                logger.warning(
+                    f"Enhancement '{enhancement.name}' failed on attempt {attempt}/{max_attempts} "
+                    f"({enhancement_error.error_type.value}): {enhancement_error.message}. "
+                    f"Retrying in {self.RETRY_COOLDOWN_SECONDS} seconds."
+                )
+                time.sleep(self.RETRY_COOLDOWN_SECONDS)
+
+        raise RuntimeError("Enhancement retry loop ended unexpectedly.")
 
     @classmethod
     def _load_error_threshold_percent(cls) -> float:
