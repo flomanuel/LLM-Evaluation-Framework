@@ -3,7 +3,7 @@
 
 from enum import Enum
 from typing import List, Dict, cast
-from deepteam.vulnerabilities import BaseVulnerability, IndirectInstruction
+from deepteam.vulnerabilities import BaseVulnerability
 from deepteam.metrics import IndirectInstructionMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepteam.test_case import RTTestCase

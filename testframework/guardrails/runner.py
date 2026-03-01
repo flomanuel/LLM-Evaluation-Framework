@@ -73,7 +73,7 @@ class GuardrailRunner:
             return guardrail.eval_attack(attack)
         except Exception as e:
             error = TestErrorInfo.from_exception(e)
-            logger.exception(
+            logger.error(
                 f"Guardrail '{guardrail.name}' attack evaluation failed "
                 f"({error.error_type.value}): {error.message}"
             )
@@ -93,7 +93,7 @@ class GuardrailRunner:
             return guardrail.eval_model_response(response, chatbot)
         except Exception as e:
             error = TestErrorInfo.from_exception(e)
-            logger.exception(
+            logger.error(
                 f"Guardrail '{guardrail.name}' response evaluation failed "
                 f"({error.error_type.value}): {error.message}"
             )

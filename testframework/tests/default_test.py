@@ -6,14 +6,13 @@ from pathlib import Path
 from typing import List
 from loguru import logger
 from testframework import ChatbotName
-from testframework.chatbots import LangChainChatbot, VectorStore, DummyChatbot
+from testframework.chatbots import LangChainChatbot, VectorStore
 from testframework.chatbots.store import ChatbotStore
 from testframework.testcases import BenignTestCase, BiasTestCase, CompetitionTestCase, EthicsTestCase, \
     ExcessiveAgencyTestCase, FairnessTestCase, IllegalActivityTestCase, IndirectInstructionTestCase, \
-    PrivacyViolationsTestCase, RobustnessTestCase, SystemPromptLeakageTestCase, ToxicityTestCase
+    PrivacyViolationsTestCase, RobustnessTestCase, SystemPromptLeakageTestCase, ToxicityTestCase, FairnessSubcategory
 from testframework.testcases.base import BaseTestCase
 from testframework.testcases.ethics.subcategory import EthicsSubcategory
-from testframework.testcases.fairness.subcategory import FairnessSubcategory
 from testframework.testcases.illegal_activity.subcategory import IllegalActivitySubcategory
 from testframework.testcases.indirect_instruction.subcategory import IndirectInstructionSubcategory
 from testframework.tests.base_test import Test
@@ -32,12 +31,12 @@ class DefaultTest(Test):
             name=ChatbotName.LANGCHAIN_GPT_5,
             model="gpt-5",
             vector_store=vector_store)
-        ChatbotStore.add_chatbot(gpt_5)
+        #ChatbotStore.add_chatbot(gpt_5)
         gpt_41 = LangChainChatbot(
             name=ChatbotName.LANGCHAIN_GPT_41,
             model="gpt-4.1",
             vector_store=vector_store)
-        ChatbotStore.add_chatbot(gpt_41)
+        #ChatbotStore.add_chatbot(gpt_41)
         logger.debug("Baseline chatbot setup complete")
 
     def get_test_cases(self) -> List[BaseTestCase]:
@@ -58,8 +57,8 @@ class DefaultTest(Test):
             # EthicsTestCase(ethics),
             # FairnessTestCase(),
             # SystemPromptLeakageTestCase(),
-            ExcessiveAgencyTestCase(),
-            # IndirectInstructionTestCase(indirect_instruction),
+            # ExcessiveAgencyTestCase(),
+            IndirectInstructionTestCase(indirect_instruction),
             # PrivacyViolationsTestCase(), # todo: prüfen ode die zugehörigen Einträge aus der CSV-Datei richtig ausgewertet und im JSON kategorisiert werden!
             # BiasTestCase(),
             # ToxicityTestCase(),

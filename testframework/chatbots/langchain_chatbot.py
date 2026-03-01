@@ -209,7 +209,7 @@ class LangChainChatbot(BaseChatbot):
             return response
         except Exception as e:
             error_info = TestErrorInfo.from_exception(e)
-            logger.exception(
+            logger.error(
                 f"LLM query failed (chatbot={self.name.value}, model={self._model_name}, "
                 f"duration={perf_counter() - query_started:.2f}s, "
                 f"error_type={error_info.error_type.value}): {error_info.message}"

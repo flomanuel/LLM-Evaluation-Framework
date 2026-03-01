@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import List
+from typing import List, cast
 
 from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from deepteam.test_case import RTTestCase
@@ -28,3 +28,6 @@ class BenignTestCase(BaseTestCase):
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         return self.attack_builder._get_metric()
+
+    def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+        return cast(BenignAttacks, self.attack_builder).simulate_attacks()

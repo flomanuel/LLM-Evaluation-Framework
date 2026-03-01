@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import time
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Callable, List
@@ -23,6 +24,7 @@ class AttackEnhancement:
 
     name: str
     transform: Callable[[str, DeepEvalBaseLLM | str], str]
+    cooldown: Callable[[], None]  # add a cooldown since techniques are generated locally
 
 
 class AttackListEnhancer:
@@ -38,31 +40,38 @@ class AttackListEnhancer:
     ENHANCEMENTS: List[AttackEnhancement] = [
         AttackEnhancement(
             name=AdversarialPoetry.name,
-            transform=lambda prompt, model: AdversarialPoetry().enhance(attack=prompt, simulator_model=model)
+            transform=lambda prompt, model: AdversarialPoetry().enhance(attack=prompt, simulator_model=model),
+            cooldown=lambda a: time.sleep(10)
         ),
         AttackEnhancement(
             name=MathProblem.name,
-            transform=lambda prompt, model: MathProblem().enhance(prompt, simulator_model=model)
+            transform=lambda prompt, model: MathProblem().enhance(prompt, simulator_model=model),
+            cooldown=lambda a: time.sleep(10)
         ),
         AttackEnhancement(
             name=Roleplay.name,
-            transform=lambda prompt, model: Roleplay().enhance(prompt, simulator_model=model)
+            transform=lambda prompt, model: Roleplay().enhance(prompt, simulator_model=model),
+            cooldown=lambda a: time.sleep(10)
         ),
         AttackEnhancement(
             name=GoalRedirection.name,
-            transform=lambda prompt, model: GoalRedirection().enhance(prompt)
+            transform=lambda prompt, model: GoalRedirection().enhance(prompt),
+            cooldown=lambda a: None
         ),
         AttackEnhancement(
             name=CipherCodeExpert.name,
-            transform=lambda prompt, model: CipherCodeExpert().enhance(prompt)
+            transform=lambda prompt, model: CipherCodeExpert().enhance(prompt),
+            cooldown=lambda a: None
         ),
         AttackEnhancement(
             name=f"{Base64.name}/{PromptInjection.name}",
-            transform=lambda prompt, model: PromptInjection().enhance(Base64().enhance(prompt))
+            transform=lambda prompt, model: PromptInjection().enhance(Base64().enhance(prompt)),
+            cooldown=lambda a: None
         ),
         AttackEnhancement(
             name=Leetspeak.name,
-            transform=lambda prompt, model: Leetspeak().enhance(prompt)
+            transform=lambda prompt, model: Leetspeak().enhance(prompt),
+            cooldown=lambda a: None
         ),
     ]
 
@@ -115,6 +124,7 @@ class AttackListEnhancer:
                 cloned_attack = deepcopy(attack)
                 try:
                     enhanced_input = enhancement.transform(baseline_input, self.simulator_model)
+                    enhancement.cooldown()
                     enhanced_attacks.append(
                         EnhancedAttack(
                             attack_case=cloned_attack,
@@ -126,7 +136,7 @@ class AttackListEnhancer:
                 except Exception as exc:
                     enhancement_error = TestErrorInfo.from_exception(exc)
                     failed_attack_count += 1
-                    logger.exception(
+                    logger.error(
                         f"Enhancement '{enhancement.name}' failed "
                         f"({enhancement_error.error_type.value}): {enhancement_error.message}"
                     )

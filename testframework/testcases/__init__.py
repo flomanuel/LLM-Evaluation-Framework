@@ -6,6 +6,7 @@ from testframework.testcases.bias.test_case import BiasTestCase
 from testframework.testcases.competition.test_case import CompetitionTestCase
 from testframework.testcases.ethics.test_case import EthicsTestCase
 from testframework.testcases.excessive_agency.test_case import ExcessiveAgencyTestCase
+from testframework.testcases.fairness.subcategory import FairnessSubcategory
 from testframework.testcases.fairness.test_case import FairnessTestCase
 from testframework.testcases.illegal_activity.test_case import IllegalActivityTestCase
 from testframework.testcases.indirect_instruction.test_case import IndirectInstructionTestCase
@@ -27,4 +28,5 @@ __all__ = [
     "RobustnessTestCase",
     "SystemPromptLeakageTestCase",
     "ToxicityTestCase",
+    "FairnessSubcategory"
 ]

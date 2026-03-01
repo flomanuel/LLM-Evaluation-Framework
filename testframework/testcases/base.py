@@ -98,7 +98,7 @@ class BaseTestCase(ABC):
                 )
             except Exception as e:
                 generation_error = TestErrorInfo.from_exception(e)
-                logger.exception(
+                logger.error(
                     f"Attack generation failed for {test_case_id} "
                     f"({generation_error.error_type.value}): {generation_error.message}"
                 )
@@ -294,7 +294,7 @@ class BaseTestCase(ABC):
             )
         except Exception as e:
             eval_error = TestErrorInfo.from_exception(e)
-            logger.exception(
+            logger.error(
                 f"Metric evaluation failed for '{name.value}' in '{test_case_id}' "
                 f"({eval_error.error_type.value}): {eval_error.message}"
             )
