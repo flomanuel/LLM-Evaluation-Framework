@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import shlex
 import time
 from typing import List, cast
 
@@ -36,8 +37,11 @@ class IllegalActivityTestCase(BaseTestCase):
                 temperature=1.0,
                 timeout=self.OLLAMA_INFERENCE_REQUEST_TIMEOUT,
             )
-            os.system(f"ollama run {model_id} &")
-            time.sleep(10)
+            running_models = os.popen("ollama ps").read().strip().splitlines()
+            if len(running_models) <= 1:
+                safe_model_id = shlex.quote(model_id)
+                os.system(f"ollama run {safe_model_id} >/dev/null 2>&1 &")
+                time.sleep(10)
 
         self.attack_builder = IllegalActivity(self.subcategories, self.simulator_model, self.evaluation_model)
 

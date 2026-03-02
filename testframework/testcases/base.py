@@ -31,7 +31,7 @@ class BaseTestCase(ABC):
 
     results: TestCaseResult
     run_folder: Path | None = None
-    simulator_model: DeepEvalBaseLLM | None | str = None  # = "gpt-3.5-turbo-0125"
+    simulator_model: DeepEvalBaseLLM | None | str = "gpt-3.5-turbo-0125"
     evaluation_model: DeepEvalBaseLLM | None | str = None  # "gpt-4o"
 
     def __init__(self,

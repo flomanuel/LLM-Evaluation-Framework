@@ -7,6 +7,7 @@ import os
 import time
 from copy import deepcopy
 from dataclasses import dataclass
+from shlex import shlex
 from typing import Callable, List
 from deepeval.models import DeepEvalBaseLLM
 from dotenv import load_dotenv
@@ -215,10 +216,11 @@ class AttackListEnhancer:
                 )
 
                 if self.LOCAL_MODEL_ID is not False:
-                    os.system(f"ollama stop {self.LOCAL_MODEL_ID} || true")
-                    time.sleep(self.RETRY_COOLDOWN_SECONDS)
-                    os.system(f"ollama run {self.LOCAL_MODEL_ID} &")
-                    time.sleep(10)
+                    running_models = os.popen("ollama ps").read().strip().splitlines()
+                    if len(running_models) <= 1:
+                        safe_model_id = shlex.quote(self.LOCAL_MODEL_ID)
+                        os.system(f"ollama run {safe_model_id} >/dev/null 2>&1 &")
+                        time.sleep(10)
 
         raise RuntimeError("Enhancement retry loop ended unexpectedly.")
 

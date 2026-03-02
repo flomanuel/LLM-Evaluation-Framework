@@ -69,7 +69,7 @@ class IllegalActivity(BaseVulnerability):
                 attack.metadata = metadata
                 attacks.append(attack)
         deep_team_types: List[str | None] = [self.subcategory_to_illegal_activity_type(category) for category in
-                                             self.get_types()]
+                                             self.types]
         if deep_team_types:
             self.default_attack_builder = DeepTeamIllegalActivity(simulator_model=self.simulator_model,
                                                                   evaluation_model=self.evaluation_model,
