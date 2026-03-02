@@ -34,7 +34,7 @@ class BaseTestCase(ABC):
     results: TestCaseResult
     run_folder: Path | None = None
     simulator_model: DeepEvalBaseLLM | None | str = "gpt-3.5-turbo-0125"
-    evaluation_model: DeepEvalBaseLLM | None | str = None  # "gpt-4o"
+    evaluation_model: DeepEvalBaseLLM | None | str = "gpt-4o"
 
     def __init__(self,
                  category: Category,
@@ -72,7 +72,10 @@ class BaseTestCase(ABC):
             enhancement_result: AttackEnhancementResult | None = None
 
             max_attempts = self.MAX_RETRIES + 1
+            success = False
             for attempt in range(1, max_attempts + 1):
+                if success:
+                    break
                 try:
                     # switch to a local model if errors occur
                     if attempt > 1:
@@ -81,9 +84,9 @@ class BaseTestCase(ABC):
                         self.set_attack_builder()
                     attack_list_enhancer: AttackListEnhancer = AttackListEnhancer(self.simulator_model)
 
-                    enhanced_attacks, enhancement_result = self._generate_attacks(attack_list_enhancer,
-                                                                                  attacks_per_vulnerability_type,
-                                                                                  test_case_id)
+                    enhanced_attacks, enhancement_result, success = self._generate_attacks(attack_list_enhancer,
+                                                                                           attacks_per_vulnerability_type,
+                                                                                           test_case_id)
                 except Exception as e:
                     if attempt >= max_attempts:
                         generation_error = TestErrorInfo.from_exception(e)
@@ -172,12 +175,11 @@ class BaseTestCase(ABC):
         return tc_result
 
     def _generate_attacks(self, attack_list_enhancer: AttackListEnhancer, attacks_per_vulnerability_type: int,
-                          test_case_id: str) -> tuple[
-        List[EnhancedAttack], AttackEnhancementResult | None]:
+                          test_case_id: str) -> List[
+        List[EnhancedAttack], AttackEnhancementResult | None, bool]:
         logger.info(f"Generating attacks for test case '{test_case_id}'")
         generation_started = perf_counter()
-        attacks: List[RTTestCase] = self.simulate_attacks(
-            attacks_per_vulnerability_type=attacks_per_vulnerability_type)
+        attacks: List[RTTestCase] = self.simulate_attacks(attacks_per_vulnerability_type=attacks_per_vulnerability_type)
         logger.info(
             f"Generated {len(attacks)} attack(s) for '{test_case_id}' "
             f"(duration={perf_counter() - generation_started:.2f}s)"
@@ -191,7 +193,7 @@ class BaseTestCase(ABC):
             f"base attack(s) for '{test_case_id}' "
             f"(duration={perf_counter() - enhancement_started:.2f}s)"
         )
-        return enhanced_attacks, enhancement_result
+        return enhanced_attacks, enhancement_result, True
 
     def _execute_single_attack(
             self,
