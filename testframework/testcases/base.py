@@ -65,6 +65,7 @@ class BaseTestCase(ABC):
         attack_results: dict[str, Attack] = {}
         generation_error: TestErrorInfo | None = None
         enhancement_error: TestErrorInfo | None = None
+        latest_attempted_generation_model: str | None = None
 
         if self.attack_builder:
             attacks_per_vulnerability_type = int(os.environ.get("ATTACKS_PER_VULNERABILITY_TYPE", 1))
@@ -82,6 +83,7 @@ class BaseTestCase(ABC):
                         self.simulator_model = OllamaGenerator.get_chatbot()
                         OllamaGenerator.start_model_if_not_running()
                         self.set_attack_builder()
+                    latest_attempted_generation_model = self._model_name(self.simulator_model)
                     attack_list_enhancer: AttackListEnhancer = AttackListEnhancer(self.simulator_model)
 
                     enhanced_attacks, enhancement_result, success = self._generate_attacks(attack_list_enhancer,
@@ -162,6 +164,9 @@ class BaseTestCase(ABC):
         tc_result = TestCaseResult(
             category=self.category,
             subcategories=self.subcategories if self.subcategories else [],
+            model=TestCaseResult.ModelInfo(
+                attack_and_vulnerability_generation=latest_attempted_generation_model,
+            ),
             attacks=attack_results,
             generation_error=generation_error,
             enhancement_error=enhancement_error,
@@ -331,3 +336,16 @@ class BaseTestCase(ABC):
 
         subcategories = ";".join(str(subcat.value) for subcat in self.subcategories)
         return f"{self.category.value}_{subcategories}"
+
+    @staticmethod
+    def _model_name(model: DeepEvalBaseLLM | None | str) -> str | None:
+        """Get a readable model name for JSON serialization."""
+        if model is None:
+            return None
+        if isinstance(model, str):
+            return model
+
+        try:
+            return model.get_model_name()
+        except Exception:
+            return str(model)

@@ -75,7 +75,8 @@ class IllegalActivity(BaseVulnerability):
                                                                   evaluation_model=self.evaluation_model,
                                                                   types=deep_team_types)
             attacks.extend(
-                self.default_attack_builder.simulate_attacks(attacks_per_vulnerability_type=attacks_per_vulnerability_type))
+                self.default_attack_builder.simulate_attacks(
+                    attacks_per_vulnerability_type=attacks_per_vulnerability_type))
         return attacks
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:

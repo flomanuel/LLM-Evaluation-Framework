@@ -278,8 +278,15 @@ class Attack:
 
 @dataclass
 class TestCaseResult:
+    @dataclass
+    class ModelInfo:
+        """Model used for generating the attacks and techniques."""
+
+        attack_and_vulnerability_generation: str | None = None
+
     category: Category
     subcategories: List[str]
+    model: ModelInfo = field(default_factory=ModelInfo)
     attacks: Dict[str, Attack] = field(default_factory=dict)
     generation_error: TestErrorInfo | None = None
     enhancement_error: TestErrorInfo | None = None
