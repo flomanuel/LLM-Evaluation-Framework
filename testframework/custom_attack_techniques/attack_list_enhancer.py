@@ -6,7 +6,7 @@ from __future__ import annotations
 import os
 from copy import deepcopy
 from typing import List
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, OllamaModel
 from dotenv import load_dotenv
 from deepteam.test_case import RTTestCase
 from loguru import logger
@@ -149,7 +149,7 @@ class AttackListEnhancer:
         for attempt in range(1, max_attempts + 1):
             try:
                 enhanced_input = enhancement.transform(baseline_input, self.simulator_model)
-                if self.LOCAL_MODEL_ID is not False and enhancement.cooldown is not None:
+                if isinstance(self.simulator_model, OllamaModel) and enhancement.cooldown is not None:
                     logger.info(
                         f"Cooldown: {self.SUCCESS_COOLDOWN_SECONDS}s.")
                     enhancement.cooldown(self.SUCCESS_COOLDOWN_SECONDS)
