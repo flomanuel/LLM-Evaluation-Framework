@@ -102,34 +102,15 @@ class BaseTestCase(ABC):
                     f"because prompt enhancement failed"
                 )
 
-            skip_chatbot_execution = (
-                    enhancement_result is not None
-                    and enhancement_result.threshold_exceeded
-            )
-            if skip_chatbot_execution and enhancement_result is not None:
+            skip_chatbot_execution = (enhancement_result is not None and enhancement_result.threshold_exceeded)
+            if skip_chatbot_execution:
                 enhancement_error = TestErrorInfo(
                     error_type=LLMErrorType.THRESHOLD_EXCEEDED,
-                    message=(
-                        "Skipped chatbot execution because the failed enhancement "
-                        f"rate ({enhancement_result.invalid_percentage:.2f}%) exceeded "
-                        f"the configured threshold "
-                        f"({enhancement_result.error_threshold_percent:.2f}%)."
-                    ),
+                    message="Skipped chatbot execution since the threshold for failed enhancements was reached.",
                 )
                 logger.warning(
-                    f"Stopping test case '{test_case_id}' before chatbot execution "
-                    f"because the failed enhancement rate exceeded the configured "
-                    f"threshold (failed={enhancement_result.failed_attack_count}, "
-                    f"planned={enhancement_result.planned_attack_count}, "
-                    f"error_rate={enhancement_result.invalid_percentage:.2f}%, "
-                    f"threshold={enhancement_result.error_threshold_percent:.2f}%)"
-                )
-                if executable_attacks:
-                    logger.warning(
-                        f"Skipping {executable_attacks} otherwise executable attack(s) "
-                        f"for '{test_case_id}' because the enhancement error threshold "
-                        f"was exceeded"
-                    )
+                    f"Skipped chatbot execution since the threshold for failed enhancements was reached."
+                    f"{executable_attacks if executable_attacks else 0} attacks would be executable.")
             else:
                 chatbots = ChatbotStore.get_chatbots()
                 logger.info(
