@@ -19,6 +19,9 @@ class EthicsTestCase(BaseTestCase):
             Category.ETHICS,
             subcategories if subcategories else list(EthicsSubcategory),
         )
+        self.set_attack_builder()
+
+    def set_attack_builder(self) -> None:
         self.attack_builder = EthicsAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:

@@ -19,6 +19,9 @@ class RobustnessTestCase(BaseTestCase):
             Category.ROBUSTNESS,
             []
         )
+        self.set_attack_builder()
+
+    def set_attack_builder(self) -> None:
         self.attack_builder = Robustness(
             simulator_model=self.simulator_model,
             evaluation_model=self.evaluation_model,

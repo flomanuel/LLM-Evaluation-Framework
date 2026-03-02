@@ -21,6 +21,9 @@ class CompetitionTestCase(BaseTestCase):
             Category.COMPETITION,
             [],
         )
+        self.set_attack_builder()
+
+    def set_attack_builder(self) -> None:
         self.attack_builder = Competition(simulator_model=self.simulator_model, evaluation_model=self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:

@@ -20,6 +20,9 @@ class PrivacyViolationsTestCase(BaseTestCase):
             Category.PRIVACY_VIOLATIONS,
             []
         )
+        self.set_attack_builder()
+
+    def set_attack_builder(self) -> None:
         self.attack_builder = PrivacyViolationsAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase = None) -> BaseRedTeamingMetric:

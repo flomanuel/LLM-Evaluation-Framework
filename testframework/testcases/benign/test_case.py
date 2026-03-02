@@ -23,6 +23,9 @@ class BenignTestCase(BaseTestCase):
             subcategories,
             severity=Severity.SAFE
         )
+        self.set_attack_builder()
+
+    def set_attack_builder(self) -> None:
         # set only after simulator_model and evaluation_model are available
         self.attack_builder = BenignAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
 

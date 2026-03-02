@@ -20,6 +20,9 @@ class FairnessTestCase(BaseTestCase):
             Category.FAIRNESS,
             subcategories,
         )
+        self.set_attack_builder()
+
+    def set_attack_builder(self) -> None:
         self.attack_builder = FairnessAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:

@@ -19,6 +19,9 @@ class SystemPromptLeakageTestCase(BaseTestCase):
             Category.SYSTEM_PROMPT_LEAKAGE,
             subcategories
         )
+        self.set_attack_builder()
+
+    def set_attack_builder(self) -> None:
         self.attack_builder = SystemPromptLeakageAttacks(self.subcategories, self.simulator_model,
                                                          self.evaluation_model)
 

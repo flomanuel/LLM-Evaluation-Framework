@@ -52,6 +52,11 @@ class BaseTestCase(ABC):
         """Simulate attacks for the test case."""
         raise NotImplementedError
 
+    @abstractmethod
+    def set_attack_builder(self) -> None:
+        """Build or rebuild the attack builder with the current simulator model."""
+        raise NotImplementedError
+
     def execute(self) -> TestCaseResult:
         """Run the test case and return a mapping from attack_id to TestCaseResult.
             Build the attacks and add the techniques. Then execute the attacks on the guardrails.
@@ -73,11 +78,11 @@ class BaseTestCase(ABC):
                     if attempt > 1:
                         self.simulator_model = OllamaGenerator.get_chatbot()
                         OllamaGenerator.start_model_if_not_running()
+                        self.set_attack_builder()
                     attack_list_enhancer: AttackListEnhancer = AttackListEnhancer(self.simulator_model)
 
                     enhanced_attacks, enhancement_result = self._generate_attacks(attack_list_enhancer,
                                                                                   attacks_per_vulnerability_type,
-                                                                                  enhanced_attacks, enhancement_result,
                                                                                   test_case_id)
                 except Exception as e:
                     if attempt >= max_attempts:
@@ -186,9 +191,8 @@ class BaseTestCase(ABC):
         return tc_result
 
     def _generate_attacks(self, attack_list_enhancer: AttackListEnhancer, attacks_per_vulnerability_type: int,
-                          enhanced_attacks: list[EnhancedAttack], enhancement_result: AttackEnhancementResult | None,
                           test_case_id: str) -> tuple[
-        list[EnhancedAttack], AttackEnhancementResult | None]:
+        List[EnhancedAttack], AttackEnhancementResult | None]:
         logger.info(f"Generating attacks for test case '{test_case_id}'")
         generation_started = perf_counter()
         attacks: List[RTTestCase] = self.simulate_attacks(
