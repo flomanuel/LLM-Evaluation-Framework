@@ -24,11 +24,13 @@ from testframework.metrics import ToolCallCodeInjectionMetric
 from testframework.models import TestCaseResult, Attack, DetectionResult, PromptVariants, ChatbotResponseEvaluation, \
     TestErrorInfo, EnhancedAttack, ChatbotResponse, AttackEnhancementResult, LLMErrorType
 from testframework.storage import save_test_case_result
+from testframework.util.OllamaGenerator import OllamaGenerator
 
 
 class BaseTestCase(ABC):
     """Abstract base for all test cases."""
 
+    MAX_RETRIES = 1
     results: TestCaseResult
     run_folder: Path | None = None
     simulator_model: DeepEvalBaseLLM | None | str = "gpt-3.5-turbo-0125"
@@ -58,36 +60,32 @@ class BaseTestCase(ABC):
         attack_results: dict[str, Attack] = {}
         generation_error: TestErrorInfo | None = None
         enhancement_error: TestErrorInfo | None = None
-        attack_list_enhancer: AttackListEnhancer = AttackListEnhancer(self.simulator_model)
 
         if self.attack_builder:
             attacks_per_vulnerability_type = int(os.environ.get("ATTACKS_PER_VULNERABILITY_TYPE", 1))
             enhanced_attacks: List[EnhancedAttack] = []
             enhancement_result: AttackEnhancementResult | None = None
-            try:
-                logger.info(f"Generating attacks for test case '{test_case_id}'")
-                generation_started = perf_counter()
-                attacks: List[RTTestCase] = self.simulate_attacks(
-                    attacks_per_vulnerability_type=attacks_per_vulnerability_type)
-                logger.info(
-                    f"Generated {len(attacks)} attack(s) for '{test_case_id}' "
-                    f"(duration={perf_counter() - generation_started:.2f}s)"
-                )
-                logger.info(f"Enhancing attacks for test case '{test_case_id}'")
-                enhancement_started = perf_counter()
-                enhancement_result = attack_list_enhancer.enhance(attacks)
-                enhanced_attacks = enhancement_result.enhanced_attacks
-                logger.info(
-                    f"Prepared {len(enhanced_attacks)} enhanced attack(s) from {len(attacks)} "
-                    f"base attack(s) for '{test_case_id}' "
-                    f"(duration={perf_counter() - enhancement_started:.2f}s)"
-                )
-            except Exception as e:
-                generation_error = TestErrorInfo.from_exception(e)
-                logger.error(
-                    f"Attack generation failed for {test_case_id} "
-                    f"({generation_error.error_type.value}): {generation_error.message}"
-                )
+
+            max_attempts = self.MAX_RETRIES + 1
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    # switch to a local model if errors occur
+                    if attempt > 1:
+                        self.simulator_model = OllamaGenerator.get_chatbot()
+                        OllamaGenerator.start_model_if_not_running()
+                    attack_list_enhancer: AttackListEnhancer = AttackListEnhancer(self.simulator_model)
+
+                    enhanced_attacks, enhancement_result = self._generate_attacks(attack_list_enhancer,
+                                                                                  attacks_per_vulnerability_type,
+                                                                                  enhanced_attacks, enhancement_result,
+                                                                                  test_case_id)
+                except Exception as e:
+                    if attempt >= max_attempts:
+                        generation_error = TestErrorInfo.from_exception(e)
+                        logger.error(
+                            f"Attack generation failed for {test_case_id} "
+                            f"({generation_error.error_type.value}): {generation_error.message}"
+                        )
 
             executable_attacks = sum(1 for attack in enhanced_attacks if not attack.is_error)
             skipped_attacks = len(enhanced_attacks) - executable_attacks
@@ -186,6 +184,29 @@ class BaseTestCase(ABC):
             f"(stored_attacks={len(attack_results)})"
         )
         return tc_result
+
+    def _generate_attacks(self, attack_list_enhancer: AttackListEnhancer, attacks_per_vulnerability_type: int,
+                          enhanced_attacks: list[EnhancedAttack], enhancement_result: AttackEnhancementResult | None,
+                          test_case_id: str) -> tuple[
+        list[EnhancedAttack], AttackEnhancementResult | None]:
+        logger.info(f"Generating attacks for test case '{test_case_id}'")
+        generation_started = perf_counter()
+        attacks: List[RTTestCase] = self.simulate_attacks(
+            attacks_per_vulnerability_type=attacks_per_vulnerability_type)
+        logger.info(
+            f"Generated {len(attacks)} attack(s) for '{test_case_id}' "
+            f"(duration={perf_counter() - generation_started:.2f}s)"
+        )
+        logger.info(f"Enhancing attacks for test case '{test_case_id}'")
+        enhancement_started = perf_counter()
+        enhancement_result = attack_list_enhancer.enhance(attacks)
+        enhanced_attacks = enhancement_result.enhanced_attacks
+        logger.info(
+            f"Prepared {len(enhanced_attacks)} enhanced attack(s) from {len(attacks)} "
+            f"base attack(s) for '{test_case_id}' "
+            f"(duration={perf_counter() - enhancement_started:.2f}s)"
+        )
+        return enhanced_attacks, enhancement_result
 
     def _execute_single_attack(
             self,

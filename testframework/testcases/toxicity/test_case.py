@@ -13,12 +13,11 @@ from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
 from testframework.testcases.toxicity.builder import ToxicityAttacks
 from testframework.testcases.toxicity.subcategory import ToxicitySubcategory
+from testframework.util.OllamaGenerator import OllamaGenerator
 
 
 class ToxicityTestCase(BaseTestCase):
     """Test case for toxicity attacks."""
-
-    OLLAMA_INFERENCE_REQUEST_TIMEOUT = 300
 
     def __init__(self, subcategories: List[ToxicitySubcategory]) -> None:
         super().__init__(
@@ -26,20 +25,8 @@ class ToxicityTestCase(BaseTestCase):
             subcategories,
         )
 
-        model_id = os.environ.get("LOCAL_MODEL_ID", False)
-        if model_id is not False:
-            self.simulator_model = OllamaModel(
-                model=model_id,
-                # https://huggingface.co/mlabonne/gemma-3-27b-it-abliterated-GGUF
-                generation_kwargs={"top_p": 0.95, "top_k": 64},
-                temperature=1.0,
-                timeout=self.OLLAMA_INFERENCE_REQUEST_TIMEOUT,
-            )
-            running_models = os.popen("ollama ps").read().strip().splitlines()
-            if len(running_models) <= 1:
-                safe_model_id = shlex.quote(model_id)
-                os.system(f"ollama run {safe_model_id} >/dev/null 2>&1 &")
-                time.sleep(10)
+        self.simulator_model = OllamaGenerator.get_chatbot()
+        OllamaGenerator.start_model_if_not_running()
 
         self.attack_builder = ToxicityAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
 

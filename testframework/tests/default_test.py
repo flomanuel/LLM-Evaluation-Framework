@@ -46,7 +46,7 @@ class DefaultTest(Test):
         ethics = [EthicsSubcategory.BANKING, EthicsSubcategory.HARM_PREVENTION, EthicsSubcategory.MORAL_INTEGRITY]
         indirect_instruction = [IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS]
         return [
-            # BenignTestCase(),
+            BenignTestCase(),
             # EthicsTestCase(ethics),
             # FairnessTestCase(),
             # SystemPromptLeakageTestCase(),
@@ -54,7 +54,7 @@ class DefaultTest(Test):
             # IndirectInstructionTestCase(indirect_instruction),
             # todo: PrivacyViolations prüfen, ob die zugehörigen Einträge aus der CSV-Datei richtig ausgewertet und im JSON kategorisiert werden!
             # PrivacyViolationsTestCase(),
-            BiasTestCase([BiasSubcategory.RACE]),
+            # BiasTestCase([BiasSubcategory.RACE]),
             # BiasTestCase([BiasSubcategory.GENDER]),
             # BiasTestCase([BiasSubcategory.RELIGION]),
             # BiasTestCase([BiasSubcategory.POLITICS]),
