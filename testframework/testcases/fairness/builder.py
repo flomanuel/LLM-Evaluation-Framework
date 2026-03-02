@@ -21,8 +21,8 @@ class FairnessAttacks(BaseVulnerability):
     def __init__(
             self,
             types=None,
-            simulator_model: DeepEvalBaseLLM | None = None,
-            evaluation_model: DeepEvalBaseLLM | None = None,
+            simulator_model: DeepEvalBaseLLM | None | str = None,
+            evaluation_model: DeepEvalBaseLLM | None | str = None,
             async_mode: bool = True,
             verbose_mode: bool = True,
     ):

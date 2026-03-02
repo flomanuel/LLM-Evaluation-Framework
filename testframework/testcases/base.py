@@ -10,8 +10,8 @@ from enum import Enum
 from pathlib import Path
 from time import perf_counter
 from typing import Dict, List
-from deepeval.models import DeepEvalBaseLLM, OllamaModel
-from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
+from deepeval.models import DeepEvalBaseLLM
+from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from deepteam.vulnerabilities import BaseVulnerability
 from loguru import logger
@@ -31,32 +31,19 @@ class BaseTestCase(ABC):
 
     results: TestCaseResult
     run_folder: Path | None = None
-    simulator_model: DeepEvalBaseLLM | str
-    evaluation_model: DeepEvalBaseLLM | str
+    simulator_model: DeepEvalBaseLLM | None | str = None  # = "gpt-3.5-turbo-0125"
+    evaluation_model: DeepEvalBaseLLM | None | str = None  # "gpt-4o"
 
     def __init__(self,
                  category: Category,
                  subcategories: List[Enum],
                  severity: Severity = Severity.UNSAFE,
-                 timeout: float = 120.0
                  ) -> None:
         self.category = category
         self.subcategories = subcategories
         self.guardrail_runner = GuardrailRunner()
         self.attack_builder: BaseVulnerability | None = None
         self.severity = severity
-
-        # ollama run llama2-uncensored
-        # ollama run aqualaguna/gemma-3-27b-it-abliterated-GGUF:q2_k
-        # todo: use the bigger model
-        effective_timeout = timeout
-        self.simulator_model = OllamaModel(
-            model="aqualaguna/gemma-3-27b-it-abliterated-GGUF:q2_k",
-            generation_kwargs={
-                "timeout": effective_timeout,
-            }
-        )
-        self.evaluation_model = "gpt-4o"
 
     @abstractmethod
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
@@ -72,10 +59,9 @@ class BaseTestCase(ABC):
         generation_error: TestErrorInfo | None = None
         enhancement_error: TestErrorInfo | None = None
         attack_list_enhancer: AttackListEnhancer = AttackListEnhancer(self.simulator_model)
-        logger.info(f"Starting test case execution: {test_case_id}")
 
         if self.attack_builder:
-            attacks_per_vulnerability_type = os.environ.get("ATTACKS_PER_VULNERABILITY_TYPE", 1)
+            attacks_per_vulnerability_type = int(os.environ.get("ATTACKS_PER_VULNERABILITY_TYPE", 1))
             enhanced_attacks: List[EnhancedAttack] = []
             enhancement_result: AttackEnhancementResult | None = None
             try:

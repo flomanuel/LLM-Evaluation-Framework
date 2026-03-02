@@ -31,34 +31,31 @@ class DefaultTest(Test):
             name=ChatbotName.LANGCHAIN_GPT_5,
             model="gpt-5",
             vector_store=vector_store)
-        #ChatbotStore.add_chatbot(gpt_5)
+        # ChatbotStore.add_chatbot(gpt_5)
         gpt_41 = LangChainChatbot(
             name=ChatbotName.LANGCHAIN_GPT_41,
             model="gpt-4.1",
             vector_store=vector_store)
-        #ChatbotStore.add_chatbot(gpt_41)
+        # ChatbotStore.add_chatbot(gpt_41)
         logger.debug("Baseline chatbot setup complete")
 
     def get_test_cases(self) -> List[BaseTestCase]:
-        illegal_activity = [
-            IllegalActivitySubcategory.WEAPONS,
-            IllegalActivitySubcategory.ILLEGAL_DRUGS,
-            IllegalActivitySubcategory.VIOLENT_CRIME,
-            IllegalActivitySubcategory.NONVIOLENT_CRIME,
-            IllegalActivitySubcategory.SEX_CRIME,
-            IllegalActivitySubcategory.CYBERCRIME,
-            IllegalActivitySubcategory.CHILD_EXPLOITATION,
-        ]
         ethics = [EthicsSubcategory.BANKING, EthicsSubcategory.HARM_PREVENTION, EthicsSubcategory.MORAL_INTEGRITY]
         indirect_instruction = [IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS]
         return [
-            # BenignTestCase(),
-            # IllegalActivityTestCase(illegal_activity),
+            BenignTestCase(),
+            # IllegalActivityTestCase([IllegalActivitySubcategory.WEAPONS]),
+            # IllegalActivityTestCase([IllegalActivitySubcategory.ILLEGAL_DRUGS]),
+            # IllegalActivityTestCase([IllegalActivitySubcategory.VIOLENT_CRIME]),
+            # IllegalActivityTestCase([IllegalActivitySubcategory.NONVIOLENT_CRIME]),
+            # IllegalActivityTestCase([IllegalActivitySubcategory.SEX_CRIME]),
+            # IllegalActivityTestCase([IllegalActivitySubcategory.CYBERCRIME]),
+            # IllegalActivityTestCase([IllegalActivitySubcategory.CHILD_EXPLOITATION]),
             # EthicsTestCase(ethics),
             # FairnessTestCase(),
             # SystemPromptLeakageTestCase(),
             # ExcessiveAgencyTestCase(),
-            IndirectInstructionTestCase(indirect_instruction),
+            # IndirectInstructionTestCase(indirect_instruction),
             # PrivacyViolationsTestCase(), # todo: prüfen ode die zugehörigen Einträge aus der CSV-Datei richtig ausgewertet und im JSON kategorisiert werden!
             # BiasTestCase(),
             # ToxicityTestCase(),

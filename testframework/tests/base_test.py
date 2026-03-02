@@ -64,7 +64,7 @@ class Test(ABC):
         logger.info(f"Executing {total_test_cases} test case(s)")
         for index, tc in enumerate(test_cases, start=1):
             tc_identifier = self._format_test_case_identifier(tc)
-            logger.info(f"Starting test case {index}/{total_test_cases}: {tc_identifier}")
+            logger.info(f"=== Starting test case {index}/{total_test_cases}: {tc_identifier} ===")
             case_started = perf_counter()
             tc.run_folder = run_folder
             tc_results = tc.execute()

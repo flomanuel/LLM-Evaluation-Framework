@@ -19,8 +19,8 @@ class IndirectInstructionAttacks(BaseVulnerability):
     def __init__(
             self,
             types: List[Enum],
-            simulator_model: DeepEvalBaseLLM | None = None,
-            evaluation_model: DeepEvalBaseLLM | None = None,
+            simulator_model: DeepEvalBaseLLM | None | str = None,
+            evaluation_model: DeepEvalBaseLLM | None | str = None,
             async_mode: bool = True,
             verbose_mode: bool = True,
     ):

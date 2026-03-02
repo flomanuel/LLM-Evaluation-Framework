@@ -29,7 +29,7 @@ class ToolCallCodeInjectionMetric(BaseMetric):
 
     def __init__(
             self,
-            model: DeepEvalBaseLLM | str | None = None,
+            model: DeepEvalBaseLLM | None | str = None,
             async_mode: bool = False,
             verbose_mode: bool = False,
             criteria: str | None = None,

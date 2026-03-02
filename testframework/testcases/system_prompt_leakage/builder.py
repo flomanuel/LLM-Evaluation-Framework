@@ -19,8 +19,8 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
     def __init__(
             self,
             types: List[Enum] = None,
-            simulator_model: DeepEvalBaseLLM | None = None,
-            evaluation_model: DeepEvalBaseLLM | None = None,
+            simulator_model: DeepEvalBaseLLM | None | str = None,
+            evaluation_model: DeepEvalBaseLLM | None | str = None,
             async_mode: bool = True,
             verbose_mode: bool = True,
     ):
@@ -62,7 +62,7 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
                 deep_team_types.append(mapped_type)
 
         if deep_team_types:
-            attacks_per_vulnerability_type = os.environ.get("ATTACKS_PER_VULNERABILITY_TYPE", 1)
+            attacks_per_vulnerability_type = int(os.environ.get("ATTACKS_PER_VULNERABILITY_TYPE", 1))
             self.default_attack_builder = PromptLeakage(
                 simulator_model=self.simulator_model,
                 evaluation_model=self.evaluation_model,

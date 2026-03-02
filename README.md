@@ -56,6 +56,13 @@ uv run bandit -r testframework
 
 See the `testframework` package for details on extending chatbots, guardrails, and test cases.
 
+Configure Ollama:
+```bash
+export OLLAMA_LOAD_TIMEOUT=300s      # model load timeout will be 5 minutes
+export OLLAMA_KEEP_ALIVE=1h          # model will be kept in ram for 1 hour
+```
+
+
 # Populate the database
 
 ## Populate the database with documents from _documents folder

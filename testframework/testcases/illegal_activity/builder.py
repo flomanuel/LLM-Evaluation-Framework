@@ -15,8 +15,8 @@ class IllegalActivity(BaseVulnerability):
     def __init__(
             self,
             types: List[Enum],
-            simulator_model: DeepEvalBaseLLM,
-            evaluation_model: DeepEvalBaseLLM,
+            simulator_model: DeepEvalBaseLLM | None | str = None,
+            evaluation_model: DeepEvalBaseLLM | None | str = None,
             async_mode: bool = True,
             verbose_mode: bool = True,
     ):

@@ -23,8 +23,8 @@ class AttackEnhancement:
     """Single enhancement strategy applied to an attack input."""
 
     name: str
-    transform: Callable[[str, DeepEvalBaseLLM | str], str]
-    cooldown: Callable[[int], None]  # add a cooldown since techniques are generated locally
+    transform: Callable[[str, DeepEvalBaseLLM | None | str], str]
+    cooldown: Callable[[int], None] | None  # add a cooldown since techniques are generated locally
 
 
 class AttackListEnhancer:
@@ -34,47 +34,48 @@ class AttackListEnhancer:
     ERROR_THRESHOLD_ENV_VAR = "ENHANCED_ATTACK_ERROR_THRESHOLD_PERCENT"
     DEFAULT_ERROR_THRESHOLD_PERCENT = 100.0
     MAX_RETRIES = 1
-    RETRY_COOLDOWN_SECONDS = 60
-    SUCCESS_COOLDOWN_SECONDS = 10
+    RETRY_COOLDOWN_SECONDS = 420
+    SUCCESS_COOLDOWN_SECONDS = 30
+    LOCAL_MODEL_ID = os.environ.get("LOCAL_MODEL_ID", False)
 
-    def __init__(self, simulator_model: DeepEvalBaseLLM | str):
+    def __init__(self, simulator_model: DeepEvalBaseLLM | None | str):
         self.simulator_model = simulator_model
 
     ENHANCEMENTS: List[AttackEnhancement] = [
         AttackEnhancement(
             name=AdversarialPoetry.name,
             transform=lambda prompt, model: AdversarialPoetry().enhance(attack=prompt, simulator_model=model),
-            cooldown=lambda time: time.sleep(time)
-        ),
-        AttackEnhancement(
-            name=MathProblem.name,
-            transform=lambda prompt, model: MathProblem().enhance(prompt, simulator_model=model),
-            cooldown=lambda sleep: time.sleep(sleep)
-        ),
-        AttackEnhancement(
-            name=Roleplay.name,
-            transform=lambda prompt, model: Roleplay().enhance(prompt, simulator_model=model),
-            cooldown=lambda sleep: time.sleep(sleep)
+            cooldown=time.sleep
         ),
         AttackEnhancement(
             name=GoalRedirection.name,
             transform=lambda prompt, model: GoalRedirection().enhance(prompt),
-            cooldown=lambda sleep: time.sleep(sleep)
+            cooldown=None
+        ),
+        AttackEnhancement(
+            name=MathProblem.name,
+            transform=lambda prompt, model: MathProblem().enhance(prompt, simulator_model=model),
+            cooldown=time.sleep
         ),
         AttackEnhancement(
             name=CipherCodeExpert.name,
             transform=lambda prompt, model: CipherCodeExpert().enhance(prompt),
-            cooldown=lambda sleep: time.sleep(sleep)
+            cooldown=None
         ),
         AttackEnhancement(
             name=f"{Base64.name}/{PromptInjection.name}",
             transform=lambda prompt, model: PromptInjection().enhance(Base64().enhance(prompt)),
-            cooldown=lambda sleep: time.sleep(sleep)
+            cooldown=None
+        ),
+        AttackEnhancement(
+            name=Roleplay.name,
+            transform=lambda prompt, model: Roleplay().enhance(prompt, simulator_model=model),
+            cooldown=time.sleep
         ),
         AttackEnhancement(
             name=Leetspeak.name,
             transform=lambda prompt, model: Leetspeak().enhance(prompt),
-            cooldown=lambda sleep: time.sleep(sleep)
+            cooldown=None
         ),
     ]
 
@@ -111,9 +112,11 @@ class AttackListEnhancer:
         enhanced_attacks: List[EnhancedAttack] = []
         planned_attack_count = len(attacks) * len(active_enhancements)
         failed_attack_count = 0
+        enhanced_attack_count = 0
         for attack in attacks:
+            logger.info(f"=== Enhancing attack {enhanced_attack_count + 1}/{len(attacks)} === ")
             is_doc_embedding_attack = attack.vulnerability_type == "document-embedded-instructions"
-            # simulate document injection by adding the injection defined in the prompt
+            # simulate indirect document injection by adding the injection defined in the prompt
             if is_doc_embedding_attack:
                 raw_prompts: List[str] = str(attack.input).split("#")
                 user_prompt = raw_prompts[0] if len(raw_prompts) > 0 else ""
@@ -176,7 +179,7 @@ class AttackListEnhancer:
                             error_threshold_percent=error_threshold_percent,
                             stopped_early=True,
                         )
-
+            enhanced_attack_count += 1
         logger.info(f"Enhanced {len(enhanced_attacks)} attacks.")
         return AttackEnhancementResult(
             enhanced_attacks=enhanced_attacks,
@@ -195,9 +198,10 @@ class AttackListEnhancer:
         for attempt in range(1, max_attempts + 1):
             try:
                 enhanced_input = enhancement.transform(baseline_input, self.simulator_model)
-                logger.info(
-                    f"Enhancement '{enhancement.name}' successful. Waiting {self.SUCCESS_COOLDOWN_SECONDS} seconds for cooldown.")
-                enhancement.cooldown(self.SUCCESS_COOLDOWN_SECONDS)
+                if self.LOCAL_MODEL_ID is not False and enhancement.cooldown is not None:
+                    logger.info(
+                        f"Cooldown: {self.SUCCESS_COOLDOWN_SECONDS}s.")
+                    enhancement.cooldown(self.SUCCESS_COOLDOWN_SECONDS)
                 return enhanced_input, None
             except Exception as exc:
                 enhancement_error = TestErrorInfo.from_exception(exc)
@@ -209,7 +213,12 @@ class AttackListEnhancer:
                     f"({enhancement_error.error_type.value}): {enhancement_error.message}. "
                     f"Retrying in {self.RETRY_COOLDOWN_SECONDS} seconds."
                 )
-                time.sleep(self.RETRY_COOLDOWN_SECONDS)
+
+                if self.LOCAL_MODEL_ID is not False:
+                    os.system(f"ollama stop {self.LOCAL_MODEL_ID} || true")
+                    time.sleep(self.RETRY_COOLDOWN_SECONDS)
+                    os.system(f"ollama run {self.LOCAL_MODEL_ID} &")
+                    time.sleep(10)
 
         raise RuntimeError("Enhancement retry loop ended unexpectedly.")
 
