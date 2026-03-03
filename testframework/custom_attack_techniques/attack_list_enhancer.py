@@ -63,8 +63,9 @@ class AttackListEnhancer:
         enhanced_attacks: List[EnhancedAttack] = []
         enhanceable_attacks = sum(
             1 for attack in attacks if
-            attack.vulnerability_type != "document-embedded-instructions" and (attack.metadata is not None and attack.metadata.get(
-                "technique", "") == ""))
+            attack.vulnerability_type != "document-embedded-instructions" and (
+                        attack.metadata is not None and attack.metadata.get(
+                    "technique", "") == ""))
         planned_attack_count = enhanceable_attacks * len(active_enhancements) + (len(attacks) - enhanceable_attacks)
         failed_attack_count = 0
         enhanced_attack_count = 0
