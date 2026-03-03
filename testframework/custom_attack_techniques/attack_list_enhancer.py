@@ -62,18 +62,14 @@ class AttackListEnhancer:
 
         enhanced_attacks: List[EnhancedAttack] = []
         enhanceable_attacks = sum(
-            1 for attack in attacks if
-            attack.vulnerability_type != "document-embedded-instructions" and (
-                        attack.metadata is not None and attack.metadata.get(
-                    "technique", "") == ""))
+            1 for attack in attacks if attack.vulnerability_type != "document-embedded-instructions")
         planned_attack_count = enhanceable_attacks * len(active_enhancements) + (len(attacks) - enhanceable_attacks)
         failed_attack_count = 0
         enhanced_attack_count = 0
         for attack in attacks:
             logger.info(f"=== Enhancing attack {enhanced_attack_count + 1}/{len(attacks)} === ")
             is_doc_embedding_attack = attack.vulnerability_type == "document-embedded-instructions"
-            has_technique = attack.metadata is not None and attack.metadata.get("technique", "") != ""
-            if is_doc_embedding_attack and has_technique:
+            if is_doc_embedding_attack:
                 cloned_attack = deepcopy(attack)
                 enhanced_input = cloned_attack.input
                 enhanced_attacks.append(
