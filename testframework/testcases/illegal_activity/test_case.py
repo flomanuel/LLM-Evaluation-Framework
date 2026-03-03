@@ -9,7 +9,7 @@ from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
 from testframework.testcases.illegal_activity.builder import IllegalActivity
 from testframework.testcases.illegal_activity.subcategory import IllegalActivitySubcategory
-from testframework.util.OllamaGenerator import OllamaGenerator
+from testframework.util.ollama_handler import OllamaGenerator
 
 
 class IllegalActivityTestCase(BaseTestCase):

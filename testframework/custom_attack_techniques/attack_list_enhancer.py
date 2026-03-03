@@ -11,9 +11,9 @@ from dotenv import load_dotenv
 from deepteam.test_case import RTTestCase
 from loguru import logger
 
-from testframework.custom_attack_techniques.Techniques import AttackEnhancement, ENHANCEMENTS
+from testframework.custom_attack_techniques.techniques import AttackEnhancement, ENHANCEMENTS
 from testframework.models import AttackEnhancementResult, EnhancedAttack, TestErrorInfo
-from testframework.util.OllamaGenerator import OllamaGenerator
+from testframework.util.ollama_handler import OllamaGenerator
 
 
 class AttackListEnhancer:
@@ -61,83 +61,83 @@ class AttackListEnhancer:
             )
 
         enhanced_attacks: List[EnhancedAttack] = []
-        planned_attack_count = len(attacks) * len(active_enhancements)
+        enhanceable_attacks = sum(
+            1 for attack in attacks if
+            attack.vulnerability_type != "document-embedded-instructions" and (attack.metadata is not None and attack.metadata.get(
+                "technique", "") == ""))
+        planned_attack_count = enhanceable_attacks * len(active_enhancements) + (len(attacks) - enhanceable_attacks)
         failed_attack_count = 0
         enhanced_attack_count = 0
         for attack in attacks:
             logger.info(f"=== Enhancing attack {enhanced_attack_count + 1}/{len(attacks)} === ")
             is_doc_embedding_attack = attack.vulnerability_type == "document-embedded-instructions"
-            # simulate indirect document injection by adding the injection defined in the prompt
-            if is_doc_embedding_attack:
-                raw_prompts: List[str] = str(attack.input).split("#")
-                user_prompt = raw_prompts[0] if len(raw_prompts) > 0 else ""
-                baseline_input = raw_prompts[1] if len(raw_prompts) > 1 else ""
-            else:
-                user_prompt = ""
-                baseline_input = str(attack.input)
-            for enhancement in active_enhancements:
-                logger.info(f"Applying enhancement '{enhancement.name}'")
+            has_technique = attack.metadata is not None and attack.metadata.get("technique", "") != ""
+            if is_doc_embedding_attack and has_technique:
                 cloned_attack = deepcopy(attack)
-                enhanced_input, enhancement_error = self._apply_enhancement(
-                    enhancement=enhancement,
-                    baseline_input=baseline_input,
+                enhanced_input = cloned_attack.input
+                enhanced_attacks.append(
+                    EnhancedAttack(
+                        attack_case=cloned_attack,
+                        baseline_input=str(attack.input),
+                        enhanced_input=enhanced_input,
+                        techniques=[attack.metadata.get("technique")],
+                    )
                 )
-                if enhancement_error is None:
-                    enhanced_attacks.append(
-                        EnhancedAttack(
-                            attack_case=cloned_attack,
-                            baseline_input=baseline_input if not user_prompt else user_prompt,
-                            enhanced_input=f"{user_prompt}\n{enhanced_input}" if user_prompt else enhanced_input,
-                            techniques=[enhancement.name],
-                        )
+                enhanced_attack_count += 1
+            else:
+                # deactivate the if-branch in line 75, including the else statement in line 87. Then uncomment this
+                # section and indent the former-else-flow one to the left.
+                # if is_doc_embedding_attack:
+                #     simulate indirect document injection by adding the injection defined in the prompt
+                #     raw_prompts: List[str] = str(attack.input).split("#")
+                #     user_prompt = raw_prompts[0] if len(raw_prompts) > 0 else ""
+                #     baseline_input = raw_prompts[1] if len(raw_prompts) > 1 else ""
+                # else:
+                #     user_prompt = ""
+                #     baseline_input = str(attack.input)
+                baseline_input = str(attack.input)
+                for enhancement in active_enhancements:
+                    logger.info(f"Applying enhancement '{enhancement.name}'")
+                    cloned_attack = deepcopy(attack)
+                    enhanced_input, enhancement_error = self._apply_enhancement(
+                        enhancement=enhancement,
+                        baseline_input=baseline_input,
                     )
-                else:
-                    failed_attack_count += 1
-                    logger.error(
-                        f"Enhancement '{enhancement.name}' failed "
-                        f"({enhancement_error.error_type.value}): {enhancement_error.message}"
-                    )
-                    enhanced_attacks.append(
-                        EnhancedAttack(
-                            attack_case=cloned_attack,
-                            baseline_input=baseline_input,
-                            enhanced_input=baseline_input,
-                            techniques=[enhancement.name],
-                            error=enhancement_error,
+                    if enhancement_error is None:
+                        enhanced_attacks.append(
+                            EnhancedAttack(attack_case=cloned_attack, baseline_input=baseline_input,
+                                           # baseline_input=baseline_input if not user_prompt else user_prompt,
+                                           enhanced_input=enhanced_input, techniques=[enhancement.name],
+                                           # enhanced_input=f"{user_prompt}\n{enhanced_input}" if user_prompt else enhanced_input,
+                                           ))
+                    else:
+                        failed_attack_count += 1
+                        logger.error(
+                            f"Enhancement '{enhancement.name}' failed "
+                            f"({enhancement_error.error_type.value}): {enhancement_error.message}"
                         )
-                    )
-                    if self._is_error_threshold_exceeded(
-                            failed_attack_count,
-                            planned_attack_count,
-                            error_threshold_percent,
-                    ):
-                        invalid_percentage = (
-                            (failed_attack_count / planned_attack_count) * 100.0
-                            if planned_attack_count > 0
-                            else 0.0
+                        enhanced_attacks.append(
+                            EnhancedAttack(attack_case=cloned_attack, baseline_input=baseline_input,
+                                           enhanced_input=baseline_input, techniques=[enhancement.name],
+                                           error=enhancement_error)
                         )
-                        logger.warning(
-                            "Stopping attack enhancement early because the failed enhancement "
-                            f"rate exceeded the configured threshold "
-                            f"(failed={failed_attack_count}, planned={planned_attack_count}, "
-                            f"error_rate={invalid_percentage:.2f}%, "
-                            f"threshold={error_threshold_percent:.2f}%)"
-                        )
-                        return AttackEnhancementResult(
-                            enhanced_attacks=enhanced_attacks,
-                            planned_attack_count=planned_attack_count,
-                            failed_attack_count=failed_attack_count,
-                            error_threshold_percent=error_threshold_percent,
-                            stopped_early=True,
-                        )
-            enhanced_attack_count += 1
+                        if self._is_error_threshold_exceeded(failed_attack_count, planned_attack_count,
+                                                             error_threshold_percent):
+                            logger.warning(
+                                "Stopping attack enhancement early because the failed enhancement "
+                                f"rate exceeded the configured threshold: "
+                                f"({failed_attack_count}/{planned_attack_count}) > {error_threshold_percent}"
+                            )
+                            return AttackEnhancementResult(enhanced_attacks=enhanced_attacks,
+                                                           planned_attack_count=planned_attack_count,
+                                                           failed_attack_count=failed_attack_count,
+                                                           error_threshold_percent=error_threshold_percent,
+                                                           stopped_early=True)
+                enhanced_attack_count += 1
         logger.info(f"Enhanced {len(enhanced_attacks)} attacks.")
-        return AttackEnhancementResult(
-            enhanced_attacks=enhanced_attacks,
-            planned_attack_count=planned_attack_count,
-            failed_attack_count=failed_attack_count,
-            error_threshold_percent=error_threshold_percent,
-        )
+        return AttackEnhancementResult(enhanced_attacks=enhanced_attacks, planned_attack_count=planned_attack_count,
+                                       failed_attack_count=failed_attack_count,
+                                       error_threshold_percent=error_threshold_percent)
 
     def _apply_enhancement(
             self,

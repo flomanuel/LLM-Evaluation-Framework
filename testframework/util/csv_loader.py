@@ -16,6 +16,7 @@ class CSVAttackRow:
     categories: list[str]
     tool_check: bool
     document_path: str | None
+    technique: str = None
 
     @classmethod
     def from_csv_row(cls, row: Mapping[str, str | None]) -> "CSVAttackRow":
@@ -36,6 +37,7 @@ class CSVAttackRow:
             ],
             tool_check=tool_check_raw == "true",
             document_path=row.get("document"),
+            technique=row.get("technique", ""),
         )
 
     def matches_filters(
@@ -50,7 +52,7 @@ class CSVAttackRow:
         return any(category in self.categories for category in categories)
 
     def build_attack_metadata(self, is_rag: bool = True) -> dict[str, Any]:
-        metadata: dict[str, Any] = {"file_path": self.document_path, "is_rag": is_rag}
+        metadata: dict[str, Any] = {"file_path": self.document_path, "is_rag": is_rag, "technique": self.technique}
         if not self.tool_check:
             return metadata
         metadata["tool_check"] = True

@@ -12,6 +12,7 @@ from testframework.testcases import BenignTestCase, BiasTestCase, CompetitionTes
     ExcessiveAgencyTestCase, FairnessTestCase, IllegalActivityTestCase, IndirectInstructionTestCase, \
     PrivacyViolationsTestCase, RobustnessTestCase, SystemPromptLeakageTestCase, ToxicityTestCase, FairnessSubcategory
 from testframework.testcases.base import BaseTestCase
+from testframework.testcases.benign.subcategory import BenignSubcategory
 from testframework.testcases.bias.subcategory import BiasSubcategory
 from testframework.testcases.ethics.subcategory import EthicsSubcategory
 from testframework.testcases.illegal_activity.subcategory import IllegalActivitySubcategory
@@ -46,19 +47,19 @@ class DefaultTest(Test):
         ethics = [EthicsSubcategory.BANKING, EthicsSubcategory.HARM_PREVENTION, EthicsSubcategory.MORAL_INTEGRITY]
         indirect_instruction = [IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS]
         return [
-            # BenignTestCase(),
+            # BenignTestCase([BenignSubcategory.BANKING]),
             # EthicsTestCase(ethics),
             # FairnessTestCase(),
             # SystemPromptLeakageTestCase(),
             # ExcessiveAgencyTestCase(),
-            # IndirectInstructionTestCase(indirect_instruction),
+            IndirectInstructionTestCase(indirect_instruction),
             # todo: PrivacyViolations prüfen, ob die zugehörigen Einträge aus der CSV-Datei richtig ausgewertet und im JSON kategorisiert werden!
             # PrivacyViolationsTestCase(),
             # BiasTestCase([BiasSubcategory.RACE]),
             # BiasTestCase([BiasSubcategory.GENDER]),
             # BiasTestCase([BiasSubcategory.RELIGION]),
             # BiasTestCase([BiasSubcategory.POLITICS]),
-            IllegalActivityTestCase([IllegalActivitySubcategory.WEAPONS]),
+            # IllegalActivityTestCase([IllegalActivitySubcategory.WEAPONS]),
             # IllegalActivityTestCase([IllegalActivitySubcategory.ILLEGAL_DRUGS]),
             # IllegalActivityTestCase([IllegalActivitySubcategory.VIOLENT_CRIME]),
             # IllegalActivityTestCase([IllegalActivitySubcategory.NONVIOLENT_CRIME]),

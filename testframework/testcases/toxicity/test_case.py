@@ -13,7 +13,7 @@ from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
 from testframework.testcases.toxicity.builder import ToxicityAttacks
 from testframework.testcases.toxicity.subcategory import ToxicitySubcategory
-from testframework.util.OllamaGenerator import OllamaGenerator
+from testframework.util.ollama_handler import OllamaGenerator
 
 
 class ToxicityTestCase(BaseTestCase):

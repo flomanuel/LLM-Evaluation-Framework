@@ -24,7 +24,7 @@ from testframework.metrics import ToolCallCodeInjectionMetric
 from testframework.models import TestCaseResult, Attack, DetectionResult, PromptVariants, ChatbotResponseEvaluation, \
     TestErrorInfo, EnhancedAttack, ChatbotResponse, AttackEnhancementResult, LLMErrorType
 from testframework.storage import save_test_case_result
-from testframework.util.OllamaGenerator import OllamaGenerator
+from testframework.util.ollama_handler import OllamaGenerator
 
 
 class BaseTestCase(ABC):

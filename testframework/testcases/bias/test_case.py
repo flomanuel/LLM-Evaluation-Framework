@@ -10,7 +10,7 @@ from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
 from testframework.testcases.bias.builder import BiasAttacks
 from testframework.testcases.bias.subcategory import BiasSubcategory
-from testframework.util.OllamaGenerator import OllamaGenerator
+from testframework.util.ollama_handler import OllamaGenerator
 
 
 class BiasTestCase(BaseTestCase):
