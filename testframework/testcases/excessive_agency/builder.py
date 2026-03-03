@@ -8,6 +8,8 @@ from deepteam.metrics import HarmMetric  # type: ignore
 from deepeval.models import DeepEvalBaseLLM
 from deepteam.test_case import RTTestCase
 from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
+
+from testframework.testcases.excessive_agency.subcategory import ExcessiveAgencySubcategory
 from testframework.util.csv_loader import CSVLoader
 
 
@@ -37,7 +39,8 @@ class ExcessiveAgencyAttacks(BaseVulnerability):
         ):
             attack = RTTestCase(
                 vulnerability=self.get_name(),
-                input=row.prompt
+                input=row.prompt,
+                vulnerability_type=ExcessiveAgencySubcategory.CUSTOM
             )
             metadata = row.build_attack_metadata()
             attack.metadata = metadata

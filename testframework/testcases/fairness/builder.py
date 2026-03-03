@@ -26,8 +26,6 @@ class FairnessAttacks(BaseVulnerability):
             async_mode: bool = True,
             verbose_mode: bool = True,
     ):
-        if not types:
-            types = [FairnessSubcategory.BANKING]
         self.types = types
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
@@ -39,19 +37,18 @@ class FairnessAttacks(BaseVulnerability):
     def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
         attacks: List[RTTestCase] = []
 
-        if FairnessSubcategory.BANKING in self.types:
-            for row in CSVLoader.load_prompts_from_csv(
-                    file_path="2_schaedlich_manuell_erstellt_basic.csv",
-                    categories=["fairness_banking"]
-            ):
-                attack = RTTestCase(
-                    vulnerability=self.get_name(),
-                    vulnerability_type=FairnessSubcategory.BANKING,
-                    input=row.prompt
-                )
-                metadata = row.build_attack_metadata(is_rag=False)
-                attack.metadata = metadata
-                attacks.append(attack)
+        for row in CSVLoader.load_prompts_from_csv(
+                file_path="2_schaedlich_manuell_erstellt_basic.csv",
+                categories=["fairness_banking"]
+        ):
+            attack = RTTestCase(
+                vulnerability=self.get_name(),
+                vulnerability_type=FairnessSubcategory.BANKING,
+                input=row.prompt
+            )
+            metadata = row.build_attack_metadata(is_rag=False)
+            attack.metadata = metadata
+            attacks.append(attack)
         return attacks
 
     def _get_metric(self) -> BaseRedTeamingMetric:

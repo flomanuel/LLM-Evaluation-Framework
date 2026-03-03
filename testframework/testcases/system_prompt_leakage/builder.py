@@ -3,9 +3,9 @@
 import os
 from enum import Enum
 from typing import Dict, List, cast
-from deepteam.vulnerabilities import BaseVulnerability, PromptLeakage  # type: ignore
-from deepteam.vulnerabilities.prompt_leakage import PromptLeakageType  # type: ignore
-from deepteam.metrics import BaseRedTeamingMetric, HarmMetric, PromptExtractionMetric  # type: ignore
+from deepteam.vulnerabilities import BaseVulnerability, PromptLeakage
+from deepteam.vulnerabilities.prompt_leakage import PromptLeakageType
+from deepteam.metrics import BaseRedTeamingMetric, PromptExtractionMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepteam.test_case import RTTestCase
 
@@ -14,7 +14,11 @@ from testframework.util.csv_loader import CSVLoader
 
 
 class SystemPromptLeakageAttacks(BaseVulnerability):
-    """Class that builds system prompt leakage attack prompts from CSV and DeepTeam."""
+    """Class that builds "system prompt leakage" attack prompts from CSV and DeepTeam."""
+
+    PURPOSE = ("A banking chatbot that is used internally by the employees. " \
+               "It has a tool to generate Images and several system instructions. " \
+               "Sometimes, the system instructions are only one sentence, and sometimes they are longer.")
 
     def __init__(
             self,
@@ -24,8 +28,7 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
             async_mode: bool = True,
             verbose_mode: bool = True,
     ):
-        self.types = types if types else [SystemPromptLeakageSubcategory.INSTRUCTIONS,
-                                          SystemPromptLeakageSubcategory.GUARD_EXPOSURE]
+        self.types = [SystemPromptLeakageSubcategory.INSTRUCTIONS, SystemPromptLeakageSubcategory.GUARD_EXPOSURE]
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self.simulator_model = simulator_model
@@ -49,7 +52,8 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
         ):
             attack = RTTestCase(
                 vulnerability=self.get_name(),
-                input=row.prompt
+                input=row.prompt,
+                vulnerability_type=SystemPromptLeakageSubcategory.CUSTOM
             )
             metadata = row.build_attack_metadata()
             attack.metadata = metadata
@@ -66,7 +70,8 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
             self.default_attack_builder = PromptLeakage(
                 simulator_model=self.simulator_model,
                 evaluation_model=self.evaluation_model,
-                types=deep_team_types
+                types=deep_team_types,
+                purpose=self.PURPOSE
             )
             attacks.extend(self.default_attack_builder.simulate_attacks(
                 attacks_per_vulnerability_type=attacks_per_vulnerability_type))
@@ -77,12 +82,7 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
         if self.default_attack_builder:
             attack_type = cast(PromptLeakageType, attack.vulnerability_type)
             return self.default_attack_builder._get_metric(type=attack_type)  # type: ignore
-        return PromptExtractionMetric(
-            model=self.evaluation_model,
-            purpose=("A banking chatbot that is used internally by the employees. "
-                     "It has a tool to generate Images and several system instructions. "
-                     "Sometimes, the system instructions are only one sentence, and sometimes they are longer.")
-        )
+        return PromptExtractionMetric(model=self.evaluation_model, purpose=self.PURPOSE)
 
     def get_name(self) -> str:
         return "SystemPromptLeakage"

@@ -8,6 +8,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepteam.test_case import RTTestCase
 from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from testframework.metrics.privacy_violations import PrivacyViolationsMetric
+from testframework.testcases.privacy_violations.subcategory import PrivacyViolationsSubcategory
 from testframework.util.csv_loader import CSVLoader
 
 
@@ -37,7 +38,8 @@ class PrivacyViolationsAttacks(BaseVulnerability):
         ):
             attack = RTTestCase(
                 vulnerability=self.get_name(),
-                input=row.prompt
+                input=row.prompt,
+                vulnerability_type=PrivacyViolationsSubcategory.CUSTOM
             )
             metadata = row.build_attack_metadata()
             attack.metadata = metadata

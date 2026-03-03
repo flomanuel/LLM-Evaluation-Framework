@@ -14,7 +14,7 @@ from testframework.testcases.system_prompt_leakage.subcategory import SystemProm
 class SystemPromptLeakageTestCase(BaseTestCase):
     """Test case for system prompt leakage attacks."""
 
-    def __init__(self, subcategories: List[SystemPromptLeakageSubcategory] = []) -> None:
+    def __init__(self, subcategories: List[SystemPromptLeakageSubcategory] = None) -> None:
         super().__init__(
             Category.SYSTEM_PROMPT_LEAKAGE,
             subcategories
