@@ -5,7 +5,7 @@ from time import perf_counter
 from typing import List
 from llm_guard.input_scanners import Anonymize as InputAnonymize, BanCode as InputBanCode, BanTopics as InputBanTopics, \
     PromptInjection as InputPromptInjection
-from llm_guard.input_scanners.anonymize_helpers import BERT_BASE_NER_CONF, DEBERTA_AI4PRIVACY_v2_CONF
+from llm_guard.input_scanners.anonymize_helpers import BERT_BASE_NER_CONF
 from llm_guard.input_scanners.ban_code import MODEL_SM
 from llm_guard.input_scanners.ban_topics import MODEL_ROBERTA_BASE_C_V2
 from llm_guard.input_scanners.prompt_injection import MatchType as PromptInjectionMatchType, V2_MODEL
@@ -39,7 +39,7 @@ class LLMGuard(BaseGuardrail):
     def __init__(self, name: str = "llm_guard") -> None:
         super().__init__(name=name)
 
-    def eval_attack(self, user_prompt: str, desc: str) -> DetectionElement:
+    def eval_attack(self, user_prompt: str, desc: str, **kwargs) -> DetectionElement:
         vault = Vault()
 
         anonymize = InputAnonymize(vault=vault, recognizer_conf=BERT_BASE_NER_CONF, language="en", threshold=0.5)
@@ -73,7 +73,7 @@ class LLMGuard(BaseGuardrail):
                     sanitized_input=sanitized_prompt,
                 )
             )
-            current_prompt = sanitized_prompt
+            # current_prompt = sanitized_prompt
             overall_valid = overall_valid and is_valid
             max_score = max(max_score, risk_score)
             if not is_valid:
@@ -86,12 +86,11 @@ class LLMGuard(BaseGuardrail):
             detected_type = None
         else:
             judge_raw_response = (
-                f"Prompt rejected by: {', '.join(alerting_scanners)}. "
-                f"Final sanitized prompt: {current_prompt}"
+                f"Prompt rejected by: {', '.join(alerting_scanners)}."
             )
             detected_type = ", ".join(alerting_scanners)
 
-        return DetectionElement(
+        detection = DetectionElement(
             success=overall_valid,
             detected_type=detected_type,
             score=max_score,
@@ -100,6 +99,14 @@ class LLMGuard(BaseGuardrail):
             scanner_details=scanner_details,
             error=None,
         )
+        detection.coverage_score = self._score_detection_coverage(
+            attack_description=desc,
+            user_prompt=user_prompt,
+            detection=detection,
+            object_to_judge=user_prompt,
+            tool_info=kwargs.get("tool_info"),
+        )
+        return detection
 
     def eval_model_response(self, model_response: str, chatbot: ChatbotName, desc: str, **kwargs) -> DetectionElement:
         reference_prompt = kwargs.get("prompt", "")
@@ -119,7 +126,7 @@ class LLMGuard(BaseGuardrail):
         output_scanners = [ban_topics, bias, ban_code, factual_consistency, sensitive, toxicity]
         scanner_details: List[ScannerDetail] = []
         current_output = model_response
-        alerting_acanners: List[str] = []
+        alerting_scanners: List[str] = []
         max_score = 0.0
         overall_valid = True
 
@@ -136,11 +143,11 @@ class LLMGuard(BaseGuardrail):
                     sanitized_input=sanitized_output,
                 )
             )
-            current_output = sanitized_output
+            # current_output = sanitized_output
             overall_valid = overall_valid and is_valid
             max_score = max(max_score, risk_score)
             if not is_valid:
-                alerting_acanners.append(scanner_name)
+                alerting_scanners.append(scanner_name)
 
         test_ended = perf_counter()
 
@@ -149,12 +156,11 @@ class LLMGuard(BaseGuardrail):
             detected_type = None
         else:
             judge_raw_response = (
-                f"Model response rejected by: {', '.join(alerting_acanners)}. "
-                f"Final sanitized output: {current_output}"
+                f"Model response rejected by: {', '.join(alerting_scanners)}."
             )
-            detected_type = ", ".join(alerting_acanners)
+            detected_type = ", ".join(alerting_scanners)
 
-        return DetectionElement(
+        detection = DetectionElement(
             success=overall_valid,
             detected_type=detected_type,
             score=max_score,
@@ -163,3 +169,11 @@ class LLMGuard(BaseGuardrail):
             scanner_details=scanner_details,
             error=None,
         )
+        detection.coverage_score = self._score_detection_coverage(
+            attack_description=desc,
+            user_prompt=reference_prompt,
+            detection=detection,
+            object_to_judge=model_response,
+            tool_info=kwargs.get("tool_info"),
+        )
+        return detection

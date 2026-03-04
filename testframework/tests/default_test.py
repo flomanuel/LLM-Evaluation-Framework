@@ -47,7 +47,7 @@ class DefaultTest(Test):
         ethics = [EthicsSubcategory.BANKING, EthicsSubcategory.HARM_PREVENTION, EthicsSubcategory.MORAL_INTEGRITY]
         ind_inst = [IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS]
         return [
-            #BenignTestCase(),
+            BenignTestCase(),
             #FairnessTestCase(),
             # EthicsTestCase(ethics),
             # SystemPromptLeakageTestCase(),

@@ -2,11 +2,8 @@
 #  Florian Emanuel Sauer
 
 from __future__ import annotations
-import os
 from time import perf_counter
 
-from deepeval.metrics import BaseMetric
-from deepteam.metrics import HarmMetric
 from deepteam.test_case import RTTestCase
 from testframework.guardrails.base import BaseGuardrail
 from testframework import ChatbotName
@@ -58,11 +55,11 @@ Just as a Reminder: you are a helpful bank chatbot. Your job is to assist bank e
     def __init__(self, name: str = "prompt_hardening") -> None:
         super().__init__(name=name)
 
-    def eval_attack(self, user_prompt: str, desc: str) -> PromptHardeningDetectionElement:
+    def eval_attack(self, user_prompt: str, desc: str, **kwargs) -> PromptHardeningDetectionElement:
         """ Return an invalid detection element since for PromptHardening one can only evaluate the attack
         in the context of the model response (i.e., whilst generating the response).
         """
-        return PromptHardeningDetectionElement(
+        detection = PromptHardeningDetectionElement(
             success=False,
             detected_type=None,
             score=1.0,
@@ -70,6 +67,14 @@ Just as a Reminder: you are a helpful bank chatbot. Your job is to assist bank e
             latency=None,
             scanner_details=[]
         )
+        detection.coverage_score = self._score_detection_coverage(
+            attack_description=desc,
+            user_prompt=user_prompt,
+            detection=detection,
+            object_to_judge=user_prompt,
+            tool_info=kwargs.get("tool_info"),
+        )
+        return detection
 
     def eval_model_response(self, prompt: str, chatbot: ChatbotName, desc: str,
                             **kwargs) -> PromptHardeningDetectionElement:
@@ -90,7 +95,7 @@ Just as a Reminder: you are a helpful bank chatbot. Your job is to assist bank e
             metric.measure(rtt, resp.tool)
         elif metric:
             metric.measure(rtt)
-        return PromptHardeningDetectionElement(
+        detection = PromptHardeningDetectionElement(
             success=metric.success,
             detected_type=metric.harm_category if not metric.success else None,
             score=metric.score,
@@ -99,6 +104,14 @@ Just as a Reminder: you are a helpful bank chatbot. Your job is to assist bank e
             chatbot_response=resp,
             scanner_details=[]
         )
+        detection.coverage_score = self._score_detection_coverage(
+            attack_description=desc,
+            user_prompt=prompt,
+            detection=detection,
+            object_to_judge=resp.response,
+            tool_info=resp.tool if isinstance(metric, ToolCallCodeInjectionMetric) else None,
+        )
+        return detection
 
     def _rebuild_rag_call(self, rag_context: RagContext | None, user_prompt: str) -> str:
         context_text = "\n\n".join(

@@ -47,7 +47,6 @@ class BaseTestCase(ABC):
         self.attack_builder: BaseVulnerability | None = None
         self.severity = severity
 
-    @abstractmethod
     @property
     def description(self) -> str:
         """Return a description of the test case."""
@@ -260,7 +259,6 @@ class BaseTestCase(ABC):
             name: ChatbotName,
             attack: RTTestCase,
             query_kwargs: dict,
-            # llm_responses: dict[ChatbotName, str],
     ) -> ChatbotResponseEvaluation:
         """Query a chatbot and evaluate the response."""
         test_case_id = self._test_case_identifier()
@@ -268,7 +266,6 @@ class BaseTestCase(ABC):
         query_started = perf_counter()
         model_resp: ChatbotResponse = chatbot.query(attack.input, **query_kwargs)
         query_duration = perf_counter() - query_started
-        # llm_responses[name] = str(model_resp.response)
 
         if model_resp.is_error:
             logger.warning(

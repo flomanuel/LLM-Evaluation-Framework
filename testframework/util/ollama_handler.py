@@ -11,7 +11,7 @@ from loguru import logger
 class OllamaGenerator:
     """Handle the local Ollama model needed for generating attacks and techniques."""
 
-    _ollama_inference_request_timeout = 150
+    _ollama_inference_request_timeout = 120
     _chatbot: OllamaModel | None = None
 
     @staticmethod

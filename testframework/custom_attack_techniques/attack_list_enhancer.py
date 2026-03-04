@@ -24,7 +24,7 @@ class AttackListEnhancer:
     DEFAULT_ERROR_THRESHOLD_PERCENT = 100.0
     MAX_RETRIES = 5
     RETRY_COOLDOWN_SECONDS = 420
-    SUCCESS_COOLDOWN_SECONDS = 30
+    SUCCESS_COOLDOWN_SECONDS = 25
     LOCAL_MODEL_ID = os.environ.get("LOCAL_MODEL_ID", False)
 
     def __init__(self, simulator_model: DeepEvalBaseLLM | None | str):
@@ -141,9 +141,10 @@ class AttackListEnhancer:
             enhancement: AttackEnhancement,
             baseline_input: str,
     ) -> tuple[str | None, TestErrorInfo | None]:
-        """Apply one enhancement and retry it once after a cooldown if it fails."""
+        """Apply one enhancement with bounded automatic retries and optional manual continuation."""
         max_attempts = self.MAX_RETRIES + 1
-        for attempt in range(1, max_attempts + 1):
+        attempt = 1
+        while True:
             try:
                 enhanced_input = enhancement.transform(baseline_input, self.simulator_model)
                 if enhanced_input == baseline_input and enhancement.name != TECHNIQUE_BASELINE:
@@ -157,13 +158,13 @@ class AttackListEnhancer:
                 return enhanced_input, None
             except Exception as exc:
                 enhancement_error = TestErrorInfo.from_exception(exc)
-                if attempt >= max_attempts:
+                if not self._prompt_retry_decision(enhancement.name, attempt, enhancement_error):
                     return None, enhancement_error
-                logger.warning(
-                    f"Enhancement '{enhancement.name}' failed on attempt {attempt}/{max_attempts} "
-                    f"({enhancement_error.error_type.value}): {enhancement_error.message}. "
-                    "Preparing retry."
-                )
+                else:
+                    logger.warning(
+                        f"Enhancement '{enhancement.name}' failed on attempt {attempt}. "
+                        "Starting an additional user-requested retry."
+                    )
 
                 if isinstance(self.simulator_model, OllamaModel) and attempt > 1:
                     OllamaGenerator.require_local_model_shutdown()
@@ -171,7 +172,34 @@ class AttackListEnhancer:
                     enhancement.cooldown(self.RETRY_COOLDOWN_SECONDS)
                     OllamaGenerator.start_model_if_not_running()
 
-        raise RuntimeError("Enhancement retry loop ended unexpectedly.")
+                attempt += 1
+
+    @staticmethod
+    def _prompt_retry_decision(
+            enhancement_name: str,
+            attempt: int,
+            enhancement_error: TestErrorInfo,
+    ) -> bool:
+        """Ask whether to stop retrying or perform one additional attempt."""
+        prompt = (
+            f"Enhancement '{enhancement_name}' failed on attempt {attempt} "
+            f"({enhancement_error.error_type.value}): {enhancement_error.message}. "
+            "Type 'break' to stop retrying or 'retry' to start a new try: "
+        )
+
+        while True:
+            try:
+                user_choice = input(prompt).strip().lower()
+            except (EOFError, KeyboardInterrupt):
+                logger.warning("Retry prompt was interrupted. Stopping enhancement retries.")
+                return False
+
+            if user_choice in {"break", "b"}:
+                return False
+            if user_choice in {"retry", "r"}:
+                return True
+
+            logger.warning("Invalid input. Please enter 'break' or 'retry'.")
 
     @classmethod
     def _load_error_threshold_percent(cls) -> float:

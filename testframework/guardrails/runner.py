@@ -10,6 +10,8 @@ from deepteam.test_case import RTTestCase
 from loguru import logger
 from testframework import ChatbotName
 from testframework.models import DetectionResult, DetectionElement, TestErrorInfo, ChatbotResponseEvaluation, RagContext
+from testframework.metrics import ToolCallCodeInjectionMetric
+from testframework.guardrails.llm_guard import LLMGuard
 from testframework.guardrails.prompt_hardening import PromptHardeningGuardrail
 
 
@@ -18,7 +20,7 @@ class GuardrailRunner:
 
     def __init__(self) -> None:
         self.guardrails = [
-            # todo: add all guardrails
+            LLMGuard(),
             PromptHardeningGuardrail(),
         ]
 
@@ -44,9 +46,16 @@ class GuardrailRunner:
             logger.info(f"Starting guardrail '{guardrail.name}'")
 
             enhanced_attack = attack.input
-            enhanced_attack_evaluation = self._safe_eval_attack(guardrail, enhanced_attack, attack_description)
+            use_tool_trace = isinstance(metric, ToolCallCodeInjectionMetric)
 
             for bot_name, bot_response_eval in chatbot_responses_eval.items():
+                tool_info = bot_response_eval.chatbot_response.tool if use_tool_trace else None
+                enhanced_attack_evaluation = self._safe_eval_attack(
+                    guardrail,
+                    enhanced_attack,
+                    attack_description,
+                    tool_info=tool_info,
+                )
                 if isinstance(guardrail, PromptHardeningGuardrail):
                     file_path: str | None = bot_response_eval.chatbot_response.file_path or None
                     # build the prompt with the same RAG context to keep all conditions the same
@@ -65,7 +74,8 @@ class GuardrailRunner:
                                                                    bot_response_eval.chatbot_response.response,
                                                                    bot_name,
                                                                    attack_description,
-                                                                   prompt=enhanced_attack)
+                                                                   prompt=enhanced_attack,
+                                                                   tool_info=tool_info)
                 result[key][bot_name] = DetectionResult(
                     enhanced_attack_evaluation, response_evaluation
                 )
@@ -76,11 +86,11 @@ class GuardrailRunner:
         logger.info("Guardrail evaluation completed")
         return result
 
-    def _safe_eval_attack(self, guardrail, attack: str, attack_description) -> DetectionElement:
+    def _safe_eval_attack(self, guardrail, attack: str, attack_description, **kwargs) -> DetectionElement:
         """Evaluate an attack, catching any errors.
         """
         try:
-            return guardrail.eval_attack(attack, attack_description)
+            return guardrail.eval_attack(attack, attack_description, **kwargs)
         except Exception as e:
             error = TestErrorInfo.from_exception(e)
             logger.error(

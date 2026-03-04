@@ -31,7 +31,7 @@ class PrivacyViolationsTestCase(BaseTestCase):
         return self.attack_builder._get_metric()
 
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
-        return cast(PrivacyViolationsAttacks, self.attack_builder).simulate_attacks()
+        return cast(PrivacyViolationsAttacks, self.attack_builder).simulate_attacks()[:2]
 
     @property
     def description(self) -> str:
