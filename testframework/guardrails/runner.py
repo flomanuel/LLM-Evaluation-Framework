@@ -59,7 +59,7 @@ class GuardrailRunner:
                 else:
                     response_evaluation = self._safe_eval_response(guardrail,
                                                                    bot_response_eval.chatbot_response.response,
-                                                                   bot_name)
+                                                                   bot_name, prompt=enhanced_attack)
                 result[key][bot_name] = DetectionResult(
                     enhanced_attack_evaluation, response_evaluation
                 )
