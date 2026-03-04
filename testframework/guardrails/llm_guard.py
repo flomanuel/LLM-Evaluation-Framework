@@ -56,7 +56,7 @@ class LLMGuard(BaseGuardrail):
         input_scanners = [anonymize, ban_code, ban_topics, prompt_injection, toxicity]
         scanner_details: List[ScannerDetail] = []
         current_prompt = user_prompt
-        failing_scanners: List[str] = []
+        alerting_scanners: List[str] = []
         max_score = 0.0
         overall_valid = True
 
@@ -77,7 +77,7 @@ class LLMGuard(BaseGuardrail):
             overall_valid = overall_valid and is_valid
             max_score = max(max_score, risk_score)
             if not is_valid:
-                failing_scanners.append(scanner_name)
+                alerting_scanners.append(scanner_name)
 
         test_ended = perf_counter()
 
@@ -86,10 +86,10 @@ class LLMGuard(BaseGuardrail):
             detected_type = None
         else:
             judge_raw_response = (
-                f"Prompt rejected by: {', '.join(failing_scanners)}. "
+                f"Prompt rejected by: {', '.join(alerting_scanners)}. "
                 f"Final sanitized prompt: {current_prompt}"
             )
-            detected_type = ", ".join(failing_scanners)
+            detected_type = ", ".join(alerting_scanners)
 
         return DetectionElement(
             success=overall_valid,
@@ -119,7 +119,7 @@ class LLMGuard(BaseGuardrail):
         output_scanners = [ban_topics, bias, ban_code, factual_consistency, sensitive, toxicity]
         scanner_details: List[ScannerDetail] = []
         current_output = model_response
-        failing_scanners: List[str] = []
+        alerting_acanners: List[str] = []
         max_score = 0.0
         overall_valid = True
 
@@ -140,7 +140,7 @@ class LLMGuard(BaseGuardrail):
             overall_valid = overall_valid and is_valid
             max_score = max(max_score, risk_score)
             if not is_valid:
-                failing_scanners.append(scanner_name)
+                alerting_acanners.append(scanner_name)
 
         test_ended = perf_counter()
 
@@ -149,10 +149,10 @@ class LLMGuard(BaseGuardrail):
             detected_type = None
         else:
             judge_raw_response = (
-                f"Model response rejected by: {', '.join(failing_scanners)}. "
+                f"Model response rejected by: {', '.join(alerting_acanners)}. "
                 f"Final sanitized output: {current_output}"
             )
-            detected_type = ", ".join(failing_scanners)
+            detected_type = ", ".join(alerting_acanners)
 
         return DetectionElement(
             success=overall_valid,
