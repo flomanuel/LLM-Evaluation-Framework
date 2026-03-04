@@ -57,11 +57,11 @@ uv run bandit -r testframework
 See the `testframework` package for details on extending chatbots, guardrails, and test cases.
 
 Configure Ollama:
+
 ```bash
 export OLLAMA_LOAD_TIMEOUT=300s      # model load timeout will be 5 minutes
 export OLLAMA_KEEP_ALIVE=1h          # model will be kept in ram for 1 hour
 ```
-
 
 # Populate the database
 
@@ -71,7 +71,8 @@ uv run llm-test-baseline populate-db
 
 ## Custom options
 
-uv run llm-test-baseline populate-db --documents-dir _rag_documents --chunk-size 1000 --chunk-overlap 200 --collection-name
+uv run llm-test-baseline populate-db --documents-dir _rag_documents --chunk-size 1000 --chunk-overlap 200
+--collection-name
 my_collection
 
 # Interpreting the results
@@ -109,3 +110,14 @@ todo: add details
 # How to interpret the rest result JSON files
 
 todo: add details
+
+# Guardrails AI
+
+## Remote Inference
+
+Account und API-Key unter https://guardrailsai.com/ anlegen.
+
+```bash
+uv sync
+guardrails configure
+```

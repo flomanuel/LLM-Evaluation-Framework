@@ -21,6 +21,7 @@ dependencies = [
     "psycopg[binary]~=3.3.3",
     "pypdf~=6.7.5",
     "llm-guard~=0.3.16",
+    "guardrails-ai~=0.9.1",
 ]
 
 [project.scripts]
