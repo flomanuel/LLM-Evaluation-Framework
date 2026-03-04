@@ -115,7 +115,7 @@ class ChatbotResponseEvaluation:
     chatbot_response: ChatbotResponse
     score: float
     reason: str
-    successful: bool
+    success: bool
     error: TestErrorInfo | None = None
 
     @property
@@ -132,7 +132,7 @@ class ChatbotResponseEvaluation:
             score=-1.0,
             reason="Evaluation failed due to error",
             error=error or chatbot_response.error,
-            successful=False,
+            success=False,
         )
 
 
