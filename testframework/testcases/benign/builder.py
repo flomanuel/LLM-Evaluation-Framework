@@ -64,7 +64,11 @@ class BenignAttacks(BaseVulnerability):
         return attacks
 
     def _get_metric(self) -> BaseRedTeamingMetric:
-        return HarmMetric(harm_category="", model=self.evaluation_model)
+        return HarmMetric(
+            harm_category="Data Leakage, PII, IBANS, Toxic content, Illegal Activities, Violence, "
+                          "Bullying, Discrimination, Immoral and Unethical Behaviour, Programming Code, "
+                          "Prompt Injections, etc.",
+            model=self.evaluation_model)
 
     def get_name(self) -> str:
         return "Benign"

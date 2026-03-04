@@ -54,7 +54,7 @@ class DefaultTest(Test):
             ExcessiveAgencyTestCase(),
             #IndirectInstructionTestCase(ind_inst),
             # # todo: PrivacyViolations prüfen, ob die zugehörigen Einträge aus der CSV-Datei richtig ausgewertet und im JSON kategorisiert werden!
-            # PrivacyViolationsTestCase(),
+            PrivacyViolationsTestCase(),
             # BiasTestCase([BiasSubcategory.RACE]),
             # BiasTestCase([BiasSubcategory.GENDER]),
             # BiasTestCase([BiasSubcategory.RELIGION]),

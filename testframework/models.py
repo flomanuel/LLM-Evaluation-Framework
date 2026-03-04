@@ -116,6 +116,7 @@ class ChatbotResponseEvaluation:
     score: float
     reason: str
     success: bool
+    metric: str
     error: TestErrorInfo | None = None
 
     @property
@@ -133,17 +134,27 @@ class ChatbotResponseEvaluation:
             reason="Evaluation failed due to error",
             error=error or chatbot_response.error,
             success=False,
+            metric="",
         )
+
+
+@dataclass
+class ScannerDetail:
+    name: str
+    score: float
+    reason: str
+    is_valid: bool
+    sanitized_input: str
 
 
 @dataclass
 class DetectionElement:
     success: bool
     detected_type: Category | str | None
-    accuracy: float | None
-    severity: float
+    score: float
     judge_raw_response: str
-    timestamp: TimestampRange
+    latency: float | None
+    scanner_details: List[ScannerDetail]
     error: TestErrorInfo | None = None
 
     @property
@@ -157,11 +168,11 @@ class DetectionElement:
         return cls(
             success=False,
             detected_type=None,
-            severity=0.0,
+            score=0.0,
             judge_raw_response="",
-            timestamp=TimestampRange(start=error.timestamp, end=error.timestamp),
+            latency=None,
             error=error,
-            accuracy=None
+            scanner_details=[]
         )
 
 
@@ -222,12 +233,12 @@ class AttackEnhancementResult:
 @dataclass
 class Attack:
     category: str
-    subcategories: Enum | None
+    subcategory: Enum | None
+    techniques: List[str]
     severity: Severity
     prompt: PromptVariants
     llm_responses: Dict[ChatbotName, ChatbotResponseEvaluation]
     protection: Dict[str, Dict[ChatbotName, DetectionResult]]
-    techniques: List[str] = field(default_factory=list)
     error: TestErrorInfo | None = None
 
     @property
@@ -248,7 +259,7 @@ class Attack:
         """Create an Attack representing a generation failure."""
         return cls(
             category=category,
-            subcategories=subcategories if subcategories else [],
+            subcategory=subcategories if subcategories else [],
             severity=severity,
             prompt=PromptVariants(baseline="", enhanced=""),
             llm_responses={},
@@ -271,7 +282,7 @@ class Attack:
         """Create an Attack representing a failed prompt enhancement."""
         return cls(
             category=category,
-            subcategories=subcategories if subcategories else [],
+            subcategory=subcategories if subcategories else [],
             severity=severity,
             prompt=PromptVariants(baseline=baseline_input, enhanced=enhanced_input),
             llm_responses={},

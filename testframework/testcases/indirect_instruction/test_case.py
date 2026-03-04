@@ -21,11 +21,10 @@ class IndirectInstructionTestCase(BaseTestCase):
             Category.INDIRECT_PROMPT_INJECTION,
             subcategories,
         )
+
+    def setup_attack_builder(self) -> None:
         self.simulator_model = OllamaGenerator.get_chatbot()
         OllamaGenerator.start_model_if_not_running()
-        self.set_attack_builder()
-
-    def set_attack_builder(self) -> None:
         self.attack_builder = IndirectInstructionAttacks(self.subcategories, self.simulator_model,
                                                          self.evaluation_model)
 

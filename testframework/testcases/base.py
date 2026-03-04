@@ -6,10 +6,11 @@ from __future__ import annotations
 import os
 import uuid
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from enum import Enum
 from pathlib import Path
 from time import perf_counter
-from typing import Dict, List
+from typing import Dict, List, Any
 from deepeval.models import DeepEvalBaseLLM
 from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
@@ -53,7 +54,7 @@ class BaseTestCase(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def set_attack_builder(self) -> None:
+    def setup_attack_builder(self) -> None:
         """Build or rebuild the attack builder with the current simulator model."""
         raise NotImplementedError
 
@@ -61,105 +62,68 @@ class BaseTestCase(ABC):
         """Run the test case and return a mapping from attack_id to TestCaseResult.
             Build the attacks and add the techniques. Then execute the attacks on the guardrails.
         """
+        self.setup_attack_builder()
         test_case_id = self._test_case_identifier()
         attack_results: dict[str, Attack] = {}
         generation_error: TestErrorInfo | None = None
         enhancement_error: TestErrorInfo | None = None
         latest_attempted_generation_model: str | None = None
 
-        if self.attack_builder:
-            attacks_per_vulnerability_type = int(os.environ.get("ATTACKS_PER_VULNERABILITY_TYPE", 1))
-            enhanced_attacks: List[EnhancedAttack] = []
-            enhancement_result: AttackEnhancementResult | None = None
+        attacks_per_vulnerability_type = int(os.environ.get("ATTACKS_PER_VULNERABILITY_TYPE", 1))
+        enhanced_attacks: List[EnhancedAttack] = []
+        enhancement_result: AttackEnhancementResult | None = None
 
-            max_attempts = self.MAX_RETRIES + 1
-            success = False
-            for attempt in range(1, max_attempts + 1):
-                if success:
-                    break
-                try:
-                    # switch to a local model if errors occur
-                    if attempt > 1:
-                        self.simulator_model = OllamaGenerator.get_chatbot()
-                        OllamaGenerator.start_model_if_not_running()
-                        self.set_attack_builder()
-                    latest_attempted_generation_model = self._model_name(self.simulator_model)
-                    attack_list_enhancer: AttackListEnhancer = AttackListEnhancer(self.simulator_model)
+        max_attempts = self.MAX_RETRIES + 1
+        success = False
+        for attempt in range(1, max_attempts + 1):
+            if success:
+                break
+            try:
+                # always switch automatically to a local model if errors occur
+                if attempt > 1:
+                    self.simulator_model = OllamaGenerator.get_chatbot()
+                    OllamaGenerator.start_model_if_not_running()
+                    self.setup_attack_builder()
+                latest_attempted_generation_model = self._model_name(self.simulator_model)
+                attack_list_enhancer: AttackListEnhancer = AttackListEnhancer(self.simulator_model)
 
-                    enhanced_attacks, enhancement_result, success = self._generate_attacks(attack_list_enhancer,
-                                                                                           attacks_per_vulnerability_type,
-                                                                                           test_case_id)
-                except Exception as e:
-                    if attempt >= max_attempts:
-                        generation_error = TestErrorInfo.from_exception(e)
-                        logger.error(
-                            f"Attack generation failed for {test_case_id} "
-                            f"({generation_error.error_type.value}): {generation_error.message}"
-                        )
-
-            executable_attacks = sum(1 for attack in enhanced_attacks if not attack.is_error)
-            skipped_attacks = len(enhanced_attacks) - executable_attacks
-            if not enhanced_attacks:
-                logger.warning(f"No executable attacks generated for '{test_case_id}'")
-            elif skipped_attacks:
-                logger.warning(
-                    f"Skipping {skipped_attacks} attack(s) for '{test_case_id}' "
-                    f"because prompt enhancement failed"
-                )
-
-            skip_chatbot_execution = (enhancement_result is not None and enhancement_result.threshold_exceeded)
-            if skip_chatbot_execution:
-                enhancement_error = TestErrorInfo(
-                    error_type=LLMErrorType.THRESHOLD_EXCEEDED,
-                    message="Skipped chatbot execution since the threshold for failed enhancements was reached.",
-                )
-                logger.warning(
-                    f"Skipped chatbot execution since the threshold for failed enhancements was reached."
-                    f"{executable_attacks if executable_attacks else 0} attacks would be executable.")
-            else:
-                chatbots = ChatbotStore.get_chatbots()
-                logger.info(
-                    f"Executing {executable_attacks} attack(s) against {len(chatbots)} chatbot(s) "
-                    f"for '{test_case_id}'"
-                )
-
-            total_attacks = len(enhanced_attacks)
-            for counter, attack in enumerate(enhanced_attacks, start=1):
-                techniques = ",".join(attack.techniques) if attack.techniques else "none"
-                if attack.is_error:
-                    attack_error = attack.error or TestErrorInfo.from_exception(
-                        RuntimeError("Attack enhancement failed without error details")
+                enhanced_attacks, enhancement_result, success = self._generate_attacks(attack_list_enhancer,
+                                                                                       attacks_per_vulnerability_type,
+                                                                                       test_case_id)
+            except Exception as e:
+                if attempt >= max_attempts:
+                    generation_error = TestErrorInfo.from_exception(e)
+                    logger.error(
+                        f"Attack generation failed for {test_case_id} "
+                        f"({generation_error.error_type.value}): {generation_error.message}"
                     )
-                    logger.warning(
-                        f"Skipping attack {counter}/{total_attacks} for '{test_case_id}' "
-                        f"(techniques={techniques}, error_type={attack_error.error_type.value})"
-                    )
-                    attack_results[str(uuid.uuid4())] = Attack.from_enhancement_error(
-                        self.category,
-                        self.subcategories if self.subcategories else [],
-                        self.severity,
-                        attack.baseline_input,
-                        attack.enhanced_input,
-                        attack.techniques,
-                        attack_error,
-                    )
-                    continue
-                if skip_chatbot_execution:
-                    continue
 
-                logger.info(
-                    f"Starting attack {counter}/{total_attacks} for '{test_case_id}' "
-                    f"(techniques={techniques})"
-                )
-                attack_started = perf_counter()
-                attack_result = self._execute_single_attack(attack, chatbots)
-                attack_results[str(uuid.uuid4())] = attack_result
-                logger.info(
-                    f"Completed attack {counter}/{total_attacks} for '{test_case_id}' "
-                    f"(duration={perf_counter() - attack_started:.2f}s)"
-                )
+        executable_attacks = sum(1 for attack in enhanced_attacks if not attack.is_error)
+        skipped_attacks = len(enhanced_attacks) - executable_attacks
+        if not enhanced_attacks:
+            logger.warning(f"No executable attacks generated for '{test_case_id}'")
+        elif skipped_attacks:
+            logger.warning(
+                f"Skipping {skipped_attacks} attack(s) for '{test_case_id}' "
+                f"because prompt enhancement failed"
+            )
+
+        skip_chatbot_execution = (enhancement_result is not None and enhancement_result.threshold_exceeded)
+        if skip_chatbot_execution:
+            enhancement_error = TestErrorInfo(
+                error_type=LLMErrorType.THRESHOLD_EXCEEDED,
+                message="Skipped chatbot execution since the threshold for failed enhancements was reached.",
+            )
+            logger.warning(
+                f"Skipped chatbot execution since the threshold for failed enhancements was reached."
+                f"{executable_attacks if executable_attacks else 0} attacks would be executable.")
         else:
-            logger.warning(f"No attack builder configured for test case '{test_case_id}'")
+            chatbots = ChatbotStore.get_chatbots()
+            logger.info(
+                f"Executing {executable_attacks} attack(s) against {len(chatbots)} chatbot(s) "
+                f"for '{test_case_id}'"
+            )
+            self._start_attacks(attack_results, chatbots, enhanced_attacks, skip_chatbot_execution, test_case_id)
 
         tc_result = TestCaseResult(
             category=self.category,
@@ -178,6 +142,45 @@ class BaseTestCase(ABC):
             f"(stored_attacks={len(attack_results)})"
         )
         return tc_result
+
+    def _start_attacks(self, attack_results: dict[str, Attack], chatbots: dict[ChatbotName, BaseChatbot],
+                       enhanced_attacks: list[EnhancedAttack], skip_chatbot_execution: bool | Any, test_case_id: str):
+        OllamaGenerator.require_local_model_shutdown()
+        total_attacks = len(enhanced_attacks)
+        for counter, attack in enumerate(enhanced_attacks, start=1):
+            techniques = ",".join(attack.techniques) if attack.techniques else "none"
+            if attack.is_error:
+                attack_error = attack.error or TestErrorInfo.from_exception(
+                    RuntimeError("Attack enhancement failed without error details")
+                )
+                logger.warning(
+                    f"Skipping attack {counter}/{total_attacks} for '{test_case_id}' "
+                    f"(techniques={techniques}, error_type={attack_error.error_type.value})"
+                )
+                attack_results[str(uuid.uuid4())] = Attack.from_enhancement_error(
+                    self.category,
+                    self.subcategories if self.subcategories else [],
+                    self.severity,
+                    attack.baseline_input,
+                    attack.enhanced_input,
+                    attack.techniques,
+                    attack_error,
+                )
+                continue
+            if skip_chatbot_execution:
+                continue
+
+            logger.info(
+                f"Starting attack {counter}/{total_attacks} for '{test_case_id}' "
+                f"(techniques={techniques})"
+            )
+            attack_started = perf_counter()
+            attack_result = self._execute_single_attack(attack, chatbots)
+            attack_results[str(uuid.uuid4())] = attack_result
+            logger.info(
+                f"Completed attack {counter}/{total_attacks} for '{test_case_id}' "
+                f"(duration={perf_counter() - attack_started:.2f}s)"
+            )
 
     def _generate_attacks(self, attack_list_enhancer: AttackListEnhancer, attacks_per_vulnerability_type: int,
                           test_case_id: str) -> List[
@@ -210,14 +213,13 @@ class BaseTestCase(ABC):
         techniques = attack.techniques
         attack_case = attack.attack_case
         attack_case.input = attack.enhanced_input
-        #bot_responses: dict[ChatbotName, str] = {}
         bot_responses_eval: dict[ChatbotName, ChatbotResponseEvaluation] = {}
 
         query_kwargs = self._build_query_kwargs(attack_case)
 
         for name, chatbot in chatbots.items():
             bot_responses_eval[name] = self._query_and_evaluate(
-                chatbot, name, attack_case, query_kwargs, #bot_responses
+                chatbot, name, attack_case, query_kwargs,  # bot_responses
             )
 
         logger.info(
@@ -227,7 +229,9 @@ class BaseTestCase(ABC):
         guardrails_started = perf_counter()
         protection: Dict[str, Dict[ChatbotName, DetectionResult]] = self.guardrail_runner.run(
             attack_case,
-            bot_responses_eval
+            bot_responses_eval,
+            # todo: sicherstellen, dass in den eigenen Implementierungen immer neue Objekte returned werden!
+            metric=self._find_metric(attack_case)
         )
         logger.info(
             f"Completed guardrails for '{self._test_case_identifier()}' "
@@ -235,9 +239,13 @@ class BaseTestCase(ABC):
         )
 
         return Attack(
-            self.category, attack.attack_case.vulnerability_type, self.severity,
-            PromptVariants(base_attack, attack_case.input),
-            bot_responses_eval, protection, techniques
+            category=self.category,
+            subcategory=attack.attack_case.vulnerability_type,
+            techniques=techniques,
+            severity=self.severity,
+            prompt=PromptVariants(base_attack, attack_case.input),
+            llm_responses=bot_responses_eval,
+            protection=protection,
         )
 
     def _query_and_evaluate(
@@ -246,7 +254,7 @@ class BaseTestCase(ABC):
             name: ChatbotName,
             attack: RTTestCase,
             query_kwargs: dict,
-            #llm_responses: dict[ChatbotName, str],
+            # llm_responses: dict[ChatbotName, str],
     ) -> ChatbotResponseEvaluation:
         """Query a chatbot and evaluate the response."""
         test_case_id = self._test_case_identifier()
@@ -254,7 +262,7 @@ class BaseTestCase(ABC):
         query_started = perf_counter()
         model_resp: ChatbotResponse = chatbot.query(attack.input, **query_kwargs)
         query_duration = perf_counter() - query_started
-        #llm_responses[name] = str(model_resp.response)
+        # llm_responses[name] = str(model_resp.response)
 
         if model_resp.is_error:
             logger.warning(
@@ -290,6 +298,7 @@ class BaseTestCase(ABC):
                 score,
                 str(metric.reason),
                 metric.success,
+                metric.__name__,
             )
         except Exception as e:
             eval_error = TestErrorInfo.from_exception(e)

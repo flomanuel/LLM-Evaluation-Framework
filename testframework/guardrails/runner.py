@@ -4,6 +4,8 @@
 from __future__ import annotations
 from time import perf_counter
 from typing import Dict
+
+from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from loguru import logger
 from testframework import ChatbotName
@@ -23,7 +25,8 @@ class GuardrailRunner:
     def run(
             self,
             attack: RTTestCase,
-            chatbot_responses_eval: dict[ChatbotName, ChatbotResponseEvaluation]
+            chatbot_responses_eval: dict[ChatbotName, ChatbotResponseEvaluation],
+            metric: BaseRedTeamingMetric,
     ) -> Dict[str, Dict[ChatbotName, DetectionResult]]:
         """
         Analyzes a given attack string against the chatbot's responses by iterating over the guardrails.
@@ -41,7 +44,6 @@ class GuardrailRunner:
 
             enhanced_attack = attack.input
             enhanced_attack_evaluation = self._safe_eval_attack(guardrail, enhanced_attack)
-            tool_check = attack.metadata.get("tool_check") if attack.metadata else None
 
             for bot_name, bot_response_eval in chatbot_responses_eval.items():
                 if isinstance(guardrail, PromptHardeningGuardrail):
@@ -52,11 +54,12 @@ class GuardrailRunner:
                     rag_context: RagContext | None = bot_response_eval.chatbot_response.rag_context
                     response_evaluation = self._safe_eval_response(guardrail, enhanced_attack, bot_name,
                                                                    file_path=file_path,
-                                                                   rag_context=rag_context, tool_check=tool_check)
+                                                                   rag_context=rag_context,
+                                                                   metric=metric)
                 else:
                     response_evaluation = self._safe_eval_response(guardrail,
                                                                    bot_response_eval.chatbot_response.response,
-                                                                   bot_name, tool_check=tool_check)
+                                                                   bot_name)
                 result[key][bot_name] = DetectionResult(
                     enhanced_attack_evaluation, response_evaluation
                 )

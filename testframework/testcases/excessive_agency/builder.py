@@ -48,7 +48,7 @@ class ExcessiveAgencyAttacks(BaseVulnerability):
         return attacks
 
     def _get_metric(self) -> BaseRedTeamingMetric:
-        return HarmMetric(harm_category="excessive-agency", model=self.evaluation_model)
+        return HarmMetric(harm_category="Excessive Agency", model=self.evaluation_model)
 
     def get_name(self) -> str:
         return "ExcessiveAgency"

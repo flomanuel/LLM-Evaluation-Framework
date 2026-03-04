@@ -20,11 +20,10 @@ class RobustnessTestCase(BaseTestCase):
             Category.ROBUSTNESS,
             []
         )
+
+    def setup_attack_builder(self) -> None:
         self.simulator_model = OllamaGenerator.get_chatbot()
         OllamaGenerator.start_model_if_not_running()
-        self.set_attack_builder()
-
-    def set_attack_builder(self) -> None:
         self.attack_builder = Robustness(
             simulator_model=self.simulator_model,
             evaluation_model=self.evaluation_model,
