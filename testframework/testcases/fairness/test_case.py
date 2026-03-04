@@ -10,6 +10,7 @@ from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
 from testframework.testcases.fairness.builder import FairnessAttacks
 from testframework.testcases.fairness.subcategory import FairnessSubcategory
+from testframework.util.ollama_handler import OllamaGenerator
 
 
 class FairnessTestCase(BaseTestCase):
@@ -20,6 +21,8 @@ class FairnessTestCase(BaseTestCase):
             Category.FAIRNESS,
             subcategories,
         )
+        self.simulator_model = OllamaGenerator.get_chatbot()
+        OllamaGenerator.start_model_if_not_running()
         self.set_attack_builder()
 
     def set_attack_builder(self) -> None:

@@ -74,6 +74,7 @@ class ToolInfo:
 @dataclass
 class ChatbotResponse:
     prompt: str
+    raw_prompt: str
     response: str
     system_prompt: str
     tool: ToolInfo
@@ -98,6 +99,7 @@ class ChatbotResponse:
         """Create an error ChatbotResponse."""
         return cls(
             prompt=prompt,
+            raw_prompt="",
             response="",
             system_prompt=system_prompt,
             tool=ToolInfo(tool_called=False),
@@ -130,6 +132,7 @@ class ChatbotResponseEvaluation:
             score=-1.0,
             reason="Evaluation failed due to error",
             error=error or chatbot_response.error,
+            successful=False,
         )
 
 
@@ -137,6 +140,7 @@ class ChatbotResponseEvaluation:
 class DetectionElement:
     success: bool
     detected_type: Category | str | None
+    accuracy: float | None
     severity: float
     judge_raw_response: str
     timestamp: TimestampRange
@@ -157,6 +161,7 @@ class DetectionElement:
             judge_raw_response="",
             timestamp=TimestampRange(start=error.timestamp, end=error.timestamp),
             error=error,
+            accuracy=None
         )
 
 

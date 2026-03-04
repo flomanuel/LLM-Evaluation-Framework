@@ -10,6 +10,7 @@ from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
 from testframework.testcases.indirect_instruction.builder import IndirectInstructionAttacks
 from testframework.testcases.indirect_instruction.subcategory import IndirectInstructionSubcategory
+from testframework.util.ollama_handler import OllamaGenerator
 
 
 class IndirectInstructionTestCase(BaseTestCase):
@@ -20,6 +21,8 @@ class IndirectInstructionTestCase(BaseTestCase):
             Category.INDIRECT_PROMPT_INJECTION,
             subcategories,
         )
+        self.simulator_model = OllamaGenerator.get_chatbot()
+        OllamaGenerator.start_model_if_not_running()
         self.set_attack_builder()
 
     def set_attack_builder(self) -> None:

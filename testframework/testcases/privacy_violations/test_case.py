@@ -10,6 +10,7 @@ from deepteam.test_case import RTTestCase
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
 from testframework.testcases.privacy_violations.builder import PrivacyViolationsAttacks
+from testframework.util.ollama_handler import OllamaGenerator
 
 
 class PrivacyViolationsTestCase(BaseTestCase):
@@ -20,6 +21,8 @@ class PrivacyViolationsTestCase(BaseTestCase):
             Category.PRIVACY_VIOLATIONS,
             []
         )
+        self.simulator_model = OllamaGenerator.get_chatbot()
+        OllamaGenerator.start_model_if_not_running()
         self.set_attack_builder()
 
     def set_attack_builder(self) -> None:

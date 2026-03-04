@@ -27,6 +27,7 @@ class DummyChatbot(BaseChatbot):
         message = f"Lorem ipsum dolor sit amet, consectetur adipiscing elit.{uuid.uuid4()}"
         return ChatbotResponse(
             prompt=user_prompt,
+            raw_prompt=user_prompt,
             response=message,
             system_prompt=system_prompt or "",
             tool=ToolInfo(tool_called=False),

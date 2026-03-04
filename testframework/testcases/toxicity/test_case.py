@@ -24,7 +24,6 @@ class ToxicityTestCase(BaseTestCase):
             Category.TOXICITY,
             subcategories,
         )
-
         self.simulator_model = OllamaGenerator.get_chatbot()
         OllamaGenerator.start_model_if_not_running()
         self.set_attack_builder()

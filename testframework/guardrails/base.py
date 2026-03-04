@@ -22,5 +22,5 @@ class BaseGuardrail(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def eval_model_response(self, model_response: str, chatbot: ChatbotName) -> DetectionElement:
+    def eval_model_response(self, model_response: str, chatbot: ChatbotName, **kwargs) -> DetectionElement:
         raise NotImplementedError

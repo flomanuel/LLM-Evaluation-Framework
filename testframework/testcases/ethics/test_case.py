@@ -9,6 +9,7 @@ from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
 from testframework.testcases.ethics.builder import EthicsAttacks
 from testframework.testcases.ethics.subcategory import EthicsSubcategory
+from testframework.util.ollama_handler import OllamaGenerator
 
 
 class EthicsTestCase(BaseTestCase):
@@ -19,6 +20,8 @@ class EthicsTestCase(BaseTestCase):
             Category.ETHICS,
             subcategories if subcategories else list(EthicsSubcategory),
         )
+        self.simulator_model = OllamaGenerator.get_chatbot()
+        OllamaGenerator.start_model_if_not_running()
         self.set_attack_builder()
 
     def set_attack_builder(self) -> None:

@@ -2,14 +2,13 @@
 #  Florian Emanuel Sauer
 
 from __future__ import annotations
-
 from typing import cast, List
-
 from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from deepteam.test_case import RTTestCase
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
 from testframework.testcases.excessive_agency.builder import ExcessiveAgencyAttacks
+from testframework.util.ollama_handler import OllamaGenerator
 
 
 class ExcessiveAgencyTestCase(BaseTestCase):
@@ -20,6 +19,8 @@ class ExcessiveAgencyTestCase(BaseTestCase):
             Category.EXCESSIVE_AGENCY,
             []
         )
+        self.simulator_model = OllamaGenerator.get_chatbot()
+        OllamaGenerator.start_model_if_not_running()
         self.set_attack_builder()
 
     def set_attack_builder(self) -> None:

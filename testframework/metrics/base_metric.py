@@ -7,9 +7,10 @@ from deepteam.metrics import BaseRedTeamingMetric
 class BaseMetric(BaseRedTeamingMetric, ABC):
     """ Base class for all custom metrics."""
 
-    def __init__(self) -> None:
+    def __init__(self, harm_category: str) -> None:
         super().__init__()
         self._g_eval = None
+        self.harm_category = harm_category
 
     def _pull_results_from_geval(self) -> None:
         self.score = self._g_eval.score
@@ -18,13 +19,3 @@ class BaseMetric(BaseRedTeamingMetric, ABC):
         self.error = self._g_eval.error
         self.evaluation_cost = self._g_eval.evaluation_cost
         self.verbose_logs = self._g_eval.verbose_logs
-
-    def is_successful(self) -> bool:
-        if self.error is not None:
-            self.success = False
-        else:
-            try:
-                self.success = self.score >= self._g_eval.threshold
-            except TypeError:
-                self.success = False
-        return self.success

@@ -7,8 +7,9 @@ from typing import List, Callable
 from deepeval.models import DeepEvalBaseLLM
 from deepteam.attacks.single_turn import AdversarialPoetry, GoalRedirection, MathProblem, PromptInjection, Base64, \
     Roleplay, Leetspeak
-
 from testframework.custom_attack_techniques.cipher_code_expert.cipher_code_expert import CipherCodeExpert
+
+TECHNIQUE_BASELINE = "Baseline Prompt (no Technique)"
 
 
 @dataclass(frozen=True)
@@ -16,10 +17,15 @@ class AttackEnhancement:
     """Single enhancement strategy applied to an attack input."""
     name: str
     transform: Callable[[str, DeepEvalBaseLLM | None | str], str]
-    cooldown: Callable[[int], None] | None  # add a cooldown since techniques are generated locally
+    cooldown: Callable[[int], None]
 
 
 ENHANCEMENTS: List[AttackEnhancement] = [
+    AttackEnhancement(
+        name=TECHNIQUE_BASELINE,
+        transform=lambda prompt, model: prompt,
+        cooldown=lambda sec: None
+    ),
     AttackEnhancement(
         name=AdversarialPoetry.name,
         transform=lambda prompt, model: AdversarialPoetry().enhance(attack=prompt, simulator_model=model),
@@ -27,8 +33,8 @@ ENHANCEMENTS: List[AttackEnhancement] = [
     ),
     AttackEnhancement(
         name=GoalRedirection.name,
-        transform=lambda prompt, model: GoalRedirection().enhance(prompt),
-        cooldown=None
+        transform=lambda prompt, model: GoalRedirection().enhance(prompt, simulator_model=model),
+        cooldown=time.sleep
     ),
     AttackEnhancement(
         name=MathProblem.name,
@@ -37,13 +43,13 @@ ENHANCEMENTS: List[AttackEnhancement] = [
     ),
     AttackEnhancement(
         name=CipherCodeExpert.name,
-        transform=lambda prompt, model: CipherCodeExpert().enhance(prompt),
-        cooldown=None
+        transform=lambda prompt, model: CipherCodeExpert().enhance(prompt, simulator_model=model),
+        cooldown=time.sleep
     ),
     AttackEnhancement(
         name=f"{Base64.name}/{PromptInjection.name}",
-        transform=lambda prompt, model: PromptInjection().enhance(Base64().enhance(prompt)),
-        cooldown=None
+        transform=lambda prompt, model: PromptInjection().enhance(Base64().enhance(prompt), simulator_model=model),
+        cooldown=time.sleep
     ),
     AttackEnhancement(
         name=Roleplay.name,
@@ -53,6 +59,6 @@ ENHANCEMENTS: List[AttackEnhancement] = [
     AttackEnhancement(
         name=Leetspeak.name,
         transform=lambda prompt, model: Leetspeak().enhance(prompt),
-        cooldown=None
+        cooldown=lambda sec: None
     ),
 ]

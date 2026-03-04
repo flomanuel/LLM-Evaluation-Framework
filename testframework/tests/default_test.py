@@ -30,43 +30,44 @@ class DefaultTest(Test):
     def setup_chatbots(self) -> None:
         logger.debug("Setting up baseline chatbots")
         vector_store = VectorStore()
-        gpt_5 = LangChainChatbot(
-            name=ChatbotName.LANGCHAIN_GPT_5,
-            model="gpt-5",
-            vector_store=vector_store)
         # todo: enable both chatbots again
+        # gpt_5 = LangChainChatbot(
+        #     name=ChatbotName.LANGCHAIN_GPT_5,
+        #     model="gpt-5",
+        #     vector_store=vector_store)
         # ChatbotStore.add_chatbot(gpt_5)
         gpt_41 = LangChainChatbot(
             name=ChatbotName.LANGCHAIN_GPT_41,
             model="gpt-4.1",
             vector_store=vector_store)
-        # ChatbotStore.add_chatbot(gpt_41)
+        ChatbotStore.add_chatbot(gpt_41)
         logger.debug("Baseline chatbot setup complete")
 
     def get_test_cases(self) -> List[BaseTestCase]:
         ethics = [EthicsSubcategory.BANKING, EthicsSubcategory.HARM_PREVENTION, EthicsSubcategory.MORAL_INTEGRITY]
+        ind_inst = [IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS]
         return [
-            BenignTestCase(),
-            FairnessTestCase(),
-            EthicsTestCase(ethics),
-            SystemPromptLeakageTestCase(),
+            #BenignTestCase(),
+            #FairnessTestCase(),
+            # EthicsTestCase(ethics),
+            # SystemPromptLeakageTestCase(),
             ExcessiveAgencyTestCase(),
-            IndirectInstructionTestCase([IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS]),
-            # todo: PrivacyViolations prüfen, ob die zugehörigen Einträge aus der CSV-Datei richtig ausgewertet und im JSON kategorisiert werden!
-            PrivacyViolationsTestCase(),
-            BiasTestCase([BiasSubcategory.RACE]),
-            BiasTestCase([BiasSubcategory.GENDER]),
-            BiasTestCase([BiasSubcategory.RELIGION]),
-            BiasTestCase([BiasSubcategory.POLITICS]),
-            IllegalActivityTestCase([IllegalActivitySubcategory.WEAPONS]),
-            IllegalActivityTestCase([IllegalActivitySubcategory.ILLEGAL_DRUGS]),
-            IllegalActivityTestCase([IllegalActivitySubcategory.VIOLENT_CRIME]),
-            IllegalActivityTestCase([IllegalActivitySubcategory.NONVIOLENT_CRIME]),
-            IllegalActivityTestCase([IllegalActivitySubcategory.SEX_CRIME]),
-            IllegalActivityTestCase([IllegalActivitySubcategory.CYBERCRIME]),
-            IllegalActivityTestCase([IllegalActivitySubcategory.CHILD_EXPLOITATION]),
-            ToxicityTestCase([ToxicitySubcategory.INSULTS]),
-            ToxicityTestCase([ToxicitySubcategory.PROFANITY]),
-            ToxicityTestCase([ToxicitySubcategory.THREATS]),
-            ToxicityTestCase([ToxicitySubcategory.MOCKERY]),
+            #IndirectInstructionTestCase(ind_inst),
+            # # todo: PrivacyViolations prüfen, ob die zugehörigen Einträge aus der CSV-Datei richtig ausgewertet und im JSON kategorisiert werden!
+            # PrivacyViolationsTestCase(),
+            # BiasTestCase([BiasSubcategory.RACE]),
+            # BiasTestCase([BiasSubcategory.GENDER]),
+            # BiasTestCase([BiasSubcategory.RELIGION]),
+            # BiasTestCase([BiasSubcategory.POLITICS]),
+            # IllegalActivityTestCase([IllegalActivitySubcategory.WEAPONS]),
+            # IllegalActivityTestCase([IllegalActivitySubcategory.ILLEGAL_DRUGS]),
+            # IllegalActivityTestCase([IllegalActivitySubcategory.VIOLENT_CRIME]),
+            # IllegalActivityTestCase([IllegalActivitySubcategory.NONVIOLENT_CRIME]),
+            # IllegalActivityTestCase([IllegalActivitySubcategory.SEX_CRIME]),
+            # IllegalActivityTestCase([IllegalActivitySubcategory.CYBERCRIME]),
+            # IllegalActivityTestCase([IllegalActivitySubcategory.CHILD_EXPLOITATION]),
+            # ToxicityTestCase([ToxicitySubcategory.INSULTS]),
+            # ToxicityTestCase([ToxicitySubcategory.PROFANITY]),
+            # ToxicityTestCase([ToxicitySubcategory.THREATS]),
+            # ToxicityTestCase([ToxicitySubcategory.MOCKERY]),
         ]

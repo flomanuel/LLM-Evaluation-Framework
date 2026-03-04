@@ -4,9 +4,10 @@
 from __future__ import annotations
 from time import perf_counter
 from typing import Dict
+from deepteam.test_case import RTTestCase
 from loguru import logger
 from testframework import ChatbotName
-from testframework.models import DetectionResult, DetectionElement, TestErrorInfo
+from testframework.models import DetectionResult, DetectionElement, TestErrorInfo, ChatbotResponseEvaluation, RagContext
 from testframework.guardrails.prompt_hardening import PromptHardeningGuardrail
 
 
@@ -15,26 +16,22 @@ class GuardrailRunner:
 
     def __init__(self) -> None:
         self.guardrails = [
-            # todo: setup all guardrails
+            # todo: add all guardrails
+            PromptHardeningGuardrail(),
         ]
 
     def run(
             self,
-            enhanced_attack: str,
-            chatbot_responses: Dict[ChatbotName, str]
+            attack: RTTestCase,
+            chatbot_responses_eval: dict[ChatbotName, ChatbotResponseEvaluation]
     ) -> Dict[str, Dict[ChatbotName, DetectionResult]]:
         """
         Analyzes a given attack string against the chatbot's responses by iterating over the guardrails.
-
-        :param chatbot_responses: The responses for each chatbot in the test case (Chatbot-ID -> Response).
-        :param enhanced_attack: The adversarial attack (attack and attack technique)
-        :return: A `DetectionResult` object encapsulating the details of detected
-            vulnerabilities and relevant metadata of the analysis.
         """
         result: Dict[str, Dict[ChatbotName, DetectionResult]] = {}
         logger.info(
             f"Running {len(self.guardrails)} guardrail(s) "
-            f"for {len(chatbot_responses)} chatbot response(s)"
+            f"for {len(chatbot_responses_eval)} chatbot response(s)"
         )
         for guardrail in self.guardrails:
             key: str = guardrail.name
@@ -42,14 +39,25 @@ class GuardrailRunner:
             guardrail_started = perf_counter()
             logger.info(f"Starting guardrail '{guardrail.name}'")
 
+            enhanced_attack = attack.input
             enhanced_attack_evaluation = self._safe_eval_attack(guardrail, enhanced_attack)
+            tool_check = attack.metadata.get("tool_check") if attack.metadata else None
 
-            for chatbot, response in chatbot_responses.items():
+            for bot_name, bot_response_eval in chatbot_responses_eval.items():
                 if isinstance(guardrail, PromptHardeningGuardrail):
-                    response_evaluation = self._safe_eval_response(guardrail, enhanced_attack, chatbot)
+                    file_path: str | None = bot_response_eval.chatbot_response.file_path or None
+                    # build the prompt with the same RAG context to keep all conditions the same
+                    # If a file path is set, then no RAG will be used in the chatbot and since the file is
+                    # always the same, the conditions stay the same for file paths as opposed to RAG.
+                    rag_context: RagContext | None = bot_response_eval.chatbot_response.rag_context
+                    response_evaluation = self._safe_eval_response(guardrail, enhanced_attack, bot_name,
+                                                                   file_path=file_path,
+                                                                   rag_context=rag_context, tool_check=tool_check)
                 else:
-                    response_evaluation = self._safe_eval_response(guardrail, response, chatbot)
-                result[key][chatbot] = DetectionResult(
+                    response_evaluation = self._safe_eval_response(guardrail,
+                                                                   bot_response_eval.chatbot_response.response,
+                                                                   bot_name, tool_check=tool_check)
+                result[key][bot_name] = DetectionResult(
                     enhanced_attack_evaluation, response_evaluation
                 )
             logger.info(
@@ -61,13 +69,6 @@ class GuardrailRunner:
 
     def _safe_eval_attack(self, guardrail, attack: str) -> DetectionElement:
         """Evaluate an attack, catching any errors.
-
-        Args:
-            guardrail: The guardrail to use for evaluation.
-            attack: The attack string to evaluate.
-
-        Returns:
-            DetectionElement with results or error info.
         """
         try:
             return guardrail.eval_attack(attack)
@@ -79,18 +80,12 @@ class GuardrailRunner:
             )
             return DetectionElement.from_error(error)
 
-    def _safe_eval_response(self, guardrail, response: str, chatbot: ChatbotName) -> DetectionElement:
+    def _safe_eval_response(self, guardrail, response: str, chatbot: ChatbotName, **kwargs) -> DetectionElement:
+        # file_path: st`r | None, rag: RagContext | None) -> DetectionElement:
         """Evaluate a response, catching any errors.
-
-        Args:
-            guardrail: The guardrail to use for evaluation.
-            response: The response string to evaluate.
-
-        Returns:
-            DetectionElement with results or error info.
         """
         try:
-            return guardrail.eval_model_response(response, chatbot)
+            return guardrail.eval_model_response(response, chatbot, **kwargs)
         except Exception as e:
             error = TestErrorInfo.from_exception(e)
             logger.error(

@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from deepteam.test_case import RTTestCase
 from loguru import logger
 
-from testframework.custom_attack_techniques.techniques import AttackEnhancement, ENHANCEMENTS
+from testframework.custom_attack_techniques.techniques import AttackEnhancement, ENHANCEMENTS, TECHNIQUE_BASELINE
 from testframework.models import AttackEnhancementResult, EnhancedAttack, TestErrorInfo
 from testframework.util.ollama_handler import OllamaGenerator
 
@@ -22,7 +22,7 @@ class AttackListEnhancer:
 
     ERROR_THRESHOLD_ENV_VAR = "ENHANCED_ATTACK_ERROR_THRESHOLD_PERCENT"
     DEFAULT_ERROR_THRESHOLD_PERCENT = 100.0
-    MAX_RETRIES = 1
+    MAX_RETRIES = 5
     RETRY_COOLDOWN_SECONDS = 420
     SUCCESS_COOLDOWN_SECONDS = 30
     LOCAL_MODEL_ID = os.environ.get("LOCAL_MODEL_ID", False)
@@ -146,7 +146,11 @@ class AttackListEnhancer:
         for attempt in range(1, max_attempts + 1):
             try:
                 enhanced_input = enhancement.transform(baseline_input, self.simulator_model)
-                if isinstance(self.simulator_model, OllamaModel) and enhancement.cooldown is not None:
+                if enhanced_input == baseline_input and enhancement.name != TECHNIQUE_BASELINE:
+                    # Because DeepTeam handles an exception when generating the technique by simply
+                    # returning the original prompt as the enhanced prompt without any changes.
+                    raise ValueError("Enhanced input is identical to baseline input.")
+                if isinstance(self.simulator_model, OllamaModel):
                     logger.info(
                         f"Cooldown: {self.SUCCESS_COOLDOWN_SECONDS}s.")
                     enhancement.cooldown(self.SUCCESS_COOLDOWN_SECONDS)
@@ -155,14 +159,13 @@ class AttackListEnhancer:
                 enhancement_error = TestErrorInfo.from_exception(exc)
                 if attempt >= max_attempts:
                     return None, enhancement_error
-
                 logger.warning(
                     f"Enhancement '{enhancement.name}' failed on attempt {attempt}/{max_attempts} "
                     f"({enhancement_error.error_type.value}): {enhancement_error.message}. "
                     "Preparing retry."
                 )
 
-                if self.LOCAL_MODEL_ID is not False and enhancement.cooldown is not None:
+                if isinstance(self.simulator_model, OllamaModel) and attempt > 1:
                     OllamaGenerator.require_local_model_shutdown()
                     logger.info(f"Retry cooldown: {self.RETRY_COOLDOWN_SECONDS}s.")
                     enhancement.cooldown(self.RETRY_COOLDOWN_SECONDS)

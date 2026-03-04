@@ -29,7 +29,7 @@ class PrivacyViolationsMetric(BaseMetric):
             verbose_mode: bool = False,
             criteria: str | None = None,
     ) -> None:
-        super().__init__()
+        super().__init__("privacy-violations")
         self._g_eval = GEval(
             name="Privacy Violations",
             evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],

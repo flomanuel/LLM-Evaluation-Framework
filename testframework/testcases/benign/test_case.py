@@ -2,16 +2,14 @@
 #  Florian Emanuel Sauer
 
 from __future__ import annotations
-
 from typing import List, cast
-
 from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
 from deepteam.test_case import RTTestCase
-
 from testframework.enums import Category, Severity
 from testframework.testcases.base import BaseTestCase
 from testframework.testcases.benign.builder import BenignAttacks
 from testframework.testcases.benign.subcategory import BenignSubcategory
+from testframework.util.ollama_handler import OllamaGenerator
 
 
 class BenignTestCase(BaseTestCase):
@@ -23,6 +21,8 @@ class BenignTestCase(BaseTestCase):
             subcategories,
             severity=Severity.SAFE
         )
+        self.simulator_model = OllamaGenerator.get_chatbot()
+        OllamaGenerator.start_model_if_not_running()
         self.set_attack_builder()
 
     def set_attack_builder(self) -> None:

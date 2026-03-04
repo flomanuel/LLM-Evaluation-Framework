@@ -85,12 +85,6 @@ class LangChainChatbot(BaseChatbot):
 
     def _retrieve_context(self, query: str) -> List[Document]:
         """Retrieve relevant documents from the vector store.
-
-        Args:
-            query: The user query to search for.
-
-        Returns:
-            List of relevant documents.
         """
         if self._vector_store is None:
             logger.warning("No vector store configured, skipping RAG retrieval")
@@ -102,13 +96,6 @@ class LangChainChatbot(BaseChatbot):
             self, user_prompt: str, context_docs: List[Document]
     ) -> str:
         """Build the enhanced prompt with RAG context.
-
-        Args:
-            user_prompt: The original user prompt.
-            context_docs: Retrieved context documents.
-
-        Returns:
-            The enhanced prompt with context.
         """
         if not context_docs:
             return user_prompt
@@ -118,12 +105,14 @@ class LangChainChatbot(BaseChatbot):
             for i, doc in enumerate(context_docs)
         )
 
-        enhanced_prompt = f"""Use the given context to answer the question, if needed.
+        enhanced_prompt = f"""
+Use the given context to answer the question, if needed.
 === CONTEXT ===
 {context_text}
 === END CONTEXT ===
 
-{user_prompt}"""
+{user_prompt}
+        """
 
         return enhanced_prompt
 
@@ -231,17 +220,19 @@ class LangChainChatbot(BaseChatbot):
 
         This method contains the core query logic, separated for cleaner error handling.
         """
-        document_content: str | None = None
+        context_docs: List[Document] = []
+        enhanced_prompt: str = user_prompt
         if file_path:
             logger.info(
                 f"Loading attack document for chatbot '{self.name.value}' "
                 f"(file_path={file_path})"
             )
-            document_content = self._load_document(file_path)
+            document_content: str | None = self._load_document(file_path)
             logger.debug(f"Loaded document from '{file_path}'")
+            if document_content is not None:
+                enhanced_prompt = self._build_prompt_with_document(user_prompt, document_content)
 
-        context_docs: List[Document] = []
-        if is_rag and self._vector_store is not None:
+        elif is_rag and self._vector_store is not None:
             logger.info(
                 f"Retrieving RAG context for chatbot '{self.name.value}' "
                 f"(top_k={self._rag_k})"
@@ -251,9 +242,6 @@ class LangChainChatbot(BaseChatbot):
                 f"Retrieved {len(context_docs)} RAG document(s) for chatbot '{self.name.value}'"
             )
             enhanced_prompt = self._build_prompt_with_context(user_prompt, context_docs)
-        else:
-            if document_content is not None:
-                enhanced_prompt = self._build_prompt_with_document(user_prompt, document_content)
 
         messages = [
             SystemMessage(content=effective_system_prompt),
@@ -294,6 +282,8 @@ class LangChainChatbot(BaseChatbot):
             response_tokens = response.usage_metadata.get("output_tokens", -1)
 
         return ChatbotResponse(
+            prompt=user_prompt,
+            raw_prompt=enhanced_prompt,
             response=response.text,
             system_prompt=effective_system_prompt,
             tool=ToolInfo(
@@ -305,5 +295,4 @@ class LangChainChatbot(BaseChatbot):
             response_tokens=response_tokens,
             rag_context=rag_context,
             file_path=file_path,
-            prompt=user_prompt,
         )

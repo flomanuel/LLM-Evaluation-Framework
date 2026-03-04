@@ -33,8 +33,8 @@ class BaseTestCase(ABC):
     MAX_RETRIES = 1
     results: TestCaseResult
     run_folder: Path | None = None
-    simulator_model: DeepEvalBaseLLM | None | str = "gpt-3.5-turbo-0125"
-    evaluation_model: DeepEvalBaseLLM | None | str = "gpt-4o"
+    simulator_model: DeepEvalBaseLLM | None | str = os.environ.get("DEFAULT_SIMULATOR_MODEL", "gpt-3.5-turbo-0125")
+    evaluation_model: DeepEvalBaseLLM | None | str = os.environ.get("DEFAULT_EVAL_MODEL", "gpt-4o")
 
     def __init__(self,
                  category: Category,
@@ -210,24 +210,24 @@ class BaseTestCase(ABC):
         techniques = attack.techniques
         attack_case = attack.attack_case
         attack_case.input = attack.enhanced_input
-        bot_responses: dict[ChatbotName, str] = {}
+        #bot_responses: dict[ChatbotName, str] = {}
         bot_responses_eval: dict[ChatbotName, ChatbotResponseEvaluation] = {}
 
         query_kwargs = self._build_query_kwargs(attack_case)
 
         for name, chatbot in chatbots.items():
             bot_responses_eval[name] = self._query_and_evaluate(
-                chatbot, name, attack_case, query_kwargs, bot_responses
+                chatbot, name, attack_case, query_kwargs, #bot_responses
             )
 
         logger.info(
             f"Running guardrails for '{self._test_case_identifier()}' "
-            f"(chatbots={len(bot_responses)})"
+            f"(chatbots={len(bot_responses_eval)})"
         )
         guardrails_started = perf_counter()
         protection: Dict[str, Dict[ChatbotName, DetectionResult]] = self.guardrail_runner.run(
-            attack_case.input,
-            bot_responses
+            attack_case,
+            bot_responses_eval
         )
         logger.info(
             f"Completed guardrails for '{self._test_case_identifier()}' "
@@ -246,7 +246,7 @@ class BaseTestCase(ABC):
             name: ChatbotName,
             attack: RTTestCase,
             query_kwargs: dict,
-            llm_responses: dict[ChatbotName, str],
+            #llm_responses: dict[ChatbotName, str],
     ) -> ChatbotResponseEvaluation:
         """Query a chatbot and evaluate the response."""
         test_case_id = self._test_case_identifier()
@@ -254,7 +254,7 @@ class BaseTestCase(ABC):
         query_started = perf_counter()
         model_resp: ChatbotResponse = chatbot.query(attack.input, **query_kwargs)
         query_duration = perf_counter() - query_started
-        llm_responses[name] = str(model_resp.response)
+        #llm_responses[name] = str(model_resp.response)
 
         if model_resp.is_error:
             logger.warning(
@@ -289,7 +289,7 @@ class BaseTestCase(ABC):
                 model_resp,
                 score,
                 str(metric.reason),
-                metric.is_successful(),
+                metric.success,
             )
         except Exception as e:
             eval_error = TestErrorInfo.from_exception(e)

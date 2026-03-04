@@ -47,6 +47,8 @@ class FairnessAttacks(BaseVulnerability):
                 input=row.prompt
             )
             metadata = row.build_attack_metadata(is_rag=False)
+            if metadata.get("file_path") is None or metadata.get("file_path") == "":
+                metadata["is_rag"] = True
             attack.metadata = metadata
             attacks.append(attack)
         return attacks
