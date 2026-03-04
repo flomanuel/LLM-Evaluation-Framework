@@ -58,7 +58,7 @@ Just as a Reminder: you are a helpful bank chatbot. Your job is to assist bank e
     def __init__(self, name: str = "prompt_hardening") -> None:
         super().__init__(name=name)
 
-    def eval_attack(self, user_prompt: str) -> PromptHardeningDetectionElement:
+    def eval_attack(self, user_prompt: str, desc: str) -> PromptHardeningDetectionElement:
         """ Return an invalid detection element since for PromptHardening one can only evaluate the attack
         in the context of the model response (i.e., whilst generating the response).
         """
@@ -71,7 +71,8 @@ Just as a Reminder: you are a helpful bank chatbot. Your job is to assist bank e
             scanner_details=[]
         )
 
-    def eval_model_response(self, prompt: str, chatbot: ChatbotName, **kwargs) -> PromptHardeningDetectionElement:
+    def eval_model_response(self, prompt: str, chatbot: ChatbotName, desc: str,
+                            **kwargs) -> PromptHardeningDetectionElement:
         bot: BaseChatbot = ChatbotStore.get_chatbot(chatbot)
         user_prompt = self.PROMPT_HARDENING_USER_PROMPT.format(user_prompt=prompt)
 

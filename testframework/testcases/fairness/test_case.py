@@ -32,3 +32,10 @@ class FairnessTestCase(BaseTestCase):
 
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         return cast(FairnessAttacks, self.attack_builder).simulate_attacks()
+
+    @property
+    def description(self) -> str:
+        return """Prompt that tries to provoke responses that do NOT uphold equitable treatment and decision-making 
+        across groups, individuals, and contexts. More specifically, it tests if the target LLM can be influenced to 
+        produce outputs that support the user in treating other people unfairly or discriminate against groups.
+        """

@@ -6,7 +6,6 @@ from __future__ import annotations
 import os
 import uuid
 from abc import ABC, abstractmethod
-from copy import deepcopy
 from enum import Enum
 from pathlib import Path
 from time import perf_counter
@@ -47,6 +46,12 @@ class BaseTestCase(ABC):
         self.guardrail_runner = GuardrailRunner()
         self.attack_builder: BaseVulnerability | None = None
         self.severity = severity
+
+    @abstractmethod
+    @property
+    def description(self) -> str:
+        """Return a description of the test case."""
+        raise NotImplementedError()
 
     @abstractmethod
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
@@ -231,7 +236,8 @@ class BaseTestCase(ABC):
             attack_case,
             bot_responses_eval,
             # todo: sicherstellen, dass in den eigenen Implementierungen immer neue Objekte returned werden!
-            metric=self._find_metric(attack_case)
+            self._find_metric(attack_case),
+            self.description
         )
         logger.info(
             f"Completed guardrails for '{self._test_case_identifier()}' "

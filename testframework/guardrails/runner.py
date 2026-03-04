@@ -27,6 +27,7 @@ class GuardrailRunner:
             attack: RTTestCase,
             chatbot_responses_eval: dict[ChatbotName, ChatbotResponseEvaluation],
             metric: BaseRedTeamingMetric,
+            attack_description: str,
     ) -> Dict[str, Dict[ChatbotName, DetectionResult]]:
         """
         Analyzes a given attack string against the chatbot's responses by iterating over the guardrails.
@@ -43,7 +44,7 @@ class GuardrailRunner:
             logger.info(f"Starting guardrail '{guardrail.name}'")
 
             enhanced_attack = attack.input
-            enhanced_attack_evaluation = self._safe_eval_attack(guardrail, enhanced_attack)
+            enhanced_attack_evaluation = self._safe_eval_attack(guardrail, enhanced_attack, attack_description)
 
             for bot_name, bot_response_eval in chatbot_responses_eval.items():
                 if isinstance(guardrail, PromptHardeningGuardrail):
@@ -52,14 +53,19 @@ class GuardrailRunner:
                     # If a file path is set, then no RAG will be used in the chatbot and since the file is
                     # always the same, the conditions stay the same for file paths as opposed to RAG.
                     rag_context: RagContext | None = bot_response_eval.chatbot_response.rag_context
-                    response_evaluation = self._safe_eval_response(guardrail, enhanced_attack, bot_name,
+                    response_evaluation = self._safe_eval_response(guardrail,
+                                                                   enhanced_attack,
+                                                                   bot_name,
+                                                                   attack_description,
                                                                    file_path=file_path,
                                                                    rag_context=rag_context,
                                                                    metric=metric)
                 else:
                     response_evaluation = self._safe_eval_response(guardrail,
                                                                    bot_response_eval.chatbot_response.response,
-                                                                   bot_name, prompt=enhanced_attack)
+                                                                   bot_name,
+                                                                   attack_description,
+                                                                   prompt=enhanced_attack)
                 result[key][bot_name] = DetectionResult(
                     enhanced_attack_evaluation, response_evaluation
                 )
@@ -70,11 +76,11 @@ class GuardrailRunner:
         logger.info("Guardrail evaluation completed")
         return result
 
-    def _safe_eval_attack(self, guardrail, attack: str) -> DetectionElement:
+    def _safe_eval_attack(self, guardrail, attack: str, attack_description) -> DetectionElement:
         """Evaluate an attack, catching any errors.
         """
         try:
-            return guardrail.eval_attack(attack)
+            return guardrail.eval_attack(attack, attack_description)
         except Exception as e:
             error = TestErrorInfo.from_exception(e)
             logger.error(
@@ -83,12 +89,13 @@ class GuardrailRunner:
             )
             return DetectionElement.from_error(error)
 
-    def _safe_eval_response(self, guardrail, response: str, chatbot: ChatbotName, **kwargs) -> DetectionElement:
+    def _safe_eval_response(self, guardrail, response: str, chatbot: ChatbotName, attack_description: str,
+                            **kwargs) -> DetectionElement:
         # file_path: st`r | None, rag: RagContext | None) -> DetectionElement:
         """Evaluate a response, catching any errors.
         """
         try:
-            return guardrail.eval_model_response(response, chatbot, **kwargs)
+            return guardrail.eval_model_response(response, chatbot, attack_description, **kwargs)
         except Exception as e:
             error = TestErrorInfo.from_exception(e)
             logger.error(

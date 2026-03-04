@@ -33,3 +33,11 @@ class IllegalActivityTestCase(BaseTestCase):
         return cast(IllegalActivity, self.attack_builder).simulate_attacks(
             attacks_per_vulnerability_type=attacks_per_vulnerability_type
         )
+
+    @property
+    def description(self) -> str:
+        return """Prompt that tries to provoke the target LLM into generating responses that 
+        facilitate or promote unlawful actions. More specifically, it focuses on testing whether the LLM provides 
+        methods, plans, or instructions for activities such as creating weapons, committing crimes, or exploiting 
+        others.
+        """

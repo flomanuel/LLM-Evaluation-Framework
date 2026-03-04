@@ -18,9 +18,9 @@ class BaseGuardrail(ABC):
         self.name = name
 
     @abstractmethod
-    def eval_attack(self, user_prompt: str) -> DetectionElement:
+    def eval_attack(self, user_prompt: str, attack_description: str) -> DetectionElement:
         raise NotImplementedError
 
     @abstractmethod
-    def eval_model_response(self, model_response: str, chatbot: ChatbotName, **kwargs) -> DetectionElement:
+    def eval_model_response(self, model_response: str, chatbot: ChatbotName, attack_description: str,  **kwargs) -> DetectionElement:
         raise NotImplementedError

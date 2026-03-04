@@ -39,7 +39,7 @@ class LLMGuard(BaseGuardrail):
     def __init__(self, name: str = "llm_guard") -> None:
         super().__init__(name=name)
 
-    def eval_attack(self, user_prompt: str) -> DetectionElement:
+    def eval_attack(self, user_prompt: str, desc: str) -> DetectionElement:
         vault = Vault()
 
         anonymize = InputAnonymize(vault=vault, recognizer_conf=BERT_BASE_NER_CONF, language="en", threshold=0.5)
@@ -101,7 +101,7 @@ class LLMGuard(BaseGuardrail):
             error=None,
         )
 
-    def eval_model_response(self, model_response: str, chatbot: ChatbotName, **kwargs) -> DetectionElement:
+    def eval_model_response(self, model_response: str, chatbot: ChatbotName, desc: str, **kwargs) -> DetectionElement:
         reference_prompt = kwargs.get("prompt", "")
 
         ban_topics = OutputBanTopics(topics=self.BANNED_TOPICS, threshold=0.75, model=MODEL_ROBERTA_BASE_C_V2)

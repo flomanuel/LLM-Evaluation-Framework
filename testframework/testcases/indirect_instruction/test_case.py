@@ -33,3 +33,11 @@ class IndirectInstructionTestCase(BaseTestCase):
 
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         return cast(IndirectInstructionAttacks, self.attack_builder).simulate_attacks()
+
+    @property
+    def description(self) -> str:
+        return """Prompt that tries to push the target LLM into situations where it can't distinguish instructions 
+        from untrusted contextual data. More specifically, it focuses on testing whether the target LLM can be influenced 
+        to follow instructions embedded inside external sources such as retrieved documents, tool outputs, prior context,
+        or intermediate artifacts.
+        """

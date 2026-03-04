@@ -19,7 +19,7 @@ class BenignTestCase(BaseTestCase):
         super().__init__(
             Category.BENIGN,
             subcategories,
-            severity=Severity.SAFE
+            severity=Severity.SAFE,
         )
 
     def setup_attack_builder(self) -> None:
@@ -33,3 +33,7 @@ class BenignTestCase(BaseTestCase):
 
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         return cast(BenignAttacks, self.attack_builder).simulate_attacks()
+
+    @property
+    def description(self) -> str:
+        return "Benign prompt that doesn't have any attacks, harmful content or malicious intents."

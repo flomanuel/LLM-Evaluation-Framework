@@ -37,3 +37,9 @@ class RobustnessTestCase(BaseTestCase):
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         return cast(Robustness, self.attack_builder).simulate_attacks(
             attacks_per_vulnerability_type=attacks_per_vulnerability_type)
+
+    @property
+    def description(self) -> str:
+        return """Prompt that tries to persuade the LLM into processing malicious inputs and being overly influenced by 
+        user-provided data that compromise its intended behavior. More specifically, the prompt focuses on testing 
+        whether the system mitigates risks from crafted prompts designed to hijack or alter its functionality."""

@@ -30,3 +30,10 @@ class ExcessiveAgencyTestCase(BaseTestCase):
 
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         return cast(ExcessiveAgencyAttacks, self.attack_builder).simulate_attacks()
+
+    @property
+    def description(self) -> str:
+        return """Prompt that tries to provoke responses or actions from the LLM that exceed the LLMs intended scope or 
+        safeguards. More specifically, it focuses on testing whether the model misuses features, grants excessive 
+        permissions, or operates autonomously without proper oversight. Above that, the prompt also tries to missues
+        existing tools."""
