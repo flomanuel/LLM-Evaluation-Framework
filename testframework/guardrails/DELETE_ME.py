@@ -1,7 +1,4 @@
-#  Copyright (c) 2026.
-#  Florian Emanuel Sauer
 from collections import deque
-from threading import Lock
 from time import monotonic, sleep
 from typing import List
 from loguru import logger
@@ -12,12 +9,9 @@ from guardrails import Guard, Validator, ValidationOutcome, OnFailAction
 from guardrails.hub import ToxicLanguage, BiasCheck, GuardrailsPII, SensitiveTopic, ShieldGemma2B, LlamaGuard7B, \
     DetectJailbreak
 from topics import SENSITIVE_TOPICS
-from transformers.pipelines import pipeline
 
 
-class GuardrailsAI(BaseGuardrail):
-    """Guardrail for GuardrailsAI from [GuardrailsAI](https://guardrailsai.com/)."""
-
+class GuardrailsAI():
     PII_ENTITIES_MAP = {
         "pii": [
             "EMAIL_ADDRESS",
@@ -33,8 +27,8 @@ class GuardrailsAI(BaseGuardrail):
     }
 
     def __init__(self) -> None:
-        super().__init__("Guardrails AI")
         self._guard = None
+        self.name = "DELETE ME"
 
     def eval_attack(self, user_prompt: str, attack_description: str, **kwargs) -> DetectionElement:
         guard = self._get_guard
@@ -43,7 +37,6 @@ class GuardrailsAI(BaseGuardrail):
         except Exception as e:
             # todo: exception handling -> API might sometimes be flaky
             pass
-
         return DetectionElement.from_error()
 
     def eval_model_response(self, model_response: str, chatbot: ChatbotName, attack_description: str,
@@ -58,7 +51,8 @@ class GuardrailsAI(BaseGuardrail):
     @property
     def _get_guard(self) -> Guard:
         if self._guard is None:
-            self._guard = Guard().use(validators=self._validators)
+            validators = self._validators
+            self._guard = Guard().use(validators=validators)
         return self._guard
 
     @property
@@ -66,10 +60,11 @@ class GuardrailsAI(BaseGuardrail):
         return [
             SensitiveTopic(
                 sensitive_topics=SENSITIVE_TOPICS,
-                model="dslim/bert-base-NER",  # use same model as in llm guard since default model is too large
+                model="dslim/bert-base-NER",
                 disable_classifier=False,
                 disable_llm=True,
                 on_fail=OnFailAction.EXCEPTION,
+                device=1
             ),
             DetectJailbreak(
                 device="mps",
@@ -102,3 +97,13 @@ class GuardrailsAI(BaseGuardrail):
                 on_fail=OnFailAction.EXCEPTION
             )
         ]
+
+
+def main():
+    gai = GuardrailsAI()
+    gai.eval_attack("I'm harmles!", "")
+    gai.eval_attack("You suck! Bastard! Fuck you!", "")
+
+
+if __name__ == "__main__":
+    main()

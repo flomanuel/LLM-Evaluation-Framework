@@ -39,6 +39,19 @@ Install dev dependencies for linting and static analysis:
 
 ```bash
 uv sync --extra dev
+# or
+uv sync --all-extras
+```
+
+One can also use the provider bash script `install_deps.sh` to install all dependencies, inclusing the Guardrails AI
+scanners.
+
+```bash
+install_deps.sh
+#or 
+install_deps.sh -e
+#or 
+install_deps.sh --all-extras
 ```
 
 Run linters:
@@ -115,22 +128,49 @@ todo: add details
 
 ## Remote Inference
 
-Account und API-Key unter https://guardrailsai.com/ anlegen.
+Create an account and API-key under https://guardrailsai.com/.
+
+Important: do opt in to remote inferencing. This will send all guardrails to the guardrails.ai server. But be aware of
+the "100 rq / 1m" and "500 rq / 5m" limit.
 
 ```bash
 uv sync
 guardrails configure
 ```
 
-The following validators are used and installed automatically as part of the custom guardrail evaluator class. By
-default, it uses remote inferencing or all guardrails.
+The following validators are used and need to be installed. Gemma and LlamaGuard are remote inference only.
 
 ```bash
-guardrails hub install hub://guardrails/sensitive_topics
-guardrails hub install hub://guardrails/detect_jailbreak
-guardrails hub install hub://guardrails/toxic_language
-guardrails hub install hub://guardrails/bias_check
-guardrails hub install hub://guardrails/guardrails_pii
-guardrails hub install hub://guardrails/shieldgemma_2b
-guardrails hub install hub://guardrails/llamaguard_7b
+  guardrails hub install hub://guardrails/sensitive_topics
+  guardrails hub install hub://guardrails/detect_jailbreak
+  guardrails hub install hub://guardrails/toxic_language
+  guardrails hub install hub://guardrails/bias_check
+  guardrails hub install hub://guardrails/guardrails_pii
+  guardrails hub install hub://guardrails/shieldgemma_2b
+  guardrails hub install hub://guardrails/llamaguard_7b
+```
+
+# Troubleshooting
+
+## Guardrails AI
+
+### CLI command `guardrails` fails
+
+If the cli command `guardrails` is not available, try runinng `source ./.venv/bin/activate`, even if you've already
+activated the venv.
+
+### filter can't be found when installing from the hub
+
+The same may apply for other guardrails-related error, e.g. if one filter can't be found when installing it from the
+hub.
+
+### Deleting a ml-model
+
+From the code:
+
+```python
+MODEL_CACHE_DIR = os.environ.get(
+    "GUARDRAILS_MODEL_CACHE_PATH_OVERRIDE",
+    Path.home() / ".cache" / "guardrails_cache"
+)
 ```

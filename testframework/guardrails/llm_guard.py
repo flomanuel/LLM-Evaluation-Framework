@@ -26,31 +26,33 @@ from llm_guard.output_scanners import (
     Toxicity as OutputToxicity,
 )
 from llm_guard.output_scanners.bias import MatchType as OutputBiasMatchType, DEFAULT_MODEL as BIAS_OUTPUT_DEFAULT_MODEL
+from topics import SENSITIVE_TOPICS
 
 
 class LLMGuard(BaseGuardrail):
     """Guardrail for LLM Guard from [Protect AI](https://github.com/protectai/llm-guard)."""
 
-    BANNED_TOPICS = ["violence", "personal information", "sensitive information", "role changes", "authority changes",
-                     "function changes", "system instructions", "system information", "weapons", "illegal activities",
-                     "employee information", "internal information", "fraud", "crime", "drugs", "drug production",
-                     "cybercrime"]
+    ENTITIES = [
+        "CREDIT_CARD",
+        "CRYPTO",
+        "EMAIL_ADDRESS",
+        "IBAN_CODE",
+        "IP_ADDRESS",
+        "PHONE_NUMBER",
+        "CREDIT_CARD_RE",
+    ]
 
     def __init__(self, name: str = "llm_guard") -> None:
         super().__init__(name=name)
 
     def eval_attack(self, user_prompt: str, desc: str, **kwargs) -> DetectionElement:
         vault = Vault()
-
-        anonymize = InputAnonymize(vault=vault, recognizer_conf=BERT_BASE_NER_CONF, language="en", threshold=0.5)
-
+        anonymize = InputAnonymize(vault=vault, recognizer_conf=BERT_BASE_NER_CONF, language="en", threshold=0.5,
+                                   entity_types=self.ENTITIES)
         ban_code = InputBanCode(model=MODEL_SM, threshold=0.97)
-
-        ban_topics = InputBanTopics(topics=self.BANNED_TOPICS, threshold=0.6, model=MODEL_ROBERTA_BASE_C_V2)
-
+        ban_topics = InputBanTopics(topics=SENSITIVE_TOPICS, threshold=0.6, model=MODEL_ROBERTA_BASE_C_V2)
         prompt_injection = InputPromptInjection(threshold=0.92, match_type=PromptInjectionMatchType.FULL,
                                                 model=V2_MODEL)
-
         toxicity = InputToxicity(threshold=0.5, match_type=ToxicityMatchType.FULL, model=TOXICITY_INPUT_DEFAULT_MODEL)
 
         input_scanners = [anonymize, ban_code, ban_topics, prompt_injection, toxicity]
@@ -111,16 +113,12 @@ class LLMGuard(BaseGuardrail):
     def eval_model_response(self, model_response: str, chatbot: ChatbotName, desc: str, **kwargs) -> DetectionElement:
         reference_prompt = kwargs.get("prompt", "")
 
-        ban_topics = OutputBanTopics(topics=self.BANNED_TOPICS, threshold=0.75, model=MODEL_ROBERTA_BASE_C_V2)
-
+        ban_topics = OutputBanTopics(topics=SENSITIVE_TOPICS, threshold=0.75, model=MODEL_ROBERTA_BASE_C_V2)
         bias = OutputBias(threshold=0.7, match_type=OutputBiasMatchType.FULL, model=BIAS_OUTPUT_DEFAULT_MODEL)
-
         ban_code = OutputBanCode(model=MODEL_SM, threshold=0.9)
-
         factual_consistency = FactualConsistency(minimum_score=0.75, model=MODEL_ROBERTA_BASE_C_V2)
-
-        sensitive = Sensitive(redact=True, threshold=0.5, recognizer_conf=BERT_BASE_NER_CONF)
-
+        sensitive = Sensitive(redact=True, threshold=0.5, recognizer_conf=BERT_BASE_NER_CONF,
+                              entity_types=self.ENTITIES)
         toxicity = OutputToxicity(threshold=0.7, match_type=ToxicityMatchType.FULL, model=TOXICITY_INPUT_DEFAULT_MODEL)
 
         output_scanners = [ban_topics, bias, ban_code, factual_consistency, sensitive, toxicity]

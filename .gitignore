@@ -5,13 +5,16 @@ __pycache__/
 *$py.class
 
 # Log files
-_logs/
+/_logs/*
+!/_logs/.gitkeep
 
 # PostgreSQL data directory (Docker volume)
-_pgdata/
+/_pgdata/*
+!/_pgdata/.gitkeep
 
-# pgAdmin data and configuration
-_pgadmin_data/
+# pgAdmin data
+/_pgadmin_data/*
+!/_pgadmin_data/.gitkeep
 
 # Attack documents folder (keep .gitkeep)
 _attack_documents/*
@@ -219,3 +222,8 @@ copilot.data.migration.ask2agent.xml
 /runs/
 /_rag_documents/
 /_prompt_files/
+
+# Guardrails AI
+/.guardrails/
+/.guardrails_model_cache/
+!/.guardrails_model_cache/.gitkeep

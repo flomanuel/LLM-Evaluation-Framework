@@ -4,14 +4,17 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.deepeval" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
-      <excludeFolder url="file://$MODULE_DIR$/_logs" />
-      <excludeFolder url="file://$MODULE_DIR$/_pgdata" />
       <excludeFolder url="file://$MODULE_DIR$/thesis_llm_chatbot_protection.egg-info" />
-      <excludeFolder url="file://$MODULE_DIR$/_pgadmin_data" />
       <excludeFolder url="file://$MODULE_DIR$/_rag_documents/1_harmlose_dokumente" />
       <excludeFolder url="file://$MODULE_DIR$/_rag_documents/2_schaedlich_manuell_erstellt_basic" />
       <excludeFolder url="file://$MODULE_DIR$/_runs" />
       <excludeFolder url="file://$MODULE_DIR$/_runs/20260223_202717_1600fb31-569e-4798-9c58-8ff845de4957" />
+      <excludeFolder url="file://$MODULE_DIR$/_logs" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgadmin_data/azurecredentialcache" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgadmin_data/sessions" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgadmin_data/storage" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgadmin_data" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata />
     </content>
     <orderEntry type="jdk" jdkName="uv (thesis_llm-chatbot_protection)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
