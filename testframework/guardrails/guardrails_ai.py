@@ -1,10 +1,14 @@
 #  Copyright (c) 2026.
 #  Florian Emanuel Sauer
 from typing import List
+
+from guardrails_grhub_llamaguard_7b import LlamaGuard7B
+from guardrails_grhub_shieldgemma_2b import ShieldGemma2B
+
 from testframework import ChatbotName
 from testframework.guardrails.base import BaseGuardrail
 from testframework.models import DetectionElement
-from guardrails import Guard, Validator, ValidationOutcome, install
+from guardrails import Guard, Validator, ValidationOutcome, install, OnFailAction
 
 
 class GuardrailsAI(BaseGuardrail):
@@ -16,91 +20,100 @@ class GuardrailsAI(BaseGuardrail):
 
     sensitive_topic = install(
         "hub://guardrails/sensitive_topics",
-        install_local_models=False,  # use remote inferencing; easier on the local hardware
         quiet=False
     ).SensitiveTopic
 
     detect_jailbreak = install(
         "hub://guardrails/detect_jailbreak",
-        install_local_models=False,  # use remote inferencing; easier on the local hardware
         quiet=False
     ).DetectJailbreak
 
     toxic_language = install(
         "hub://guardrails/toxic_language",
-        install_local_models=False,  # use remote inferencing; easier on the local hardware
         quiet=False
     ).ToxicLanguage
 
     bias_check = install(
         "hub://guardrails/bias_check",
-        install_local_models=False,  # use remote inferencing; easier on the local hardware
         quiet=False
     ).BiasCheck
 
     guardrails_pii = install(
         "hub://guardrails/guardrails_pii",
-        install_local_models=False,  # use remote inferencing; easier on the local hardware
         quiet=False
     ).GuardrailsPII
 
     shield_gemma_2b = install(
         "hub://guardrails/shieldgemma_2b",
-        install_local_models=False,  # use remote inferencing; easier on the local hardware
         quiet=False
     ).ShieldGemma2B
 
     llama_guard_7b = install(
         "hub://guardrails/llamaguard_7b",
-        install_local_models=False,  # use remote inferencing; easier on the local hardware
         quiet=False
     ).LlamaGuard7B
 
     def eval_attack(self, user_prompt: str, attack_description: str, **kwargs) -> DetectionElement:
         self._check_request_allowed()
-        res: ValidationOutcome = self._guard.parse(user_prompt)
+        try:
+            res: ValidationOutcome = self._guard.parse(user_prompt)
+        except Exception as e:
+            # todo: exception handling -> API might sometimes be flaky
+            pass
 
         return None
 
     def eval_model_response(self, model_response: str, chatbot: ChatbotName, attack_description: str,
                             **kwargs) -> DetectionElement:
         self._check_request_allowed()
-        res: ValidationOutcome = self._guard.parse(model_response)
-
+        try:
+            res: ValidationOutcome = self._guard.parse(model_response)
+        except Exception as e:
+            # todo: exception handling -> API might sometimes be flaky
+            pass
         return None
 
     @property
     def validators(self) -> List[Validator]:
         return [
             self.sensitive_topic(
-                sensitive_topics="",
-                device=-1,
+                sensitive_topics=["TBD"],
                 model="facebook/bart-large-mnli",
-                llm_callable="gpt-3.5-turbo",
-                disable_classifier=["disable_classifier"],
-                classifier_api_endpoint=["classifier_api_endpoint"],
-                disable_llm=["disable_llm"],
-                zero_shot_threshold=0.5,
-                llm_threshold=3
+                disable_classifier=False,
+                disable_llm=True,
+                on_fail=OnFailAction.EXCEPTION,
             ),
             self.detect_jailbreak(
-                threshold=["threshold"],
-                device=["device"]
+                device="mps",
+                on_fail=OnFailAction.EXCEPTION,
             ),
             self.toxic_language(
-                validation_method="sentence",
-                threshold=0.5
+                validation_method="full",
+                on_fail=OnFailAction.EXCEPTION,
             ),
             self.bias_check(
-                debias_strength=0.5,
-                on_fail=["on_fail"]
+                on_fail=OnFailAction.EXCEPTION,
             ),
             self.guardrails_pii(
                 entities=["entities"],
-                model_name="urchade/gliner_small-v2.1"
+                model_name="urchade/gliner_small-v2.1",
+                on_fail=OnFailAction.EXCEPTION,
             ),
-            self.shield_gemma_2b(),
-            self.llama_guard_7b()
+            self.shield_gemma_2b(
+                # only one policy supported at a time, according to https://guardrailsai.com/hub/validator/guardrails/shieldgemma_2b
+                policies=[ShieldGemma2B.POLICY__NO_DANGEROUS_CONTENT],
+                on_fail=OnFailAction.EXCEPTION
+            ),
+            self.llama_guard_7b(
+                # applies all given policies if not defined:
+                policies=[LlamaGuard7B.POLICY__NO_VIOLENCE_HATE,
+                          LlamaGuard7B.POLICY__NO_SEXUAL_CONTENT,
+                          LlamaGuard7B.POLICY__NO_CRIMINAL_PLANNING,
+                          LlamaGuard7B.POLICY__NO_GUNS_AND_ILLEGAL_WEAPONS,
+                          LlamaGuard7B.POLICY__NO_ILLEGAL_DRUGS,
+                          LlamaGuard7B.POLICY__NO_ENOURAGE_SELF_HARM],
+                on_fail=OnFailAction.EXCEPTION
+            )
         ]
 
     def _check_request_allowed(self):
