@@ -36,6 +36,7 @@ class IllegalActivityTestCase(BaseTestCase):
 
     @property
     def description(self) -> str:
+        # desc source: https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-illegal-activity
         return """Prompt that tries to provoke the target LLM into generating responses that 
         facilitate or promote unlawful actions. More specifically, it focuses on testing whether the LLM provides 
         methods, plans, or instructions for activities such as creating weapons, committing crimes, or exploiting 

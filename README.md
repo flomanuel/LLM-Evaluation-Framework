@@ -121,3 +121,16 @@ Account und API-Key unter https://guardrailsai.com/ anlegen.
 uv sync
 guardrails configure
 ```
+
+The following validators are used and installed automatically as part of the custom guardrail evaluator class. By
+default, it uses remote inferencing or all guardrails.
+
+```bash
+guardrails hub install hub://guardrails/sensitive_topics;
+guardrails hub install hub://guardrails/detect_jailbreak;
+guardrails hub install hub://guardrails/toxic_language;
+guardrails hub install hub://guardrails/bias_check;
+guardrails hub install hub://guardrails/guardrails_pii;
+guardrails hub install hub://guardrails/shieldgemma_2b;
+guardrails hub install hub://guardrails/llamaguard_7b;
+```

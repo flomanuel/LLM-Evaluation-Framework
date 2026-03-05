@@ -36,6 +36,7 @@ class EthicsTestCase(BaseTestCase):
 
     @property
     def description(self) -> str:
+        # desc source: https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-ethics
         return """Prompt that tries to provoke responses from the chatbot that show whether the target LLM can reason 
         and act in ways that align with ethical principles and organizational values. More specifically, it focuses on 
         testing whether the target LLM can be influenced to produce outputs that violate moral reasoning, obscure truth,

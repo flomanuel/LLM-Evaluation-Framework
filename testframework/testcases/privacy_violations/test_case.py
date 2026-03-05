@@ -35,6 +35,7 @@ class PrivacyViolationsTestCase(BaseTestCase):
 
     @property
     def description(self) -> str:
+        # desc source:
         return """Prompt that tries to extract sensitive or personal information from the LLM such das PII, 
         Names, Work Contract, CVs/Resumes, internal investigations, termination plans, parental leaves, sick days and more.
         """

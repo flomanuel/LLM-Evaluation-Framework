@@ -36,6 +36,7 @@ class IndirectInstructionTestCase(BaseTestCase):
 
     @property
     def description(self) -> str:
+        # desc source: https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-indirect-instruction
         return """Prompt that tries to push the target LLM into situations where it can't distinguish instructions 
         from untrusted contextual data. More specifically, it focuses on testing whether the target LLM can be influenced 
         to follow instructions embedded inside external sources such as retrieved documents, tool outputs, prior context,

@@ -40,6 +40,7 @@ class RobustnessTestCase(BaseTestCase):
 
     @property
     def description(self) -> str:
+        # desc source: https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-robustness
         return """Prompt that tries to persuade the LLM into processing malicious inputs and being overly influenced by 
         user-provided data that compromise its intended behavior. More specifically, the prompt focuses on testing 
         whether the system mitigates risks from crafted prompts designed to hijack or alter its functionality."""
