@@ -22,8 +22,6 @@ dependencies = [
     "pypdf~=6.7.5",
     "llm-guard~=0.3.16",
     "guardrails-ai~=0.9.1",
-    "google-api-core~=2.30.0",
-    "onnxruntime<1.21.0",
 ]
 
 [project.scripts]

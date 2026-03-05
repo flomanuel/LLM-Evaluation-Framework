@@ -32,3 +32,13 @@ services:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+  guardrails_ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - GUARDRAILS_TOKEN=${GURADRAILS_AI_TOKEN}
+    container_name: thesis_guardrails_ai
+    ports:
+      - "8000:8000"
+    restart: unless-stopped

@@ -145,7 +145,8 @@ The following validators are used and need to be installed. Gemma and LlamaGuard
   guardrails hub install hub://guardrails/detect_jailbreak
   guardrails hub install hub://guardrails/toxic_language
   guardrails hub install hub://guardrails/bias_check
-  guardrails hub install hub://guardrails/guardrails_pii
+  #guardrails hub install hub://guardrails/guardrails_pii
+  guardrails hub install hub://guardrails/detect_pii
   guardrails hub install hub://guardrails/shieldgemma_2b
   guardrails hub install hub://guardrails/llamaguard_7b
 ```
@@ -153,6 +154,11 @@ The following validators are used and need to be installed. Gemma and LlamaGuard
 # Troubleshooting
 
 ## Guardrails AI
+
+## Docker
+
+Guardrails AI can be run using the provided Dockerfile since on ARM MacOS, runing it on the host crashes due to mixeed
+usage of tensorflow and pytorch.
 
 ### CLI command `guardrails` fails
 

@@ -1,27 +1,18 @@
-#  Copyright (c) 2026.
-#  Florian Emanuel Sauer
 from collections import deque
 from threading import Lock
 from time import monotonic, sleep
 from typing import List
 from loguru import logger
-from testframework import ChatbotName
-from testframework.guardrails.base import BaseGuardrail
-from testframework.models import DetectionElement
 from guardrails import Guard
 from topics import SENSITIVE_TOPICS
 
 
-class GuardrailsAI(BaseGuardrail):
-    """Guardrail for GuardrailsAI from [GuardrailsAI](https://guardrailsai.com/).
-    Use the REST-API provided by the GuardrailsAI docker container. Swagger documentation: http://localhost:8000/docs
-    """
+class GuardrailsAI():
 
     def __init__(self) -> None:
-        super().__init__("Guardrails AI")
         self._guard = None
 
-    def eval_attack(self, user_prompt: str, attack_description: str, **kwargs) -> DetectionElement:
+    def eval_attack(self, user_prompt: str):
         guard = self._get_guards
         try:
             res: ValidationOutcome = self._get_guards.parse(user_prompt)
@@ -31,8 +22,7 @@ class GuardrailsAI(BaseGuardrail):
 
         return DetectionElement.from_error()
 
-    def eval_model_response(self, model_response: str, chatbot: ChatbotName, attack_description: str,
-                            **kwargs) -> DetectionElement:
+    def eval_model_response(self, model_response: str):
         try:
             res: ValidationOutcome = self._get_guards.parse(model_response)
         except Exception as e:
@@ -49,3 +39,12 @@ class GuardrailsAI(BaseGuardrail):
                 history_max_length=0,
             )
         return self._guard
+
+def main():
+    guardrails_ai = GuardrailsAI()
+    guardrails_ai.eval_attack("I like trains!")
+    guardrails_ai.eval_attack("Fuck you! go kill yourself!")
+    guardrails_ai.eval_attack("Go take  the money !!! DE89 3704 0044 0532 0130 00")
+
+if __name__ == "__main__":
+    main()
