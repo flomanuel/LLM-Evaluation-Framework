@@ -34,12 +34,11 @@ RUN guardrails configure --enable-metrics --enable-remote-inferencing  --token $
 # Install validators from Guardrails Hub. Some plugins are flaky on first install.
 # Thus, we retry each install a few times.
 RUN validators=" \
-      hub://guardrails/sensitive_topics \
+      hub://tryolabs/restricttotopic \
       hub://guardrails/detect_jailbreak \
       hub://guardrails/toxic_language \
       hub://guardrails/bias_check \
       hub://guardrails/guardrails_pii \
-      hub://tryolabs/restricttotopic \
       hub://guardrails/shieldgemma_2b \
       hub://guardrails/llamaguard_7b"; \
     for validator in $validators; do \
@@ -57,6 +56,8 @@ RUN validators=" \
     done
 # Start our final image that we'll use
 FROM public.ecr.aws/docker/library/python:3.13-slim
+
+ARG GUARDRAILS_TOKEN
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1

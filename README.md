@@ -138,15 +138,14 @@ uv sync
 guardrails configure
 ```
 
-The following validators are used and need to be installed. Gemma and LlamaGuard are remote inference only.
+The following validators are used. Gemma and LlamaGuard are remote inference only.
 
 ```bash
   guardrails hub install hub://guardrails/sensitive_topics
   guardrails hub install hub://guardrails/detect_jailbreak
   guardrails hub install hub://guardrails/toxic_language
   guardrails hub install hub://guardrails/bias_check
-  #guardrails hub install hub://guardrails/guardrails_pii
-  guardrails hub install hub://guardrails/detect_pii
+  guardrails hub install hub://guardrails/guardrails_pii
   guardrails hub install hub://guardrails/shieldgemma_2b
   guardrails hub install hub://guardrails/llamaguard_7b
 ```
@@ -159,6 +158,15 @@ The following validators are used and need to be installed. Gemma and LlamaGuard
 
 Guardrails AI can be run using the provided Dockerfile since on ARM MacOS, runing it on the host crashes due to mixeed
 usage of tensorflow and pytorch.
+
+Someties, the image needs to be buidl twice because the internal dependency resolver used by Guardrails AI misses some
+dependencies.
+
+```bash
+docker-compose build --no-cache
+# and
+docker compose up
+```
 
 ### CLI command `guardrails` fails
 
