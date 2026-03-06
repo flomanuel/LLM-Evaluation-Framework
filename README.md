@@ -171,6 +171,13 @@ Visit the [dashboard](https://api.together.ai) to generate an API key.
 Visit the [Hugging Face model page](https://huggingface.co/meta-llama/Llama-Prompt-Guard-2-86M/tree/main) to request
 access to Prompt Guard.
 
+# Lakera Guard
+
+First, create a free account from the [Lakera Guard website](https://www.lakera.ai/).
+
+Then create a new API key from the [API Keys page](https://platform.lakera.ai/account/api-keys) and paste it into the
+.env file (LAKERA_GUARD_API_KEY).
+
 # Troubleshooting
 
 ## Guardrails AI

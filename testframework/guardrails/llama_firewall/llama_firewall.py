@@ -24,6 +24,8 @@ class LlamaFirewall(BaseGuardrail):
                          ScannerType.REGEX],
     }
 
+#todo:  generell PII detection nur bei der Analyse des response? Guck nochmal Theat Model an.
+
     def __init__(self):
         super().__init__("LlamaFirewall")
 
