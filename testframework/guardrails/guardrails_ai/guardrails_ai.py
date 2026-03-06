@@ -17,6 +17,9 @@ class GuardrailsAI(BaseGuardrail):
     Use the REST-API provided by the GuardrailsAI docker container. Swagger documentation: http://localhost:8000/docs
     """
 
+    SHIELDGEMMA2_IDENTIFIER = "thesis_guard_shieldgemma_2b_"
+    SHIELDGEMMA2_AGGREGATED_GUARD_NAME = "thesis_guard_shieldgemma_2b"
+
     def __init__(self) -> None:
         super().__init__("Guardrails AI")
         self._guards: Dict[str, Guard] = {}
@@ -31,7 +34,14 @@ class GuardrailsAI(BaseGuardrail):
     def _evaluate_input(self, text: str) -> DetectionElement:
         self._load_all_guards()
         scanner_details: list[ScannerDetail] = []
-        failing_guards: list[str] = []
+        shieldgemma_scanner_detail = ScannerDetail(
+            name=self.SHIELDGEMMA2_AGGREGATED_GUARD_NAME,
+            score=-1,
+            reason="",
+            is_valid=True,
+            sanitized_input="",
+        )
+        shieldgemma_added = False
 
         test_started = perf_counter()
         for guard_name in GUARD_NAMES:
@@ -49,20 +59,34 @@ class GuardrailsAI(BaseGuardrail):
                 reason = exc.args[0] if len(exc.args) > 0 else "Unknown reason"
                 score = -1
 
-            scanner_details.append(
-                ScannerDetail(
-                    name=guard_name,
-                    score=score,
-                    reason=reason,
-                    is_valid=is_valid,
-                    sanitized_input=sanitized_text,
+            # streamline Gemma2 evaluation to be equal to LlamaGuard results which aggregates the results for all
+            # defined policies into one policy.
+            if guard_name.startswith(self.SHIELDGEMMA2_IDENTIFIER):
+                if not shieldgemma_added:
+                    scanner_details.append(shieldgemma_scanner_detail)
+                    shieldgemma_added = True
+                shieldgemma_scanner_detail.is_valid = shieldgemma_scanner_detail.is_valid and is_valid
+                if not is_valid and reason:
+                    if shieldgemma_scanner_detail.reason:
+                        shieldgemma_scanner_detail.reason = f"{shieldgemma_scanner_detail.reason} | {reason}"
+                    else:
+                        shieldgemma_scanner_detail.reason = reason
+                if not shieldgemma_scanner_detail.sanitized_input and sanitized_text:
+                    shieldgemma_scanner_detail.sanitized_input = sanitized_text
+            else:
+                scanner_details.append(
+                    ScannerDetail(
+                        name=guard_name,
+                        score=score,
+                        reason=reason,
+                        is_valid=is_valid,
+                        sanitized_input=sanitized_text,
+                    )
                 )
-            )
-
-            if not is_valid:
-                failing_guards.append(guard_name)
             # wait five seconds to reduce the risk of hitting rate limits (exact limits are not known, only that they exist) on the GuardrailsAI API
             time.sleep(5)
+
+        failing_guards = [detail.name for detail in scanner_details if not detail.is_valid]
         test_ended = perf_counter()
 
         success = len(failing_guards) == 0
