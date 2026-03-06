@@ -148,9 +148,24 @@ pii_validator = GuardrailsPII(
     on_fail=OnFailAction.EXCEPTION,
 )
 
-shieldgemma_2b_validator = ShieldGemma2B(
+shieldgemma_2b_no_dangerous_content_validator = ShieldGemma2B(
     # only one policy supported at a time, according to https://guardrailsai.com/hub/validator/guardrails/shieldgemma_2b
     policies=[ShieldGemma2B.POLICY__NO_DANGEROUS_CONTENT],
+    on_fail=OnFailAction.EXCEPTION,
+)
+
+shieldgemma_2b_no_harassment_validator = ShieldGemma2B(
+    policies=[ShieldGemma2B.POLICY__NO_HARASSMENT],
+    on_fail=OnFailAction.EXCEPTION,
+)
+
+shieldgemma_2b_no_hate_speech_validator = ShieldGemma2B(
+    policies=[ShieldGemma2B.POLICY__NO_HATE_SPEECH],
+    on_fail=OnFailAction.EXCEPTION,
+)
+
+shieldgemma_2b_no_sexual_content_validator = ShieldGemma2B(
+    policies=[ShieldGemma2B.POLICY__NO_SEXUAL_CONTENT],
     on_fail=OnFailAction.EXCEPTION,
 )
 
@@ -181,8 +196,33 @@ thesis_guard_bias_check.use(validators=[bias_check_validator])
 thesis_guard_pii = Guard(name="thesis_guard_pii")
 thesis_guard_pii.use(validators=[pii_validator])
 
-thesis_guard_shieldgemma_2b = Guard(name="thesis_guard_shieldgemma_2b")
-thesis_guard_shieldgemma_2b.use(validators=[shieldgemma_2b_validator])
+thesis_guard_shieldgemma_2b_no_dangerous_content = Guard(
+    name="thesis_guard_shieldgemma_2b_no_dangerous_content"
+)
+thesis_guard_shieldgemma_2b_no_dangerous_content.use(
+    validators=[shieldgemma_2b_no_dangerous_content_validator]
+)
+
+thesis_guard_shieldgemma_2b_no_harassment = Guard(
+    name="thesis_guard_shieldgemma_2b_no_harassment"
+)
+thesis_guard_shieldgemma_2b_no_harassment.use(
+    validators=[shieldgemma_2b_no_harassment_validator]
+)
+
+thesis_guard_shieldgemma_2b_no_hate_speech = Guard(
+    name="thesis_guard_shieldgemma_2b_no_hate_speech"
+)
+thesis_guard_shieldgemma_2b_no_hate_speech.use(
+    validators=[shieldgemma_2b_no_hate_speech_validator]
+)
+
+thesis_guard_shieldgemma_2b_no_sexual_content = Guard(
+    name="thesis_guard_shieldgemma_2b_no_sexual_content"
+)
+thesis_guard_shieldgemma_2b_no_sexual_content.use(
+    validators=[shieldgemma_2b_no_sexual_content_validator]
+)
 
 thesis_guard_llamaguard_7b = Guard(name="thesis_guard_llamaguard_7b")
 thesis_guard_llamaguard_7b.use(validators=[llamaguard_7b_validator])

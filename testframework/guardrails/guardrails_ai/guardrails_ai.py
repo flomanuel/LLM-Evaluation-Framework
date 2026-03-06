@@ -1,6 +1,8 @@
 #  Copyright (c) 2026.
 #  Florian Emanuel Sauer
 from __future__ import annotations
+
+import time
 from time import perf_counter
 from typing import Dict
 from testframework import ChatbotName
@@ -57,8 +59,10 @@ class GuardrailsAI(BaseGuardrail):
                 )
             )
 
-            if is_valid:
+            if not is_valid:
                 failing_guards.append(guard_name)
+            # wait five seconds to reduce the risk of hitting rate limits (exact limits are not known, only that they exist) on the GuardrailsAI API
+            time.sleep(5)
         test_ended = perf_counter()
 
         success = len(failing_guards) == 0

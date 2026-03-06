@@ -70,6 +70,9 @@ COPY --from=builder /opt/venv /opt/venv
 
 ENV PATH="/opt/venv/bin:$PATH"
 
+# Run the Guardrails configure command to create a .guardrailsrc file
+RUN guardrails configure --disable-metrics --enable-remote-inferencing  --token $GUARDRAILS_TOKEN
+
 # run installs a second time since sometimes, the post install scripts fail to run on the first try
 RUN validators=" \
       hub://tryolabs/restricttotopic \
@@ -98,7 +101,5 @@ COPY ./_extras/docker/config.py ./config.py
 
 EXPOSE 8000
 
-# Run the Guardrails configure command to create a .guardrailsrc file
-RUN guardrails configure --disable-metrics --enable-remote-inferencing  --token $GUARDRAILS_TOKEN
 # https://gunicorn.org/asgi/
 CMD gunicorn --bind 0.0.0.0:8000 --timeout=90 --workers=1 --worker-class asgi 'guardrails_api.app:create_app(None, "config.py")'

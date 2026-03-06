@@ -7,6 +7,9 @@ GUARD_NAMES = [
     "thesis_guard_toxic_language",
     "thesis_guard_bias_check",
     "thesis_guard_pii",
-    "thesis_guard_shieldgemma_2b",
+    "thesis_guard_shieldgemma_2b_no_dangerous_content",
+    "thesis_guard_shieldgemma_2b_no_harassment",
+    "thesis_guard_shieldgemma_2b_no_hate_speech",
+    "thesis_guard_shieldgemma_2b_no_sexual_content",
     "thesis_guard_llamaguard_7b",
 ]
