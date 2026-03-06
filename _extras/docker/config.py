@@ -123,7 +123,7 @@ PII_ENTITIES_MAP = {
 
 sensitive_topic_validator = SensitiveTopic(
     sensitive_topics=SENSITIVE_TOPICS,
-    model="dslim/bert-base-NER",
+    # model="dslim/bert-base-NER",
     disable_classifier=False,
     disable_llm=True,
     on_fail=OnFailAction.EXCEPTION,
