@@ -45,25 +45,27 @@ class GuardrailRunner:
             guardrail_started = perf_counter()
             logger.info(f"Starting guardrail '{guardrail.name}'")
 
-            enhanced_attack = attack.input
             use_tool_trace = isinstance(metric, ToolCallCodeInjectionMetric)
 
             for bot_name, bot_response_eval in chatbot_responses_eval.items():
+                full_attack = bot_response_eval.chatbot_response.raw_prompt
                 tool_info = bot_response_eval.chatbot_response.tool if use_tool_trace else None
                 enhanced_attack_evaluation = self._safe_eval_attack(
                     guardrail,
-                    enhanced_attack,
+                    # todo: decide whether to use `enhanced_attack` (attack + technique) or full_attack (attack + technique + RAG/Documents -> no system prompt)
+                    # `full_attack` is exactly the prompt that the chatbot got (except for the system prompt, but that one can't be controlled by the user so this is fine)
+                    # So it makes sense to also use this prompt on the guardrails, e.g. because of indirect prompt injections.
+                    full_attack,
                     attack_description,
                     tool_info=tool_info,
                 )
                 if isinstance(guardrail, PromptHardeningGuardrail):
                     file_path: str | None = bot_response_eval.chatbot_response.file_path or None
-                    # build the prompt with the same RAG context to keep all conditions the same
-                    # If a file path is set, then no RAG will be used in the chatbot and since the file is
-                    # always the same, the conditions stay the same for file paths as opposed to RAG.
+                    # Build the prompt with the same RAG context to keep all conditions the same. If a file path is set, then no RAG will be used in the chatbot and since the file is
+                    # always the same, the conditions stay the same for file paths, as opposed to RAG.
                     rag_context: RagContext | None = bot_response_eval.chatbot_response.rag_context
                     response_evaluation = self._safe_eval_response(guardrail,
-                                                                   enhanced_attack,
+                                                                   attack.input,
                                                                    bot_name,
                                                                    attack_description,
                                                                    file_path=file_path,
@@ -74,7 +76,7 @@ class GuardrailRunner:
                                                                    bot_response_eval.chatbot_response.response,
                                                                    bot_name,
                                                                    attack_description,
-                                                                   prompt=enhanced_attack,
+                                                                   prompt=full_attack,
                                                                    tool_info=tool_info)
                 result[key][bot_name] = DetectionResult(
                     enhanced_attack_evaluation, response_evaluation

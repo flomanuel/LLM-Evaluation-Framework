@@ -32,7 +32,7 @@ class BenignTestCase(BaseTestCase):
         return self.attack_builder._get_metric()
 
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
-        return cast(BenignAttacks, self.attack_builder).simulate_attacks()[:2]
+        return cast(BenignAttacks, self.attack_builder).simulate_attacks()
 
     @property
     def description(self) -> str:

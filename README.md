@@ -150,6 +150,15 @@ The following validators are used. Gemma and LlamaGuard are remote inference onl
   guardrails hub install hub://guardrails/llamaguard_7b
 ```
 
+# LlamaFirewall
+
+## Setup Hugging Face
+
+Install the [Hugging Face CLI](https://huggingface.co/docs/huggingface_hub/guides/cli).
+
+Authenticate with the Hugging Face CLI via an existing / new token.
+
+
 # Troubleshooting
 
 ## Guardrails AI

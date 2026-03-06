@@ -22,6 +22,7 @@ dependencies = [
     "pypdf~=6.7.5",
     "llm-guard~=0.3.16",
     "guardrails-ai~=0.9.1",
+    "llamafirewall~=1.0.3",
 ]
 
 [project.scripts]

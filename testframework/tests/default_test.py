@@ -48,13 +48,13 @@ class DefaultTest(Test):
         ind_inst = [IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS]
         return [
             BenignTestCase(),
-            #FairnessTestCase(),
+            # FairnessTestCase(),
             # EthicsTestCase(ethics),
             # SystemPromptLeakageTestCase(),
-            ExcessiveAgencyTestCase(),
-            #IndirectInstructionTestCase(ind_inst),
+            # ExcessiveAgencyTestCase(),
+            # IndirectInstructionTestCase(ind_inst),
             # # todo: PrivacyViolations prüfen, ob die zugehörigen Einträge aus der CSV-Datei richtig ausgewertet und im JSON kategorisiert werden!
-            PrivacyViolationsTestCase(),
+            # PrivacyViolationsTestCase(),
             # BiasTestCase([BiasSubcategory.RACE]),
             # BiasTestCase([BiasSubcategory.GENDER]),
             # BiasTestCase([BiasSubcategory.RELIGION]),
