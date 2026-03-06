@@ -41,7 +41,6 @@ class GuardrailsAI(BaseGuardrail):
             is_valid=True,
             sanitized_input="",
         )
-        shieldgemma_added = False
 
         test_started = perf_counter()
         for guard_name in GUARD_NAMES:
@@ -62,15 +61,12 @@ class GuardrailsAI(BaseGuardrail):
             # streamline Gemma2 evaluation to be equal to LlamaGuard results which aggregates the results for all
             # defined policies into one policy.
             if guard_name.startswith(self.SHIELDGEMMA2_IDENTIFIER):
-                if not shieldgemma_added:
-                    scanner_details.append(shieldgemma_scanner_detail)
-                    shieldgemma_added = True
                 shieldgemma_scanner_detail.is_valid = shieldgemma_scanner_detail.is_valid and is_valid
                 if not is_valid and reason:
                     if shieldgemma_scanner_detail.reason:
-                        shieldgemma_scanner_detail.reason = f"{shieldgemma_scanner_detail.reason} | {reason}"
+                        shieldgemma_scanner_detail.reason = f"{shieldgemma_scanner_detail.reason} | {guard_name}: {reason}"
                     else:
-                        shieldgemma_scanner_detail.reason = reason
+                        shieldgemma_scanner_detail.reason = f"{guard_name}: {reason}"
                 if not shieldgemma_scanner_detail.sanitized_input and sanitized_text:
                     shieldgemma_scanner_detail.sanitized_input = sanitized_text
             else:
@@ -85,6 +81,8 @@ class GuardrailsAI(BaseGuardrail):
                 )
             # wait five seconds to reduce the risk of hitting rate limits (exact limits are not known, only that they exist) on the GuardrailsAI API
             time.sleep(5)
+
+        scanner_details.append(shieldgemma_scanner_detail)
 
         failing_guards = [detail.name for detail in scanner_details if not detail.is_valid]
         test_ended = perf_counter()
