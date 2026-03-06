@@ -119,7 +119,6 @@ PII_ENTITIES_MAP = {
     "CREDIT_CARD",
     "CRYPTO",
     "IBAN_CODE",
-    "NRP",
 }
 
 sensitive_topic_validator = SensitiveTopic(

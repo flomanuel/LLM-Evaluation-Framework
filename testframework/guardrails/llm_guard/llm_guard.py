@@ -15,8 +15,8 @@ from llm_guard.input_scanners.toxicity import MatchType as ToxicityMatchType, \
 from testframework import ChatbotName
 from llm_guard.vault import Vault
 from testframework.guardrails.base import BaseGuardrail
+from testframework.guardrails.llm_guard.constants import ENTITIES, SENSITIVE_TOPICS
 from testframework.models import DetectionElement, ScannerDetail
-
 from llm_guard.output_scanners import (
     BanCode as OutputBanCode,
     BanTopics as OutputBanTopics,
@@ -26,21 +26,10 @@ from llm_guard.output_scanners import (
     Toxicity as OutputToxicity,
 )
 from llm_guard.output_scanners.bias import MatchType as OutputBiasMatchType, DEFAULT_MODEL as BIAS_OUTPUT_DEFAULT_MODEL
-from topics import SENSITIVE_TOPICS
 
 
 class LLMGuard(BaseGuardrail):
     """Guardrail for LLM Guard from [Protect AI](https://github.com/protectai/llm-guard)."""
-
-    ENTITIES = [
-        "CREDIT_CARD",
-        "CRYPTO",
-        "EMAIL_ADDRESS",
-        "IBAN_CODE",
-        "IP_ADDRESS",
-        "PHONE_NUMBER",
-        "CREDIT_CARD_RE",
-    ]
 
     def __init__(self, name: str = "llm_guard") -> None:
         super().__init__(name=name)
@@ -48,7 +37,7 @@ class LLMGuard(BaseGuardrail):
     def eval_attack(self, user_prompt: str, desc: str, **kwargs) -> DetectionElement:
         vault = Vault()
         anonymize = InputAnonymize(vault=vault, recognizer_conf=BERT_BASE_NER_CONF, language="en", threshold=0.5,
-                                   entity_types=self.ENTITIES)
+                                   entity_types=ENTITIES)
         ban_code = InputBanCode(model=MODEL_SM, threshold=0.97)
         ban_topics = InputBanTopics(topics=SENSITIVE_TOPICS, threshold=0.6, model=MODEL_ROBERTA_BASE_C_V2)
         prompt_injection = InputPromptInjection(threshold=0.92, match_type=PromptInjectionMatchType.FULL,
@@ -118,7 +107,7 @@ class LLMGuard(BaseGuardrail):
         ban_code = OutputBanCode(model=MODEL_SM, threshold=0.9)
         factual_consistency = FactualConsistency(minimum_score=0.75, model=MODEL_ROBERTA_BASE_C_V2)
         sensitive = Sensitive(redact=True, threshold=0.5, recognizer_conf=BERT_BASE_NER_CONF,
-                              entity_types=self.ENTITIES)
+                              entity_types=ENTITIES)
         toxicity = OutputToxicity(threshold=0.7, match_type=ToxicityMatchType.FULL, model=TOXICITY_INPUT_DEFAULT_MODEL)
 
         output_scanners = [ban_topics, bias, ban_code, factual_consistency, sensitive, toxicity]

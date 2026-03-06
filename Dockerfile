@@ -70,6 +70,29 @@ COPY --from=builder /opt/venv /opt/venv
 
 ENV PATH="/opt/venv/bin:$PATH"
 
+# run installs a second time since sometimes, the post install scripts fail to run on the first try
+RUN validators=" \
+      hub://tryolabs/restricttotopic \
+      hub://guardrails/detect_jailbreak \
+      hub://guardrails/toxic_language \
+      hub://guardrails/bias_check \
+      hub://guardrails/guardrails_pii \
+      hub://guardrails/shieldgemma_2b \
+      hub://guardrails/llamaguard_7b"; \
+    for validator in $validators; do \
+      current_attempts=0; \
+      max_attempts=4; \
+      until [ "$current_attempts" -ge "$max_attempts" ]; do \
+        current_attempts=$((current_attempts + 1)); \
+        if guardrails hub install "$validator"; then \
+          break; \
+        fi; \
+      done; \
+      if [ "$current_attempts" -ge "$max_attempts" ]; then \
+        echo "ERROR: Could not install $validator."; \
+      fi; \
+    done
+
 # Copy the config over
 COPY ./_extras/docker/config.py ./config.py
 
