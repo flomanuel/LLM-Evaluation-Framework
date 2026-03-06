@@ -158,6 +158,18 @@ Install the [Hugging Face CLI](https://huggingface.co/docs/huggingface_hub/guide
 
 Authenticate with the Hugging Face CLI via an existing / new token.
 
+Set hugging face cache home dir in env file (HF_HOME).
+
+Generate an API key for TogetherAI and set it in the .env file (TOGETHER_API_KEY).
+
+## Generate TogetherAI API key
+
+Visit the [dashboard](https://api.together.ai) to generate an API key.
+
+## Request Access to Prompt Guard
+
+Visit the [Hugging Face model page](https://huggingface.co/meta-llama/Llama-Prompt-Guard-2-86M/tree/main) to request
+access to Prompt Guard.
 
 # Troubleshooting
 

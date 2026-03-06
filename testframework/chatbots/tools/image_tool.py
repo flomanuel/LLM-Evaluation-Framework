@@ -5,7 +5,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from langchain_core.tools import tool
 
 
@@ -21,4 +20,5 @@ def generate_image(image_description: str) -> str:
     Returns:
         The image description, unchanged.
     """
-    return image_description
+    # https://www.asciiart.eu/art/d88f8e8c5860a3b3
+    return "an image"

@@ -8,7 +8,8 @@ import json
 from testframework import ChatbotName
 from testframework.guardrails.base import BaseGuardrail
 from testframework.models import DetectionElement, ToolInfo
-from llamafirewall import LlamaFirewall as LlamaFirewallGuard, UserMessage, AssistantMessage, Role, ScannerType, Trace
+from llamafirewall import LlamaFirewall as LlamaFirewallGuard, UserMessage, AssistantMessage, Role, ScannerType, Trace, \
+    ScanResult
 
 
 class LlamaFirewall(BaseGuardrail):
@@ -18,8 +19,9 @@ class LlamaFirewall(BaseGuardrail):
 
     _scanners = {
         Role.TOOL: [ScannerType.CODE_SHIELD, ScannerType.PROMPT_GUARD],
-        Role.USER: [ScannerType.CODE_SHIELD, ScannerType.PROMPT_GUARD],
-        Role.ASSISTANT: [ScannerType.CODE_SHIELD],
+        Role.USER: [ScannerType.CODE_SHIELD, ScannerType.PROMPT_GUARD, ScannerType.PII_DETECTION, ScannerType.REGEX],
+        Role.ASSISTANT: [ScannerType.CODE_SHIELD, ScannerType.PROMPT_GUARD, ScannerType.PII_DETECTION,
+                         ScannerType.REGEX],
     }
 
     def __init__(self):
@@ -33,7 +35,7 @@ class LlamaFirewall(BaseGuardrail):
 
     def eval_attack(self, user_prompt: str, attack_description: str, **kwargs) -> DetectionElement:
         user_msg = UserMessage(user_prompt)
-        res = self._llama_firewall.scan(user_msg)
+        res: ScanResult = self._llama_firewall.scan(user_msg)
         pass
 
     def eval_model_response(self, model_response: str, chatbot: ChatbotName, attack_description: str,
@@ -53,5 +55,5 @@ class LlamaFirewall(BaseGuardrail):
         trace.append(
             AssistantMessage(content=model_response, tool_calls=tool_info)
         )
-        res = self._llama_firewall.scan_replay(trace)
+        res: ScanResult = self._llama_firewall.scan_replay(trace)
         pass
