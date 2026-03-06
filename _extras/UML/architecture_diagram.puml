@@ -19,7 +19,9 @@ package "Test Execution Pipeline" {
     [ChatbotStore] as ChatbotStore
     [LangChainChatbot] as LangChainChatbot
     [GuardrailRunner] as GuardrailRunner
+    [LLMGuard] as LLMGuard
     [PromptHardeningGuardrail] as PromptHardeningGuardrail
+    [GuardrailsAI Guardrail\n(implemented, not default)] as GuardrailsAI
     [Storage helpers] as Storage
 }
 
@@ -29,10 +31,17 @@ package "RAG + Tooling Path" {
     [generate_image tool] as GenerateImage
 }
 
+package "Utility Layer" {
+    [CSVLoader] as CSVLoader
+    [OllamaGenerator] as OllamaGenerator
+}
+
 package "External Libraries / Services" {
     [DeepTeam] as DeepTeam
     [DeepEval + OllamaModel] as DeepEval
     [LangChain + ChatOpenAI] as LangChain
+    [LLM Guard library] as LLMGuardLib
+    [Guardrails AI API\n(local Docker service)] as GuardrailsAPI
     [OpenAI API] as OpenAI
     [Postgres + pgvector] as Postgres
     [PyPDFLoader] as PyPDFLoader
@@ -64,15 +73,24 @@ TestCases --> AttackEnhancer : enhance()
 TestCases --> ChatbotStore : get_chatbots()
 TestCases --> LangChainChatbot : query()
 TestCases --> GuardrailRunner : evaluate responses
-TestCases ..> CsvFiles : custom prompts
+TestCases --> Storage : save_test_case_result()
+TestCases --> OllamaGenerator : local model lifecycle
 
 AttackBuilders --> DeepTeam : vulnerabilities + metrics
+AttackBuilders --> CSVLoader : load custom attacks
+CSVLoader ..> CsvFiles : load CSV prompts
+
 AttackEnhancer --> DeepTeam : built-in attack transforms
 AttackEnhancer --> DeepEval : simulator model
+AttackEnhancer --> OllamaGenerator : cooldown / retries
 
+GuardrailRunner --> LLMGuard : default guardrail
 GuardrailRunner --> PromptHardeningGuardrail : default guardrail
+GuardrailRunner ..> GuardrailsAI : optional extension
+LLMGuard --> LLMGuardLib : input/output scanners
 PromptHardeningGuardrail --> ChatbotStore : guarded re-query
-PromptHardeningGuardrail --> DeepTeam : HarmMetric
+PromptHardeningGuardrail --> DeepTeam : metric reuse
+GuardrailsAI --> GuardrailsAPI : parse/validate
 
 LangChainChatbot --> LangChain
 LangChainChatbot --> VectorStore : similarity_search()
@@ -95,6 +113,7 @@ PopulateDb ..> Logs
 
 Docker ..> Postgres : provisions service
 Docker ..> PgAdmin : provisions service
+Docker ..> GuardrailsAPI : provisions optional service
 PgAdmin ..> Postgres : inspects DB
 
 @enduml

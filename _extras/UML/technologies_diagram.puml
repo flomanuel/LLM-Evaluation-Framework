@@ -7,14 +7,14 @@ skinparam rectangle {
     FontStyle bold
 }
 
-title LLM Chatbot Protection Framework - Source-Aligned Technology Stack
+title LLM Chatbot Protection Framework - Technology Stack
 
 rectangle "Project Technology Stack" {
 
     rectangle "Runtime & Core Utilities" <<Category>> {
-        [Python ~=3.13] as Python
+        [Python ~=3.12.0\n(project runtime)] as Python
         [argparse (stdlib CLI)] as Argparse
-        [python-dotenv ~=1.2.1] as Dotenv
+        [python-dotenv ~=1.2.2] as Dotenv
         [Loguru ~=0.7.0] as Loguru
     }
 
@@ -22,8 +22,14 @@ rectangle "Project Technology Stack" {
         [OpenAI SDK ~=2.24.0] as OpenAISDK
         [OpenAI API] as OpenAIAPI
         [Ollama SDK ~=0.6.1] as Ollama
-        [DeepTeam ~=1.0.5] as DeepTeam
+        [DeepTeam ~=1.0.6] as DeepTeam
         [DeepEval ~=3.8.8] as DeepEval
+    }
+
+    rectangle "Guardrails & Safety" <<Category>> {
+        [llm-guard ~=0.3.16] as LLMGuard
+        [guardrails-ai ~=0.9.1] as GuardrailsAI
+        [Guardrails API service\n(optional local Docker)] as GuardrailsService
     }
 
     rectangle "Chatbot Orchestration & RAG" <<Category>> {
@@ -32,7 +38,7 @@ rectangle "Project Technology Stack" {
         [langchain-postgres ~=0.0.17] as LangChainPostgres
         [langchain-community ~=0.4.1] as LangChainCommunity
         [langchain-text-splitters ~=1.1.1] as LangChainSplitters
-        [pypdf ~=6.7.3] as PyPDF
+        [pypdf ~=6.7.5] as PyPDF
     }
 
     rectangle "Persistence & Local Infrastructure" <<Category>> {
@@ -49,7 +55,8 @@ rectangle "Project Technology Stack" {
         [Flake8 ~=7.3.0] as Flake8
         [Pylint ~=4.0.5] as Pylint
         [Bandit ~=1.9.4] as Bandit
-        [OpenTelemetry OTLP ~=1.39.1\n(declared dependency)] as OTLP
+        [OpenTelemetry OTLP ~=1.39.1\n(declared, currently unused in code)] as OTLP
+        [Python 3.13 (Dockerfile)\nfor Guardrails container] as PythonDocker
     }
 }
 
@@ -68,12 +75,17 @@ LangChainCommunity ..> PyPDF : PDF parsing
 LangChainOpenAI ..> OpenAIAPI : remote calls
 OpenAISDK ..> OpenAIAPI : API client dependency
 
+LLMGuard ..> LangChain : runtime guardrail pipeline
+GuardrailsAI ..> GuardrailsService : parse/validate calls
+
 LangChainPostgres ..> Psycopg : database driver
 LangChainPostgres ..> Postgres : vector persistence
 Postgres ..> Pgvector : vector extension image
 Docker ..> Postgres : local service
 Docker ..> PgAdmin : local service
+Docker ..> GuardrailsService : optional local service
 
 UV ..> Python : environment + dependency management
+PythonDocker ..> GuardrailsService : service runtime
 
 @enduml
