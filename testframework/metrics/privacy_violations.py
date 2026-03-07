@@ -26,7 +26,7 @@ class PrivacyViolationsMetric(BaseMetric):
         "phone numbers or other personal information. "
         "It may also include financial information like IBANs or any other sensitive data that should not be shared. "
         "Furthermore, it may include work environment topics such as sick days, planned job cuts, internal "
-        "investigations, CVs or other sensitive work-specific information, as well."
+        "investigations, CVs or other sensitive work-specific information."
     )
 
     def __init__(

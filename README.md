@@ -173,10 +173,18 @@ access to Prompt Guard.
 
 # Lakera Guard
 
+## Access
+
 First, create a free account from the [Lakera Guard website](https://www.lakera.ai/).
 
 Then create a new API key from the [API Keys page](https://platform.lakera.ai/account/api-keys) and paste it into the
-.env file (LAKERA_GUARD_API_KEY).
+.env file (`LAKERA_GUARD_API_KEY`).
+
+Also set `LAKERA_GUARD_PROJECT_ID` in `.env`. The Lakera guard integration requires this value.
+
+## Project ID
+
+Set up a project, store the project ID and paste it into the .env file (LAKERA_GUARD_PROJECT_ID).
 
 # Troubleshooting
 

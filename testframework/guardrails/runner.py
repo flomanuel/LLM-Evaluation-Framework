@@ -16,6 +16,7 @@ from testframework import ChatbotName
 from testframework.models import DetectionResult, DetectionElement, TestErrorInfo, ChatbotResponseEvaluation, RagContext
 from testframework.metrics import ToolCallCodeInjectionMetric
 from testframework.guardrails.llm_guard import LLMGuard
+from testframework.guardrails.lakera_guard import LakeraGuard
 from testframework.guardrails.prompt_hardening import PromptHardeningGuardrail
 
 
@@ -25,6 +26,7 @@ class GuardrailRunner:
     def __init__(self) -> None:
         self.guardrails = [
             LLMGuard(),
+            LakeraGuard(),
             PromptHardeningGuardrail(),
         ]
 

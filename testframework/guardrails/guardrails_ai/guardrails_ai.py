@@ -33,7 +33,10 @@ class GuardrailsAI(BaseGuardrail):
 
     def eval_model_response(self, model_response: str, chatbot: ChatbotName, attack_description: str,
                             **kwargs) -> DetectionElement:
-        return self._evaluate_input(model_response)
+        t_info = kwargs.get("tool_info", None)
+        tool_call = f"Tool Name: {t_info.tool_name if t_info.tool_name else 'N/A'} | Tool Was Called: {t_info.tool_called if t_info.tool_called else 'N/A'} | Tool Call Args: {t_info.tool_args if t_info.tool_args else 'N/A'}" if t_info else None
+        current_output = f"=== tool call ===\n{tool_call}" if tool_call else model_response
+        return self._evaluate_input(current_output)
 
     def _evaluate_input(self, text: str) -> DetectionElement:
         self._load_all_guards()

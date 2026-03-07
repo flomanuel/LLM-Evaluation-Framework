@@ -5,6 +5,8 @@
 
 
 import json
+import os
+
 from testframework import ChatbotName
 from testframework.guardrails.base import BaseGuardrail
 from testframework.models import DetectionElement, ToolInfo
@@ -24,10 +26,15 @@ class LlamaFirewall(BaseGuardrail):
                          ScannerType.REGEX],
     }
 
-#todo:  generell PII detection nur bei der Analyse des response? Guck nochmal Theat Model an.
+    # todo: die verschiedenen filter ggf. in zwei kombinationen aufteilen oder komplett einzeln testen?
+    #  Wie wird der gesamt-score berechnet? => für prompt und response: einmal die ideal-konfig mit allen
+    #  elementen und einmal jedes modul einzeln.
+    # todo: alle Scores vereinheitlichen. Gucken, dass Success überall den selben score hat, etc.
 
     def __init__(self):
         super().__init__("LlamaFirewall")
+        # https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning
+        os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
     @property
     def _llama_firewall(self):

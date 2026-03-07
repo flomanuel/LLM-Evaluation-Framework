@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from time import perf_counter
 from typing import List
 from llm_guard.input_scanners import Anonymize as InputAnonymize, BanCode as InputBanCode, BanTopics as InputBanTopics, \
@@ -116,7 +115,9 @@ class LLMGuard(BaseGuardrail):
 
         output_scanners = [ban_topics, bias, ban_code, factual_consistency, sensitive, toxicity]
         scanner_details: List[ScannerDetail] = []
-        current_output = model_response
+        t_info = kwargs.get("tool_info", None)
+        tool_call = f"Tool Name: {t_info.tool_name if t_info.tool_name else 'N/A'} | Tool Was Called: {t_info.tool_called if t_info.tool_called else 'N/A'} | Tool Call Args: {t_info.tool_args if t_info.tool_args else 'N/A'}" if t_info else None
+        current_output = f"=== tool call ===\n{tool_call}" if tool_call else model_response
         alerting_scanners: List[str] = []
         max_score = 0.0
         overall_valid = True

@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from __future__ import annotations
 
 import json
@@ -51,42 +50,43 @@ class BaseGuardrail(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def eval_model_response(self, model_response: str, chatbot: ChatbotName, attack_description: str, **kwargs) -> DetectionElement:
+    def eval_model_response(self, model_response: str, chatbot: ChatbotName, attack_description: str,
+                            **kwargs) -> DetectionElement:
         raise NotImplementedError
 
-    def _score_detection_coverage(
-            self,
-            *,
-            attack_description: str,
-            user_prompt: str,
-            detection: DetectionElement,
-            object_to_judge: Any,
-            tool_info: ToolInfo | None = None,
-    ) -> float | None:
-        evidence_text = self._build_evidence_text(object_to_judge, tool_info)
-        failing_scanners = [
-            detail.name for detail in detection.scanner_details if not detail.is_valid
-        ]
-        evaluation_case = LLMTestCase(
-            input=(
-                f"Guardrail: {self.name}\n"
-                f"Attack description: {attack_description}\n"
-                f"User prompt: {user_prompt}\n"
-                f"Evidence: {evidence_text}"
-            ),
-            actual_output=(
-                f"Detected type: {detection.detected_type or 'none'}\n"
-                f"Rejected scanners: {', '.join(failing_scanners) if failing_scanners else 'none'}"
-            ),
-        )
-
-        try:
-            return float(self._coverage_metric.measure(evaluation_case))
-        except Exception as exc:
-            logger.warning(
-                f"Coverage evaluation failed for guardrail '{self.name}': {exc}"
-            )
-            return None
+    # def _score_detection_coverage(
+    #         self,
+    #         *,
+    #         attack_description: str,
+    #         user_prompt: str,
+    #         detection: DetectionElement,
+    #         object_to_judge: Any,
+    #         tool_info: ToolInfo | None = None,
+    # ) -> float | None:
+    #     evidence_text = self._build_evidence_text(object_to_judge, tool_info)
+    #     failing_scanners = [
+    #         detail.name for detail in detection.scanner_details if not detail.is_valid
+    #     ]
+    #     evaluation_case = LLMTestCase(
+    #         input=(
+    #             f"Guardrail: {self.name}\n"
+    #             f"Attack description: {attack_description}\n"
+    #             f"User prompt: {user_prompt}\n"
+    #             f"Evidence: {evidence_text}"
+    #         ),
+    #         actual_output=(
+    #             f"Detected type: {detection.detected_type or 'none'}\n"
+    #             f"Rejected scanners: {', '.join(failing_scanners) if failing_scanners else 'none'}"
+    #         ),
+    #     )
+    #
+    #     try:
+    #         return float(self._coverage_metric.measure(evaluation_case))
+    #     except Exception as exc:
+    #         logger.warning(
+    #             f"Coverage evaluation failed for guardrail '{self.name}': {exc}"
+    #         )
+    #         return None
 
     @staticmethod
     def _build_evidence_text(evidence: Any, tool_info: ToolInfo | None) -> str:

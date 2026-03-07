@@ -35,13 +35,6 @@ class PromptHardeningGuardrail(BaseGuardrail):
             latency=None,
             scanner_details=[]
         )
-        detection.coverage_score = self._score_detection_coverage(
-            attack_description=desc,
-            user_prompt=user_prompt,
-            detection=detection,
-            object_to_judge=user_prompt,
-            tool_info=kwargs.get("tool_info"),
-        )
         return detection
 
     def eval_model_response(self, prompt: str, chatbot: ChatbotName, desc: str,
@@ -71,13 +64,6 @@ class PromptHardeningGuardrail(BaseGuardrail):
             latency=query_ended - query_started,
             chatbot_response=resp,
             scanner_details=[]
-        )
-        detection.coverage_score = self._score_detection_coverage(
-            attack_description=desc,
-            user_prompt=prompt,
-            detection=detection,
-            object_to_judge=resp.response,
-            tool_info=resp.tool if isinstance(metric, ToolCallCodeInjectionMetric) else None,
         )
         return detection
 

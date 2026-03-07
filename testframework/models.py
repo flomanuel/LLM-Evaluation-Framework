@@ -159,7 +159,6 @@ class DetectionElement:
     judge_raw_response: str
     latency: float | None
     scanner_details: List[ScannerDetail]
-    coverage_score: float | None = None
     error: TestErrorInfo | None = None
 
     @property
