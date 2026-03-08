@@ -186,16 +186,33 @@ Also set `LAKERA_GUARD_PROJECT_ID` in `.env`. The Lakera guard integration requi
 
 Set up a project, store the project ID and paste it into the .env file (LAKERA_GUARD_PROJECT_ID).
 
+# Google Model Armor
+
+Install the [Google Cloud CLI](https://docs.cloud.google.com/sdk/docs/install-sdk).
+Authenticate with the Google Cloud CLI: `gcloud auth login`.
+Set up a project and acticate it on the Google Cloud CLI: `gcloud config set project [PROJECT_ID]`.
+
+Create a new template under "Security" → "Model Armor"
+
+A suggested default template config can be found under `_extras/gcp/*`.
+
+Set vales for the GCP Model Armor in the `.env` file.
+
+Set up Application Default Credentials (ADC):
+see [here](https://docs.cloud.google.com/docs/authentication/provide-credentials-adc#how-to).
+
+For local development environments, use `gcloud auth application-default login` to set up ADC.
+
 # Troubleshooting
 
 ## Guardrails AI
 
-## Docker
+### Docker
 
-Guardrails AI can be run using the provided Dockerfile since on ARM MacOS, runing it on the host crashes due to mixeed
+Guardrails AI can be run using the provided Dockerfile since on ARM macOS, running it on the host crashes due to mixed
 usage of tensorflow and pytorch.
 
-Someties, the image needs to be buidl twice because the internal dependency resolver used by Guardrails AI misses some
+Sometimes, the image needs to be build twice because the internal dependency resolver used by Guardrails AI misses some
 dependencies.
 
 ```bash

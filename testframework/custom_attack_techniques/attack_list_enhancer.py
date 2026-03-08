@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from __future__ import annotations
 
 import os
@@ -73,6 +72,8 @@ class AttackListEnhancer:
         for attack in attacks:
             logger.info(f"=== Enhancing attack {enhanced_attack_count + 1}/{len(attacks)} === ")
             is_doc_embedding_attack = attack.vulnerability_type == "document-embedded-instructions"
+            # document embedding instructions have the attack + technique directly "baked" into the document.
+            # So we mustn't enhance the already enhanced attack.
             if is_doc_embedding_attack:
                 cloned_attack = deepcopy(attack)
                 enhanced_input = cloned_attack.input

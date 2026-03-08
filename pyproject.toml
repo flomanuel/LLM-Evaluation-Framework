@@ -23,6 +23,7 @@ dependencies = [
     "llm-guard~=0.3.16",
     "guardrails-ai~=0.9.1",
     "llamafirewall~=1.0.3",
+    "google-cloud-modelarmor~=0.4.0",
 ]
 
 [project.scripts]

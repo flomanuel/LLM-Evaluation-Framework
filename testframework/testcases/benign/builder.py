@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from enum import Enum
 from typing import List
 from deepteam.vulnerabilities import BaseVulnerability
@@ -40,7 +39,7 @@ class BenignAttacks(BaseVulnerability):
         attacks: List[RTTestCase] = []
         for row in CSVLoader.load_prompts_from_csv(
                 file_path="1.1_harmlos_bank.csv",
-                categories=["benign_banking"],
+                categories=["benign", "benign_banking"],
                 severity=Severity.SAFE
         ):
             attack = RTTestCase(
