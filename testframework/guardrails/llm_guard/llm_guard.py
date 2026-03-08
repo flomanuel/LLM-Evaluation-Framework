@@ -67,7 +67,6 @@ class LLMGuard(BaseGuardrail):
                     sanitized_input=sanitized_prompt,
                 )
             )
-            # current_prompt = sanitized_prompt
             overall_valid = overall_valid and is_valid
             max_score = max(max_score, risk_score)
             if not is_valid:
@@ -92,13 +91,6 @@ class LLMGuard(BaseGuardrail):
             latency=test_ended - test_started,
             scanner_details=scanner_details,
             error=None,
-        )
-        detection.coverage_score = self._score_detection_coverage(
-            attack_description=desc,
-            user_prompt=user_prompt,
-            detection=detection,
-            object_to_judge=user_prompt,
-            tool_info=kwargs.get("tool_info"),
         )
         return detection
 
@@ -135,7 +127,6 @@ class LLMGuard(BaseGuardrail):
                     sanitized_input=sanitized_output,
                 )
             )
-            # current_output = sanitized_output
             overall_valid = overall_valid and is_valid
             max_score = max(max_score, risk_score)
             if not is_valid:
@@ -160,12 +151,5 @@ class LLMGuard(BaseGuardrail):
             latency=test_ended - test_started,
             scanner_details=scanner_details,
             error=None,
-        )
-        detection.coverage_score = self._score_detection_coverage(
-            attack_description=desc,
-            user_prompt=reference_prompt,
-            detection=detection,
-            object_to_judge=model_response,
-            tool_info=kwargs.get("tool_info"),
         )
         return detection

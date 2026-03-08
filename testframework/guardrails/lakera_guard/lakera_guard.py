@@ -23,22 +23,16 @@ class LakeraGuard(BaseGuardrail):
         self._api_key = os.environ.get("LAKERA_GUARD_API_KEY", "").strip()
         self._project_id = os.environ.get("LAKERA_GUARD_PROJECT_ID", "").strip()
         timeout_raw = os.environ.get("LAKERA_GUARD_TIMEOUT_SECONDS", "60").strip()
-
         if not self._api_key:
             raise ValueError("LAKERA_GUARD_API_KEY must be set.")
         if not self._project_id:
             raise ValueError("LAKERA_GUARD_PROJECT_ID must be set.")
-
         try:
             self._timeout_seconds = float(timeout_raw)
         except ValueError as exc:
-            raise ValueError(
-                "LAKERA_GUARD_TIMEOUT_SECONDS must be a positive number."
-            ) from exc
+            raise ValueError("LAKERA_GUARD_TIMEOUT_SECONDS must be a positive number.") from exc
         if self._timeout_seconds <= 0:
-            raise ValueError(
-                "LAKERA_GUARD_TIMEOUT_SECONDS must be a positive number."
-            )
+            raise ValueError("LAKERA_GUARD_TIMEOUT_SECONDS must be a positive number.")
 
     def eval_attack(self, user_prompt: str, *args, **kwargs) -> DetectionElement:
         messages = [{"role": "user", "content": user_prompt}]
@@ -46,9 +40,11 @@ class LakeraGuard(BaseGuardrail):
 
     def eval_model_response(self, model_response: str, *args, **kwargs) -> DetectionElement:
         t_info = kwargs.get("tool_info")
-        tool_call = f"Tool Name: {t_info.tool_name if t_info.tool_name else 'N/A'} | Tool Was Called: {t_info.tool_called if t_info.tool_called else 'N/A'} | Tool Call Args: {t_info.tool_args if t_info.tool_args else 'N/A'}" if t_info else None
+        name = t_info.tool_name if t_info.tool_name else 'N/A'
+        called = t_info.tool_called if t_info.tool_called else 'N/A'
+        args = t_info.tool_args if t_info.tool_args else 'N/A'
+        tool_call = f"Tool Name: {name} | Tool Was Called: {called} | Tool Call Args: {args}" if t_info else None
         resp_or_tool = f"=== tool call ===\n{tool_call}" if tool_call else model_response
-
         messages = [{"role": "assistant", "content": resp_or_tool}]
         return self._evaluate_messages(messages)
 
@@ -58,10 +54,7 @@ class LakeraGuard(BaseGuardrail):
         test_ended = perf_counter()
         flagged = bool(resp.get("flagged", False))
         breakdown = resp.get("breakdown")
-        scanner_details = self._build_scanner_details(
-            breakdown=breakdown,
-            flagged=flagged,
-        )
+        scanner_details = self._build_scanner_details(breakdown)
         if flagged:
             scanner_alerts = ", ".join((scanner.name for scanner in scanner_details)) if scanner_details else "flagged"
         else:
@@ -89,8 +82,6 @@ class LakeraGuard(BaseGuardrail):
     def _build_scanner_details(
             self,
             breakdown,
-            # payload,
-            flagged: bool,
     ) -> list[ScannerDetail]:
         breakdown_entries = breakdown if isinstance(breakdown, list) else []
         details: list[ScannerDetail] = []
@@ -112,14 +103,4 @@ class LakeraGuard(BaseGuardrail):
                     sanitized_input="",
                 )
             )
-        if details:
-            return details
-        return [
-            ScannerDetail(
-                name=self.FALLBACK_SCANNER_NAME,
-                score=1.0 if flagged else 0.0,
-                reason="No details were provided by Lakera.",
-                is_valid=not flagged,
-                sanitized_input="",
-            )
-        ]
+        return details

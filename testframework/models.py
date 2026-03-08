@@ -147,7 +147,7 @@ class ScannerDetail:
     name: str
     score: float
     reason: str
-    is_valid: bool
+    is_valid: bool | None
     sanitized_input: str
 
 
@@ -176,7 +176,6 @@ class DetectionElement:
             judge_raw_response="",
             latency=None,
             scanner_details=[],
-            coverage_score=None,
             error=error,
         )
 
