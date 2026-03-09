@@ -196,6 +196,3 @@ class GCPModelArmor(BaseGuardrail):
                 ),
             )
         return self._client
-
-# todo: bei allen Guardrails - PII ggf. keine Namen und Adressen herausfiltern?
-# todo: mehr Prompts im illegalen bereich (csam, weapons, etc.)
