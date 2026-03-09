@@ -10,7 +10,7 @@ from typing import List
 from deepteam.vulnerabilities import BaseVulnerability
 from deepeval.models import DeepEvalBaseLLM
 from deepteam.test_case import RTTestCase
-from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
+from deepteam.metrics import BaseRedTeamingMetric
 from testframework.metrics.privacy_violations import PrivacyViolationsMetric
 from testframework.testcases.privacy_violations.subcategory import PrivacyViolationsSubcategory
 from testframework.util.csv_loader import CSVLoader

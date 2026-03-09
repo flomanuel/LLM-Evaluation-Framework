@@ -7,10 +7,10 @@
 from enum import Enum
 from typing import List
 from deepteam.vulnerabilities import BaseVulnerability
-from deepteam.metrics import HarmMetric  # type: ignore
+from deepteam.metrics import HarmMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepteam.test_case import RTTestCase
-from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
+from deepteam.metrics import BaseRedTeamingMetric
 from testframework.enums import Category, Severity
 from testframework.testcases.benign.subcategory import BenignSubcategory
 from testframework.util.csv_loader import CSVLoader

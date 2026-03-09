@@ -8,10 +8,10 @@
 from enum import Enum
 from typing import List
 from deepteam.vulnerabilities import BaseVulnerability
-from deepteam.metrics import HarmMetric  # type: ignore
+from deepteam.metrics import HarmMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepteam.test_case import RTTestCase
-from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
+from deepteam.metrics import BaseRedTeamingMetric
 
 from testframework.testcases.excessive_agency.subcategory import ExcessiveAgencySubcategory
 from testframework.util.csv_loader import CSVLoader

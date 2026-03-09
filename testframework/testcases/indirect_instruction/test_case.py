@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 from typing import List, cast
-from deepteam.metrics import BaseRedTeamingMetric  # type: ignore
+from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
