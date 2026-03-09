@@ -13,6 +13,9 @@ from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from loguru import logger
 from testframework import ChatbotName
+from testframework.guardrails.gcp_model_armor.gcp_model_armor import GcpModelArmor
+from testframework.guardrails.guardrails_ai import GuardrailsAI
+from testframework.guardrails.llama_firewall.llama_firewall import LlamaFirewall
 from testframework.models import DetectionResult, DetectionElement, TestErrorInfo, ChatbotResponseEvaluation, RagContext
 from testframework.metrics import ToolCallCodeInjectionMetric
 from testframework.guardrails.llm_guard import LLMGuard
@@ -25,9 +28,12 @@ class GuardrailRunner:
 
     def __init__(self) -> None:
         self.guardrails = [
-            LLMGuard(),
-            LakeraGuard(),
             PromptHardeningGuardrail(),
+            LLMGuard(),
+            LlamaFirewall(),
+            LakeraGuard(),
+            GuardrailsAI(),
+            GcpModelArmor(),
         ]
 
     def run(

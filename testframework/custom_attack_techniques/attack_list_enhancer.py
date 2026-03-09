@@ -7,8 +7,9 @@
 from __future__ import annotations
 
 import os
+import time
 from copy import deepcopy
-from typing import List
+from typing import List, Callable
 from deepeval.models import DeepEvalBaseLLM, OllamaModel
 from dotenv import load_dotenv
 from deepteam.test_case import RTTestCase
@@ -25,9 +26,9 @@ class AttackListEnhancer:
 
     ERROR_THRESHOLD_ENV_VAR = "ENHANCED_ATTACK_ERROR_THRESHOLD_PERCENT"
     DEFAULT_ERROR_THRESHOLD_PERCENT = 100.0
-    MAX_RETRIES = 5
-    RETRY_COOLDOWN_SECONDS = 420
-    SUCCESS_COOLDOWN_SECONDS = 25
+    ERROR_RETRY_COOLDOWN_SECONDS = 420
+    ATTACK_GENERATION_COOLDOWN_SECONDS = 60
+    SUCCESS_COOLDOWN_SECONDS = 30
     LOCAL_MODEL_ID = os.environ.get("LOCAL_MODEL_ID", False)
 
     def __init__(self, simulator_model: DeepEvalBaseLLM | None | str):
@@ -130,16 +131,26 @@ class AttackListEnhancer:
                                 f"rate exceeded the configured threshold: "
                                 f"({failed_attack_count}/{planned_attack_count}) > {error_threshold_percent}"
                             )
+                            self._cooldown_with_model_shutdown(time.sleep, self.ATTACK_GENERATION_COOLDOWN_SECONDS)
                             return AttackEnhancementResult(enhanced_attacks=enhanced_attacks,
                                                            planned_attack_count=planned_attack_count,
                                                            failed_attack_count=failed_attack_count,
                                                            error_threshold_percent=error_threshold_percent,
                                                            stopped_early=True)
                 enhanced_attack_count += 1
+            if enhanced_attack_count % 5 == 0:
+                self._cooldown_with_model_shutdown(time.sleep, self.ATTACK_GENERATION_COOLDOWN_SECONDS)
         logger.info(f"Enhanced {len(enhanced_attacks)} attacks.")
         return AttackEnhancementResult(enhanced_attacks=enhanced_attacks, planned_attack_count=planned_attack_count,
                                        failed_attack_count=failed_attack_count,
                                        error_threshold_percent=error_threshold_percent)
+
+    def _cooldown_with_model_shutdown(self, cooldown: Callable[[int], None], seconds: int):
+        if isinstance(self.simulator_model, OllamaModel):
+            OllamaGenerator.require_local_model_shutdown()
+            logger.info(f"Cooldown: {seconds} seconds.")
+            cooldown(seconds)
+            OllamaGenerator.start_model_if_not_running()
 
     def _apply_enhancement(
             self,
@@ -147,7 +158,6 @@ class AttackListEnhancer:
             baseline_input: str,
     ) -> tuple[str | None, TestErrorInfo | None]:
         """Apply one enhancement with bounded automatic retries and optional manual continuation."""
-        max_attempts = self.MAX_RETRIES + 1
         attempt = 1
         while True:
             try:
@@ -170,13 +180,7 @@ class AttackListEnhancer:
                         f"Enhancement '{enhancement.name}' failed on attempt {attempt}. "
                         "Starting an additional user-requested retry."
                     )
-
-                if isinstance(self.simulator_model, OllamaModel) and attempt > 1:
-                    OllamaGenerator.require_local_model_shutdown()
-                    logger.info(f"Retry cooldown: {self.RETRY_COOLDOWN_SECONDS}s.")
-                    enhancement.cooldown(self.RETRY_COOLDOWN_SECONDS)
-                    OllamaGenerator.start_model_if_not_running()
-
+                    self._cooldown_with_model_shutdown(enhancement.cooldown, self.ERROR_RETRY_COOLDOWN_SECONDS)
                 attempt += 1
 
     @staticmethod

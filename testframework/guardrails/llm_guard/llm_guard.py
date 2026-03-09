@@ -19,7 +19,7 @@ from testframework import ChatbotName
 from llm_guard.vault import Vault
 from testframework.guardrails.base import BaseGuardrail
 from testframework.guardrails.llm_guard.constants import ENTITIES, SENSITIVE_TOPICS
-from testframework.models import DetectionElement, ScannerDetail
+from testframework.models import DetectionElement, ScannerDetail, ToolInfo
 from llm_guard.output_scanners import (
     BanCode as OutputBanCode,
     BanTopics as OutputBanTopics,
@@ -107,9 +107,12 @@ class LLMGuard(BaseGuardrail):
 
         output_scanners = [ban_topics, bias, ban_code, factual_consistency, sensitive, toxicity]
         scanner_details: List[ScannerDetail] = []
-        t_info = kwargs.get("tool_info", None)
-        tool_call = f"Tool Name: {t_info.tool_name if t_info.tool_name else 'N/A'} | Tool Was Called: {t_info.tool_called if t_info.tool_called else 'N/A'} | Tool Call Args: {t_info.tool_args if t_info.tool_args else 'N/A'}" if t_info else None
-        current_output = f"=== Tool Call ===\n\n{tool_call}" if tool_call else model_response
+        t_info: ToolInfo = kwargs.get("tool_info", None)
+        if t_info:
+            tool_call = f"Tool Name: {t_info.tool_name if t_info.tool_name else 'N/A'} \n Tool Was Called: {t_info.tool_called if t_info.tool_called else 'N/A'} \n Tool Call Args: {t_info.tool_args if t_info.tool_args else 'N/A'}"
+            current_output = f"=== Tool Call ===\n{tool_call}"
+        else:
+            current_output = model_response
         alerting_scanners: List[str] = []
         max_score = 0.0
         overall_valid = True

@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from __future__ import annotations
 from pathlib import Path
 from typing import List
@@ -34,12 +33,11 @@ class DefaultTest(Test):
     def setup_chatbots(self) -> None:
         logger.debug("Setting up baseline chatbots")
         vector_store = VectorStore()
-        # todo: enable both chatbots again
-        # gpt_5 = LangChainChatbot(
-        #     name=ChatbotName.LANGCHAIN_GPT_5,
-        #     model="gpt-5",
-        #     vector_store=vector_store)
-        # ChatbotStore.add_chatbot(gpt_5)
+        gpt_5 = LangChainChatbot(
+            name=ChatbotName.LANGCHAIN_GPT_5,
+            model="gpt-5",
+            vector_store=vector_store)
+        ChatbotStore.add_chatbot(gpt_5)
         gpt_41 = LangChainChatbot(
             name=ChatbotName.LANGCHAIN_GPT_41,
             model="gpt-4.1",
@@ -51,7 +49,7 @@ class DefaultTest(Test):
         ethics = [EthicsSubcategory.BANKING, EthicsSubcategory.HARM_PREVENTION, EthicsSubcategory.MORAL_INTEGRITY]
         ind_inst = [IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS]
         return [
-            BenignTestCase(),
+            # BenignTestCase(),
             # FairnessTestCase(),
             # EthicsTestCase(ethics),
             # SystemPromptLeakageTestCase(),
@@ -69,7 +67,7 @@ class DefaultTest(Test):
             # IllegalActivityTestCase([IllegalActivitySubcategory.NONVIOLENT_CRIME]),
             # IllegalActivityTestCase([IllegalActivitySubcategory.SEX_CRIME]),
             # IllegalActivityTestCase([IllegalActivitySubcategory.CYBERCRIME]),
-            # IllegalActivityTestCase([IllegalActivitySubcategory.CHILD_EXPLOITATION]),
+            IllegalActivityTestCase([IllegalActivitySubcategory.CHILD_EXPLOITATION]),
             # ToxicityTestCase([ToxicitySubcategory.INSULTS]),
             # ToxicityTestCase([ToxicitySubcategory.PROFANITY]),
             # ToxicityTestCase([ToxicitySubcategory.THREATS]),

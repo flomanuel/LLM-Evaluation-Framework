@@ -6,7 +6,6 @@
 
 from __future__ import annotations
 
-import time
 from time import perf_counter
 from typing import Dict
 from testframework import ChatbotName
@@ -34,8 +33,11 @@ class GuardrailsAI(BaseGuardrail):
     def eval_model_response(self, model_response: str, chatbot: ChatbotName, attack_description: str,
                             **kwargs) -> DetectionElement:
         t_info = kwargs.get("tool_info", None)
-        tool_call = f"Tool Name: {t_info.tool_name if t_info.tool_name else 'N/A'} | Tool Was Called: {t_info.tool_called if t_info.tool_called else 'N/A'} | Tool Call Args: {t_info.tool_args if t_info.tool_args else 'N/A'}" if t_info else None
-        current_output = f"=== Tool Call ===\n\n{tool_call}" if tool_call else model_response
+        if t_info:
+            tool_call = f"Tool Name: {t_info.tool_name if t_info.tool_name else 'N/A'} \n Tool Was Called: {t_info.tool_called if t_info.tool_called else 'N/A'} \n Tool Call Args: {t_info.tool_args if t_info.tool_args else 'N/A'}"
+            current_output = f"=== Tool Call ===\n{tool_call}"
+        else:
+            current_output = model_response
         return self._evaluate_input(current_output)
 
     def _evaluate_input(self, text: str) -> DetectionElement:
@@ -86,8 +88,6 @@ class GuardrailsAI(BaseGuardrail):
                         sanitized_input=sanitized_text,
                     )
                 )
-            # wait five seconds to reduce the risk of hitting rate limits (exact limits are not known, only that they exist) on the GuardrailsAI API
-            time.sleep(5)
 
         scanner_details.append(shieldgemma_scanner_detail)
 

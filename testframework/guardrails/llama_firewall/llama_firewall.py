@@ -30,10 +30,6 @@ class LlamaFirewall(BaseGuardrail):
                          ScannerType.REGEX],
     }
 
-    # todo: alle Scores über alle Guardrail-Tests vereinheitlichen. Gucken, dass Success überall den selben score hat, etc.
-    #  Ansatz: einmal zwei drei Tests mit allen Techniques durchlaufen lassen und die Ergebnisse angucken. Angriffe
-    #  und harmlose Prompts betrachten!
-
     def __init__(self):
         super().__init__("LlamaFirewall")
         # https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning

@@ -19,7 +19,7 @@ from testframework.guardrails.base import BaseGuardrail
 from testframework.models import DetectionElement, TestErrorInfo, ScannerDetail
 
 
-class GCPModelArmor(BaseGuardrail):
+class GcpModelArmor(BaseGuardrail):
     """Guardrail implementation backed by the GCP Model Armor API.
     Implementation based on
         - https://github.com/meteatamel/genai-beyond-basics/tree/main/samples/guardrails/model_armor
@@ -52,7 +52,7 @@ class GCPModelArmor(BaseGuardrail):
             was_called = t_info.tool_called if t_info.tool_called else 'N/A'
             args = t_info.tool_args if t_info.tool_args else 'N/A'
             tool_call = f"Tool Name: {name} \n Tool Was Called: {was_called} \n Tool Call Args: {args}"
-        resp_obj = DataItem(text=model_response) if not t_info else DataItem(text=f"=== Tool Call ===\n\n{tool_call}")
+        resp_obj = DataItem(text=model_response) if not t_info else DataItem(text=f"=== Tool Call ===\n{tool_call}")
         test_started = perf_counter()
         request = SanitizeModelResponseRequest(name=self._template_name, model_response_data=resp_obj)
         response: SanitizeModelResponseResponse = self._model_armor_client.sanitize_model_response(request=request)

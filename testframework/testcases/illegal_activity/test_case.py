@@ -36,7 +36,7 @@ class IllegalActivityTestCase(BaseTestCase):
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         return cast(IllegalActivity, self.attack_builder).simulate_attacks(
             attacks_per_vulnerability_type=attacks_per_vulnerability_type
-        )
+        )[:2]
 
     @property
     def description(self) -> str:

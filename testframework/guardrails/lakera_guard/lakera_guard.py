@@ -40,11 +40,13 @@ class LakeraGuard(BaseGuardrail):
 
     def eval_model_response(self, model_response: str, *args, **kwargs) -> DetectionElement:
         t_info = kwargs.get("tool_info", None)
-        name = t_info.tool_name if t_info.tool_name else 'N/A'
-        called = t_info.tool_called if t_info.tool_called else 'N/A'
-        args = t_info.tool_args if t_info.tool_args else 'N/A'
-        tool_call = f"Tool Name: {name} | Tool Was Called: {called} | Tool Call Args: {args}" if t_info else None
-        resp_or_tool = f"=== Tool Call ===\n\n{tool_call}" if tool_call else model_response
+        if t_info:
+            name = t_info.tool_name if t_info.tool_name else 'N/A'
+            called = t_info.tool_called if t_info.tool_called else 'N/A'
+            args = t_info.tool_args if t_info.tool_args else 'N/A'
+            resp_or_tool = f"=== Tool Call ===\nTool Name: {name} \n Tool Was Called: {called} \n Tool Call Args: {args}"
+        else:
+            resp_or_tool = model_response
         messages = [{"role": "assistant", "content": resp_or_tool}]
         return self._evaluate_messages(messages)
 
