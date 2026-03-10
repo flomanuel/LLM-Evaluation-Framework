@@ -14,8 +14,7 @@ from pathlib import Path
 from time import perf_counter
 from typing import Dict, List, Any
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.test_case import ToolCall
-from deepteam.metrics import BaseRedTeamingMetric, IndirectInstructionMetric
+from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from deepteam.vulnerabilities import BaseVulnerability
 from loguru import logger
@@ -292,7 +291,6 @@ class BaseTestCase(ABC):
                 metric.measure(attack, t_info)
             else:
                 metric.measure(attack)
-            # todo: in the final evaluation, consider response evaluations with a score of -1 due to an error
             score = float(metric.score if not metric.error else -1)
             logger.info(
                 f"Completed evaluation for chatbot '{name.value}' in '{test_case_id}' "

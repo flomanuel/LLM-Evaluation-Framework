@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from __future__ import annotations
 import argparse
 import os
@@ -21,7 +20,7 @@ from testframework.chatbots.rag.vector_store import VectorStore
 def configure_logging() -> None:
     """Configure loguru with file and console logging."""
     logger.remove()
-    log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+    log_level = os.environ.get("CUSTOM_LOG_LEVEL", "ERROR").upper()
     log_dir = Path("_logs")
     log_dir.mkdir(exist_ok=True)
     log_file = log_dir / "testframework.log"
