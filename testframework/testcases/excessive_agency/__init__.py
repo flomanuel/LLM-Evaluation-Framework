@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from testframework.testcases.excessive_agency.test_case import ExcessiveAgencyTestCase
 
 __all__ = [

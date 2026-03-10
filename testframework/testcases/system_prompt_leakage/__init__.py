@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from testframework.testcases.system_prompt_leakage.test_case import SystemPromptLeakageTestCase
 
 __all__ = [

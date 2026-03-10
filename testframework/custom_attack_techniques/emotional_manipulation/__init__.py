@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from .emotional_manipulation import EmotionalManipulation
 
 __all__ = [

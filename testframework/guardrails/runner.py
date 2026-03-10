@@ -41,9 +41,7 @@ class GuardrailRunner:
             chatbot_responses_eval: dict[ChatbotName, ChatbotResponseEvaluation],
             metric: BaseRedTeamingMetric,
     ) -> Dict[str, Dict[ChatbotName, DetectionResult]]:
-        """
-        Analyzes a given attack string against the chatbot's responses by iterating over the guardrails.
-        """
+        """Analyzes a given attack string against the chatbot's responses by iterating over the guardrails."""
         result: Dict[str, Dict[ChatbotName, DetectionResult]] = {}
         logger.info(
             f"Running {len(self.guardrails)} guardrail(s) "
@@ -96,8 +94,7 @@ class GuardrailRunner:
         return result
 
     def _safe_eval_attack(self, guardrail, attack: str, **kwargs) -> DetectionElement:
-        """Evaluate an attack, catching any errors.
-        """
+        """Evaluate an attack, catching any errors."""
         try:
             return guardrail.eval_attack(attack, **kwargs)
         except Exception as e:
@@ -109,9 +106,7 @@ class GuardrailRunner:
             return DetectionElement.from_error(error)
 
     def _safe_eval_response(self, guardrail, response: str, chatbot: ChatbotName, **kwargs) -> DetectionElement:
-        # file_path: st`r | None, rag: RagContext | None) -> DetectionElement:
-        """Evaluate a response, catching any errors.
-        """
+        """Evaluate a response, catching any errors."""
         try:
             return guardrail.eval_model_response(response, chatbot, **kwargs)
         except Exception as e:

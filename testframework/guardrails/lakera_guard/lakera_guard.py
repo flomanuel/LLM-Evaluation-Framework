@@ -35,10 +35,12 @@ class LakeraGuard(BaseGuardrail):
             raise ValueError("LAKERA_GUARD_TIMEOUT_SECONDS must be a positive number.")
 
     def eval_attack(self, user_prompt: str, *args, **kwargs) -> DetectionElement:
+        """Evaluate the attack."""
         messages = [{"role": "user", "content": user_prompt}]
         return self._evaluate_messages(messages)
 
     def eval_model_response(self, model_response: str, *args, **kwargs) -> DetectionElement:
+        """Evaluate the response from the attacked model."""
         t_info = kwargs.get("tool_info", None)
         if t_info:
             name = t_info.tool_name if t_info.tool_name else 'N/A'
@@ -51,6 +53,7 @@ class LakeraGuard(BaseGuardrail):
         return self._evaluate_messages(messages)
 
     def _evaluate_messages(self, messages: list[dict[str, str]]) -> DetectionElement:
+        """Evaluate the messages (i.e. attack, response)."""
         test_started = perf_counter()
         resp = self._call_api(messages=messages)
         test_ended = perf_counter()
@@ -73,6 +76,7 @@ class LakeraGuard(BaseGuardrail):
         return detection
 
     def _call_api(self, messages: list[dict[str, str]]) -> dict:
+        """Call the Lakera Guard API."""
         payload = {"messages": messages, "project_id": self._project_id, "breakdown": True}
         headers = {"Authorization": f"Bearer {self._api_key}", "Content-Type": "application/json"}
         try:
@@ -85,6 +89,7 @@ class LakeraGuard(BaseGuardrail):
             self,
             breakdown,
     ) -> list[ScannerDetail]:
+        """Build the scanner details from the breakdown in the response."""
         breakdown_entries = breakdown if isinstance(breakdown, list) else []
         details: list[ScannerDetail] = []
         for scanner_result in breakdown_entries:

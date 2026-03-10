@@ -56,12 +56,13 @@ class PrivacyViolationsMetric(BaseMetric):
             test_case: RTTestCase,
             *args, **kwargs
     ) -> float:
+        """Measure the privacy violations in the LLM output."""
         evaluation_case = LLMTestCase(
             input=test_case.input,
             actual_output=test_case.actual_output,
         )
         score = self._g_eval.measure(evaluation_case)
-        self._pull_results_from_geval()
+        self._transfer_results_from_geval()
         return score
 
     async def a_measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:

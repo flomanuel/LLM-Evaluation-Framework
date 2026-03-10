@@ -18,7 +18,6 @@ from loguru import logger
 
 class DocumentLoader:
     """Load and process documents from a directory for RAG ingestion."""
-
     DEFAULT_CHUNK_SIZE = 1000
     DEFAULT_CHUNK_OVERLAP = 200
 
@@ -28,13 +27,7 @@ class DocumentLoader:
             chunk_size: int = DEFAULT_CHUNK_SIZE,
             chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
     ) -> None:
-        """Initialize the document loader.
-
-        Args:
-            documents_dir: Path to the directory containing documents.
-            chunk_size: Size of text chunks for splitting.
-            chunk_overlap: Overlap between chunks.
-        """
+        """Initialize the document loader."""
         self._documents_dir = Path(documents_dir)
         self._chunk_size = chunk_size
         self._chunk_overlap = chunk_overlap
@@ -72,14 +65,7 @@ class DocumentLoader:
         return documents, len(pdf_files)
 
     def load_documents(self) -> List[Document]:
-        """Load all documents from the configured directory.
-
-        Returns:
-            List of loaded Document objects (not yet chunked).
-
-        Raises:
-            FileNotFoundError: If the documents directory does not exist.
-        """
+        """Load all documents from the configured directory."""
         if not self._documents_dir.exists():
             raise FileNotFoundError(f"Documents directory not found: {self._documents_dir}")
 
@@ -95,11 +81,7 @@ class DocumentLoader:
         return documents
 
     def load_and_split(self) -> List[Document]:
-        """Load documents and split them into chunks.
-
-        Returns:
-            List of chunked Document objects ready for embedding.
-        """
+        """Load documents and split them into chunks."""
         documents = self.load_documents()
 
         if not documents:

@@ -16,7 +16,8 @@ class BaseMetric(BaseRedTeamingMetric, ABC):
         self._g_eval = None
         self.harm_category = harm_category
 
-    def _pull_results_from_geval(self) -> None:
+    def _transfer_results_from_geval(self) -> None:
+        """ Pull results from the GEval object."""
         self.score = self._g_eval.score
         self.reason = self._g_eval.reason
         self.success = self._g_eval.success

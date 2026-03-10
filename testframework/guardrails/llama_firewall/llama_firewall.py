@@ -10,7 +10,6 @@ import atexit
 import asyncio
 from time import perf_counter
 from typing import List, Dict
-
 from testframework import ChatbotName, LLMErrorType
 from testframework.guardrails.base import BaseGuardrail
 from testframework.models import DetectionElement, ToolInfo, TestErrorInfo, ScannerDetail
@@ -41,24 +40,30 @@ class LlamaFirewall(BaseGuardrail):
 
     @property
     def _llama_firewall(self):
+        """Get the custom LlamaFirewallGuard instance."""
         if self._firewall is None:
             self._firewall = LlamaFirewallGuard(scanners=self._scanners)
         return self._firewall
 
     def _get_runner(self) -> asyncio.Runner:
+        """Get the asyncio runner instance since LlamaFirewallGuard is calls async filters that by default get handled
+        by asyncio which sometimes closes the async loop (?) before all scanners have finished."""
         if self._runner is None:
             self._runner = asyncio.Runner()
         return self._runner
 
     def _close_runner(self) -> None:
+        """Close the asyncio runner instance."""
         if self._runner is not None:
             self._runner.close()
             self._runner = None
 
     def _scan_with_metrics(self, message) -> Dict[str, List[ScannerDetail] | ScanResult]:
+        """Scan a message with metrics."""
         return self._get_runner().run(self._llama_firewall.scan_async_with_metrics(message))
 
     def eval_attack(self, user_prompt: str, **kwargs) -> DetectionElement:
+        """Avaluate an attack."""
         user_msg = UserMessage(user_prompt)
         try:
             test_started = perf_counter()
@@ -70,6 +75,7 @@ class LlamaFirewall(BaseGuardrail):
             return DetectionElement.from_error(TestErrorInfo.from_exception(e))
 
     def eval_model_response(self, model_response: str, chatbot: ChatbotName, **kwargs) -> DetectionElement:
+        """Evaluate the response from the attacked model."""
         t_info: ToolInfo = kwargs.get("tool_info", None)
         tool_info = [
             {
@@ -89,6 +95,7 @@ class LlamaFirewall(BaseGuardrail):
 
     def _build_result(self, res: Dict[str, List[ScannerDetail] | ScanResult], test_ended: float,
                       test_started: float) -> DetectionElement:
+        """Build the scan result."""
         orig_scan_result = res.get("scan_result", None)
         scanner_details = res.get("scanner_details", None)
         error = TestErrorInfo(LLMErrorType.UNKNOWN,

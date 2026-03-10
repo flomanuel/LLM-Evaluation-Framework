@@ -6,7 +6,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from .attack_list_enhancer import AttackEnhancement, AttackListEnhancer
 
 __all__ = ["AttackListEnhancer", "AttackEnhancement"]

@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from enum import Enum
 from typing import List, Dict, cast
 from deepteam.vulnerabilities import BaseVulnerability
@@ -36,6 +35,7 @@ class IndirectInstructionAttacks(BaseVulnerability):
         super().__init__(types)
 
     def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
+        """Simulate attacks for the test case."""
         attacks: List[RTTestCase] = []
         if IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS in self.types:
             csv_data = CSVLoader.load_prompts_from_csv(
@@ -55,8 +55,10 @@ class IndirectInstructionAttacks(BaseVulnerability):
         return attacks
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
+        """Get the metric for the test case."""
         return IndirectInstructionMetric(IndirectInstructionType.DOCUMENT_EMBEDDED_INSTRUCTIONS.value,
                                          model=self.evaluation_model)
 
     def get_name(self) -> str:
+        """Get the human readable name of the test case."""
         return "IndirectInstruction"

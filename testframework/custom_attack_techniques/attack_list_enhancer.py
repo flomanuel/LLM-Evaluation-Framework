@@ -21,13 +21,12 @@ from testframework.util.ollama_handler import OllamaGenerator
 
 
 class AttackListEnhancer:
-    """Enhance a list of attacks.
-    """
+    """Enhance a list of attacks."""
 
     ERROR_THRESHOLD_ENV_VAR = "ENHANCED_ATTACK_ERROR_THRESHOLD_PERCENT"
     DEFAULT_ERROR_THRESHOLD_PERCENT = 100.0
     ERROR_RETRY_COOLDOWN_SECONDS = 420
-    ATTACK_GENERATION_COOLDOWN_SECONDS = 60
+    ATTACK_GENERATION_COOLDOWN_SECONDS = 120
     SUCCESS_COOLDOWN_SECONDS = 30
     LOCAL_MODEL_ID = os.environ.get("LOCAL_MODEL_ID", False)
 
@@ -39,6 +38,7 @@ class AttackListEnhancer:
             attacks: List[RTTestCase],
             enhancements: List[AttackEnhancement] | None = None,
     ) -> AttackEnhancementResult:
+        """Enhance a list of attacks with the given techniques."""
         logger.info(
             f"Enhancing {len(attacks)} attacks with "
             f"{len(enhancements) if enhancements else len(ENHANCEMENTS)} "
@@ -138,7 +138,7 @@ class AttackListEnhancer:
                                                            error_threshold_percent=error_threshold_percent,
                                                            stopped_early=True)
                 enhanced_attack_count += 1
-            if enhanced_attack_count % 3 == 0 and any(
+            if enhanced_attack_count % 4 == 0 and any(
                     a.vulnerability_type != "document-embedded-instructions" for a in attacks):
                 self._cooldown_with_model_shutdown(time.sleep, self.ATTACK_GENERATION_COOLDOWN_SECONDS)
         logger.info(f"Enhanced {len(enhanced_attacks)} attacks.")
@@ -147,6 +147,7 @@ class AttackListEnhancer:
                                        error_threshold_percent=error_threshold_percent)
 
     def _cooldown_with_model_shutdown(self, cooldown: Callable[[int], None], seconds: int):
+        """Apply a cooldown and shut down the model if it's an Ollama model."""
         if isinstance(self.simulator_model, OllamaModel):
             OllamaGenerator.require_local_model_shutdown()
             logger.info(f"Cooldown: {seconds} seconds.")
@@ -158,7 +159,7 @@ class AttackListEnhancer:
             enhancement: AttackEnhancement,
             baseline_input: str,
     ) -> tuple[str | None, TestErrorInfo | None]:
-        """Apply one enhancement with bounded automatic retries and optional manual continuation."""
+        """Apply one enhancement with automatic retries and optional manual continuation."""
         attempt = 1
         while True:
             try:

@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from __future__ import annotations
 
 import json
@@ -35,15 +34,7 @@ def save_test_run(test_run: TestRunResult, base_dir: Path | None = None) -> Path
 
 
 def save_test_case_result(result: TestCaseResult, run_folder: Path) -> Path:
-    """Save a single test case result as a backup to the run folder.
-
-    Args:
-        result: The TestCaseResult to save.
-        run_folder: The folder path for the current test run.
-
-    Returns:
-        The path to the saved JSON file.
-    """
+    """Save a single test case result as a backup to the run folder."""
     testcase_folder = run_folder / "testcase"
     testcase_folder.mkdir(parents=True, exist_ok=True)
 

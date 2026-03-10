@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from typing import Optional, Union, Literal
 
 from deepeval.models import DeepEvalBaseLLM
@@ -27,6 +26,11 @@ EmotionLiteral = Literal["ANGER", "PITY", "CONFUSION", "AUTHORITY", "URGENCY"]
 
 
 class EmotionalManipulation(BaseSingleTurnAttack):
+    """
+    Emotional manipulation technique.
+    Copied from "https://github.com/confident-ai/deepteam/tree/main/deepteam/attacks/single_turn/emotional_manipulation" since it is not available in the package version 1.05.
+
+    """
     name = "Emotional Manipulation"
     exploitability = Exploitability.HIGH
     description = "Rewrites the attack by wrapping it in a high-intensity emotional narrative (Anger, Pity, Urgency) to bypass safety filters."

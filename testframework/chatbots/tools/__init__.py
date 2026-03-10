@@ -5,8 +5,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from .image_tool import generate_image
 
 __all__ = ["generate_image"]
-

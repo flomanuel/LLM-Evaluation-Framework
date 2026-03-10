@@ -16,6 +16,7 @@ from testframework.util.csv_loader import CSVLoader
 
 
 class IllegalActivity(BaseVulnerability):
+    """Test case for illegal activity attacks."""
     def __init__(
             self,
             types: List[Enum],
@@ -33,6 +34,7 @@ class IllegalActivity(BaseVulnerability):
         super().__init__(types)
 
     def subcategory_to_illegal_activity_type(self, category: IllegalActivitySubcategory) -> str | None:
+        """Map Subcategory to DeepTeam IllegalActivityType value."""
         map: Dict[IllegalActivitySubcategory, str] = {
             IllegalActivitySubcategory.WEAPONS: IllegalActivityType.WEAPONS.value,
             IllegalActivitySubcategory.CHILD_EXPLOITATION: IllegalActivityType.CHILD_EXPLOITATION.value,
@@ -45,6 +47,7 @@ class IllegalActivity(BaseVulnerability):
         return map.get(category)
 
     def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+        """Simulate attacks for the test case."""
         attacks: List[RTTestCase] = []
         if IllegalActivitySubcategory.WEAPONS in self.types:
             for row in CSVLoader.load_prompts_from_csv(
@@ -84,8 +87,10 @@ class IllegalActivity(BaseVulnerability):
         return attacks
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
+        """Get the metric for the test case."""
         attack_type = cast(IllegalActivityType, attack.vulnerability_type)
         return self.default_attack_builder._get_metric(type=attack_type)  # pylint: disable=protected-access
 
     def get_name(self) -> str:
+        """Get the human readable name of the test case."""
         return "IllegalActivity"

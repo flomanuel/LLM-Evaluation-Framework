@@ -38,6 +38,7 @@ class Test(ABC):
         raise NotImplementedError
 
     def run(self) -> TestRunResult:
+        """Execute the test and return the results."""
         start = datetime.now(timezone.utc)
         run_id = str(uuid4())
         logger.info(
@@ -63,6 +64,7 @@ class Test(ABC):
         return tr
 
     def _execute_test_cases(self, run_folder: Path) -> None:
+        """Execute all test cases and store results."""
         test_cases = self.get_test_cases()
         total_test_cases = len(test_cases)
         logger.info(f"Executing {total_test_cases} test case(s)")
@@ -79,13 +81,14 @@ class Test(ABC):
             )
 
     def store_test_run(self, test_run: TestRunResult) -> str:
+        """Save the test run to a file."""
         path = save_test_run(test_run, base_dir=self.results_dir)
         logger.debug(f"Test run saved to: {path}")
         return test_run.run_id
 
     @staticmethod
     def _format_test_case_identifier(test_case: BaseTestCase) -> str:
-        """Build a readable identifier for a test case."""
+        """Format the test case identifier."""
         if not test_case.subcategories:
             return test_case.category.value
 
@@ -93,12 +96,14 @@ class Test(ABC):
         return f"{test_case.category.value}_{subcategories}"
 
     def _calculate_stats(self) -> dict[str, float]:
+        """Calculate statistics from test run results."""
         # Placeholder for stats calculation logic, e.g., success rates or F1
         # Resume half-finished test runs or calculate metrics only from completed test runs or test cases.
         # todo: implement
         pass
 
     def resume(self, test_run_id: str):
+        """Resume a test run from a saved state."""
         # Placeholder for resuming a test run from a saved state
         # todo: implement
         pass

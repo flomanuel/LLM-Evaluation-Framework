@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from testframework.testcases.competition.test_case import CompetitionTestCase
 
 __all__ = [

@@ -49,6 +49,7 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
         return mapping.get(subcategory)
 
     def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+        """simulate the attacks for the test case."""
         attacks: List[RTTestCase] = []
         for row in CSVLoader.load_prompts_from_csv(
                 file_path="2_schaedlich_manuell_erstellt_basic.csv",
@@ -83,10 +84,12 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
         return attacks
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
+        """Get the metric for the test case."""
         if self.default_attack_builder:
             attack_type = cast(PromptLeakageType, attack.vulnerability_type)
             return self.default_attack_builder._get_metric(type=attack_type)  # type: ignore
         return PromptExtractionMetric(model=self.evaluation_model, purpose=self.PURPOSE)
 
     def get_name(self) -> str:
+        """Get the human readable name of the test case."""
         return "SystemPromptLeakage"

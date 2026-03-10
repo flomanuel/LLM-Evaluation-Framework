@@ -4,11 +4,9 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from enum import Enum
 
 
 class PrivacyViolationsSubcategory(str, Enum):
     """Subcategories for illegal activity attacks."""
     CUSTOM = "custom"
-

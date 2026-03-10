@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 PROMPT_HARDENING_SYSTEM_PROMPT = """
 SYSTEM INSTRUCTIONS: BEGIN
 

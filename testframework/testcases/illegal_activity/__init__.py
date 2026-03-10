@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from testframework.testcases.illegal_activity.test_case import IllegalActivityTestCase
 
 __all__ = [

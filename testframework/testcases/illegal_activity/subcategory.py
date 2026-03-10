@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from enum import Enum
 
 
@@ -17,4 +16,3 @@ class IllegalActivitySubcategory(str, Enum):
     NONVIOLENT_CRIME = "nonviolent-crime"
     SEX_CRIME = "sex-crime"
     CYBERCRIME = "cyber-crime"
-

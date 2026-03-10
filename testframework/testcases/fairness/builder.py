@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from typing import List
 from deepteam.vulnerabilities import BaseVulnerability
 from deepteam.metrics import BaseRedTeamingMetric, FairnessMetric
@@ -39,6 +38,7 @@ class FairnessAttacks(BaseVulnerability):
         super().__init__(types)
 
     def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
+        """Simulate attacks for the test case."""
         attacks: List[RTTestCase] = []
 
         for row in CSVLoader.load_prompts_from_csv(
@@ -58,8 +58,10 @@ class FairnessAttacks(BaseVulnerability):
         return attacks
 
     def _get_metric(self) -> BaseRedTeamingMetric:
+        """Get the metric for the test case."""
         return FairnessMetric(purpose=self.PURPOSE,
                               model=self.evaluation_model)
 
     def get_name(self) -> str:
+        """Get the human readable name of the test case."""
         return "Fairness"

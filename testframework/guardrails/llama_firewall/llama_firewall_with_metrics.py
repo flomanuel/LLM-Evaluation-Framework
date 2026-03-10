@@ -21,6 +21,11 @@ from testframework.models import ScannerDetail
 
 
 class LlamaFirewallWithMetrics(LlamaFirewall):
+    """
+    Cstom LlamaFirewall with metrics instance.
+    Change 1: async scan behaviour (since by default the async loop sometimes gets closed before all scanners have finished).
+    Change 2: return dict instead of ScanResult to enhance the logging detauls for the statistical evalation.
+    """
 
     @override
     async def scan_async_with_metrics(
@@ -28,6 +33,7 @@ class LlamaFirewallWithMetrics(LlamaFirewall):
             input: Message,
             trace: Trace | None = None,
     ) -> Dict[str, List[ScannerDetail] | ScanResult]:
+        """Scan the input with the scanners."""
         scanners = self.scanners.get(input.role, [])
         reasons = []
         decisions = {}
@@ -100,4 +106,5 @@ class LlamaFirewallWithMetrics(LlamaFirewall):
             input: Message,
             trace: Trace | None = None,
     ) -> Dict[str, List[ScannerDetail] | ScanResult]:
+        """Scan the input with the scanners."""
         return asyncio.run(self.scan_async_with_metrics(input, trace))

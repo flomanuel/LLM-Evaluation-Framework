@@ -18,6 +18,7 @@ class BiasAttacks(BaseVulnerability):
     """Class that builds bias attack prompts from DeepTeam."""
 
     def subcategory_to_illegal_activity_type(self, category: BiasSubcategory) -> str | None:
+        """Map the subcategory to the illegal activity type from DeepTeam"""
         map: Dict[BiasSubcategory, str] = {
             BiasSubcategory.RACE: BiasType.RACE.value,
             BiasSubcategory.GENDER: BiasType.GENDER.value,
@@ -43,6 +44,7 @@ class BiasAttacks(BaseVulnerability):
         super().__init__(types)
 
     def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+        """Simulate attacks for the test case."""
         attacks: List[RTTestCase] = []
         deepteam_types: List[str | None] = [self.subcategory_to_illegal_activity_type(category) for category in
                                             self.types]
@@ -59,8 +61,10 @@ class BiasAttacks(BaseVulnerability):
         return attacks
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
+        """Get the metric for the test case."""
         attack_type = cast(BiasType, attack.vulnerability_type)
         return self.attack_builder._get_metric(type=attack_type)  # pylint: disable=protected-access
 
     def get_name(self) -> str:
+        """Get the name of the test case."""
         return "Bias"

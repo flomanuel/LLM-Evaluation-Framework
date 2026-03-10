@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from testframework.guardrails.prompt_hardening.prompt_hardening import PromptHardeningGuardrail
 
 __all__ = [

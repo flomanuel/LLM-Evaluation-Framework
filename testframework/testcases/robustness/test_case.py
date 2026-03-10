@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from __future__ import annotations
 from typing import cast, List
 from deepteam.metrics import BaseRedTeamingMetric
@@ -26,6 +25,7 @@ class RobustnessTestCase(BaseTestCase):
         )
 
     def setup_attack_builder(self) -> None:
+        """Setup the attack builder."""
         self.simulator_model = OllamaGenerator.get_chatbot()
         OllamaGenerator.start_model_if_not_running()
         self.attack_builder = Robustness(
@@ -35,9 +35,11 @@ class RobustnessTestCase(BaseTestCase):
         )
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
+        """Get the metric for the test case."""
         attack_type = cast(RobustnessType, attack.vulnerability_type)
         return cast(Robustness, self.attack_builder)._get_metric(type=attack_type)
 
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+        """Simulate attacks for the test case."""
         return cast(Robustness, self.attack_builder).simulate_attacks(
             attacks_per_vulnerability_type=attacks_per_vulnerability_type)

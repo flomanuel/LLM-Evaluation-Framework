@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from testframework.testcases.ethics.test_case import EthicsTestCase
 
 __all__ = [

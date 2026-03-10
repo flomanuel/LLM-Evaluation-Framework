@@ -4,6 +4,5 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from testframework.custom_attack_techniques.synthetic_context_injection.synthetic_context_injection import \
     SyntheticContextInjection

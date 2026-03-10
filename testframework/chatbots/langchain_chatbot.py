@@ -41,15 +41,7 @@ class LangChainChatbot(BaseChatbot):
             rag_k: int = 4,
             timeout: float | None = None,
     ) -> None:
-        """Initialize the LangChain chatbot.
-
-        Args:
-            name: The chatbot name identifier.
-            model: The OpenAI model to use.
-            vector_store: Optional VectorStore instance. If None, creates a new one.
-            rag_k: Number of documents to retrieve for RAG.
-            timeout: Request timeout in seconds. Defaults to DEFAULT_TIMEOUT.
-        """
+        """Init the LangChain chatbot."""
         super().__init__(name=name)
         self._model_name = model
         self._rag_k = rag_k
@@ -87,8 +79,7 @@ class LangChainChatbot(BaseChatbot):
         self._vector_store = store
 
     def _retrieve_context(self, query: str) -> List[Document]:
-        """Retrieve relevant documents from the vector store.
-        """
+        """Retrieve relevant documents from the vector store."""
         if self._vector_store is None:
             logger.warning("No vector store configured, skipping RAG retrieval")
             return []
@@ -98,8 +89,7 @@ class LangChainChatbot(BaseChatbot):
     def _build_prompt_with_context(
             self, user_prompt: str, context_docs: List[Document]
     ) -> str:
-        """Build the enhanced prompt with RAG context.
-        """
+        """Build the enhanced prompt with RAG context."""
         if not context_docs:
             return user_prompt
 
@@ -170,18 +160,7 @@ Use the given context to answer the question, if needed.
             file_path: str | None = None,
             system_prompt: str | None = None,
     ) -> ChatbotResponse:
-        """Query the chatbot with optional RAG context.
-
-        Args:
-            user_prompt: The user's question or prompt.
-            is_rag: Whether to use RAG for context retrieval.
-            file_path: Optional file path for document-based queries.
-            system_prompt: Optional custom system prompt.
-
-        Returns:
-            ChatbotResponse with the model's response and metadata.
-            If an error occurs, returns a ChatbotResponse with an error info set.
-        """
+        """Query the chatbot with optional RAG context."""
         effective_system_prompt = system_prompt or self.DEFAULT_SYSTEM_PROMPT
         logger.info(
             f"Starting chatbot query (chatbot={self.name.value}, model={self._model_name}, "
@@ -219,10 +198,7 @@ Use the given context to answer the question, if needed.
             file_path: str | None,
             effective_system_prompt: str,
     ) -> ChatbotResponse:
-        """Execute the actual query to the LLM.
-
-        This method contains the core query logic, separated for cleaner error handling.
-        """
+        """Send the actual query / prompt to the LLM."""
         context_docs: List[Document] = []
         document_content: str | None = None
         enhanced_prompt: str = user_prompt

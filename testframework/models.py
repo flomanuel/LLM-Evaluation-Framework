@@ -51,29 +51,34 @@ class TestErrorInfo:
 
 @dataclass
 class TimestampRange:
+    """Timestamp range for the tests."""
     start: datetime
     end: datetime
 
 
 @dataclass
 class RagContext:
+    """Context for RAG retrieval."""
     embedding_model: str | None
     nodes: List[str]
 
 
 @dataclass
 class DocumentContext:
+    """Context for document retrieval."""
     document: str
 
 
 @dataclass
 class PromptVariants:
+    """prmopt variants before and after enhancement."""
     baseline: str
     enhanced: str
 
 
 @dataclass
 class ToolInfo:
+    """Information about a tool call."""
     tool_called: bool
     tool_name: str | None = None
     tool_args: dict[str, Any] | str | None = None
@@ -81,6 +86,7 @@ class ToolInfo:
 
 @dataclass
 class ChatbotResponse:
+    """Response from a chatbot."""
     prompt: str
     raw_prompt: str
     response: str
@@ -122,6 +128,7 @@ class ChatbotResponse:
 
 @dataclass
 class ChatbotResponseEvaluation:
+    """Evaluation result of a chatbot response."""
     chatbot_response: ChatbotResponse
     score: float
     reason: str
@@ -150,6 +157,7 @@ class ChatbotResponseEvaluation:
 
 @dataclass
 class ScannerDetail:
+    """Detailed information about a guardrail's scanner result."""
     name: str
     score: float
     reason: str
@@ -159,6 +167,7 @@ class ScannerDetail:
 
 @dataclass
 class DetectionElement:
+    """Container for a detection result of a guardrail."""
     success: bool
     detected_type: Category | str | None
     score: float
@@ -194,6 +203,7 @@ class PromptHardeningDetectionElement(DetectionElement):
 
 @dataclass
 class DetectionResult:
+    """Container for the detection results of a guardrail for a specific chatbot."""
     input_detection: DetectionElement
     output_detection: DetectionElement
 
@@ -201,7 +211,6 @@ class DetectionResult:
 @dataclass
 class EnhancedAttack:
     """Container for a base attack and its enhanced representation."""
-
     attack_case: RTTestCase
     baseline_input: str
     enhanced_input: str
@@ -216,8 +225,7 @@ class EnhancedAttack:
 
 @dataclass
 class AttackEnhancementResult:
-    """Summary of an attack enhancement batch."""
-
+    """Summary of all enhanced attacks."""
     enhanced_attacks: List[EnhancedAttack]
     planned_attack_count: int
     failed_attack_count: int
@@ -242,6 +250,7 @@ class AttackEnhancementResult:
 
 @dataclass
 class Attack:
+    """One LLM-specific attack"""
     category: str
     subcategory: Enum | None
     techniques: List[str]
@@ -307,7 +316,6 @@ class TestCaseResult:
     @dataclass
     class ModelInfo:
         """Model used for generating the attacks and techniques."""
-
         attack_and_vulnerability_generation: str | None = None
 
     category: Category
@@ -344,12 +352,14 @@ class TestCaseResult:
 
 @dataclass
 class TestRunTimestamp:
+    """Timestamps for the whole test run."""
     start: datetime
     end: datetime
 
 
 @dataclass
 class TestRunResult:
+    """Result of a test run."""
     run_id: str
     timestamp: TestRunTimestamp
     attack_categories: List[TestCaseResult]

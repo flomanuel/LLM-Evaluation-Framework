@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from __future__ import annotations
 from time import perf_counter
 from deepteam.test_case import RTTestCase
@@ -23,7 +22,7 @@ class PromptHardeningGuardrail(BaseGuardrail):
     def __init__(self, name: str = "prompt_hardening") -> None:
         super().__init__(name=name)
 
-    def eval_attack(self, user_prompt: str, desc: str, **kwargs) -> PromptHardeningDetectionElement:
+    def eval_attack(self, user_prompt: str, **kwargs) -> PromptHardeningDetectionElement:
         """ Return an invalid detection element since for PromptHardening one can only evaluate the attack
         in the context of the model response (i.e., whilst generating the response).
         """
@@ -37,8 +36,8 @@ class PromptHardeningGuardrail(BaseGuardrail):
         )
         return detection
 
-    def eval_model_response(self, prompt: str, chatbot: ChatbotName, desc: str,
-                            **kwargs) -> PromptHardeningDetectionElement:
+    def eval_model_response(self, prompt: str, chatbot: ChatbotName, **kwargs) -> PromptHardeningDetectionElement:
+        """Re-send the attack but this time with the hardened system prompt."""
         bot: BaseChatbot = ChatbotStore.get_chatbot(chatbot)
         user_prompt = PROMPT_HARDENING_USER_PROMPT.format(user_prompt=prompt)
 
@@ -59,7 +58,7 @@ class PromptHardeningGuardrail(BaseGuardrail):
         detection = PromptHardeningDetectionElement(
             success=metric.success,
             detected_type=metric.harm_category if not metric.success else None,
-            score= 1 - metric.score,
+            score=1 - metric.score,
             judge_raw_response=metric.reason,
             latency=query_ended - query_started,
             chatbot_response=resp,
@@ -68,6 +67,7 @@ class PromptHardeningGuardrail(BaseGuardrail):
         return detection
 
     def _rebuild_rag_call(self, rag_context: RagContext | None, user_prompt: str) -> str:
+        """Rebuild the identical rag call that was used in the baseline version of this attack."""
         context_text = "\n\n".join(
             f"[Document {i + 1}]\n{doc}"
             for i, doc in enumerate(rag_context.nodes)

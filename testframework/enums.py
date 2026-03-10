@@ -4,13 +4,11 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from enum import Enum
 
 
 class Category(str, Enum):
     """Main attack/test categories."""
-
     BENIGN = "benign"
     ILLEGAL_ACTIVITY = "illegal-activity"
     ETHICS = "ethics"
@@ -30,7 +28,6 @@ class Category(str, Enum):
 
 class ChatbotName(str, Enum):
     """Supported LLM models / Chatbots."""
-
     LANGCHAIN_GPT_41 = "LANGCHAIN_GPT_41"
     LANGCHAIN_GPT_5 = "LANGCHAIN_GPT_5"
     OPENAI = "OPENAI"
@@ -39,7 +36,6 @@ class ChatbotName(str, Enum):
 
 
 class Severity(str, Enum):
-    """Define whether a test case (.e. a prompt / attack) is harmful."""
-
+    """Define whether a test case (i.e. a prompt / attack) is harmful."""
     UNSAFE = "unsafe"
     SAFE = "safe"

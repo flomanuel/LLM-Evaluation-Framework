@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from testframework.testcases.privacy_violations.test_case import PrivacyViolationsTestCase
 
 __all__ = [

@@ -28,9 +28,11 @@ class GuardrailsAI(BaseGuardrail):
         self._guards: Dict[str, Guard] = {}
 
     def eval_attack(self, user_prompt: str, **kwargs) -> DetectionElement:
+        """Evaluate the attack prompt."""
         return self._evaluate_input(user_prompt)
 
     def eval_model_response(self, model_response: str, chatbot: ChatbotName, **kwargs) -> DetectionElement:
+        """Evaluate the response from the attacked model."""
         t_info = kwargs.get("tool_info", None)
         if t_info:
             tool_call = f"Tool Name: {t_info.tool_name if t_info.tool_name else 'N/A'} \n Tool Was Called: {t_info.tool_called if t_info.tool_called else 'N/A'} \n Tool Call Args: {t_info.tool_args if t_info.tool_args else 'N/A'}"
@@ -40,6 +42,7 @@ class GuardrailsAI(BaseGuardrail):
         return self._evaluate_input(current_output)
 
     def _evaluate_input(self, text: str) -> DetectionElement:
+        """Evaluate the input text (attack, response)."""
         self._load_all_guards()
         scanner_details: list[ScannerDetail] = []
         shieldgemma_scanner_detail = ScannerDetail(
@@ -113,10 +116,12 @@ class GuardrailsAI(BaseGuardrail):
         )
 
     def _load_all_guards(self) -> None:
+        """Load all Guardrails AI scanners / guards."""
         for guard_name in GUARD_NAMES:
             self._get_guards(guard_name)
 
     def _get_guards(self, guard_name: str) -> Guard:
+        """Get a Guardrails AI scanner / guard by name."""
         if guard_name not in self._guards:
             guard = Guard(history_max_length=0, base_url="http://localhost:8000").load(
                 name=guard_name,

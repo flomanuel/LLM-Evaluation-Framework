@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from testframework.testcases.benign.test_case import BenignTestCase
 
 __all__ = [

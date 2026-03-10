@@ -36,6 +36,7 @@ class GcpModelArmor(BaseGuardrail):
         self._client: ModelArmorClient | None = None
 
     def eval_attack(self, user_prompt: str, **kwargs) -> DetectionElement:
+        """Evaluate the attack."""
         test_started = perf_counter()
         prompt_obj: DataItem = DataItem(text=user_prompt)
         request = SanitizeUserPromptRequest(name=self._template_name, user_prompt_data=prompt_obj)
@@ -45,6 +46,7 @@ class GcpModelArmor(BaseGuardrail):
         return detection
 
     def eval_model_response(self, model_response: str, chatbot: ChatbotName, **kwargs) -> DetectionElement:
+        """Evaluate the response from the attacked model."""
         t_info = kwargs.get("tool_info", None)
         if t_info:
             name = t_info.tool_name if t_info.tool_name else 'N/A'
@@ -64,6 +66,7 @@ class GcpModelArmor(BaseGuardrail):
             response: SanitizeUserPromptResponse | SanitizeModelResponseResponse,
             latency: float,
     ) -> DetectionElement:
+        """Build the detection element from the guardrail response."""
         sanitization_result = response.sanitization_result
         scanner_details: list[ScannerDetail] = []
         matched_types: list[str] = []
@@ -113,6 +116,7 @@ class GcpModelArmor(BaseGuardrail):
         )
 
     def _scanner_detail_from_filter(self, filter_name: str, filter_result) -> tuple[ScannerDetail, List, List]:
+        """Build the scanner detail from the filter result. Hanlde protobuf results."""
         warnings: List = []
         match_was_found = False
         subtypes_of_found_match: List = []
@@ -183,10 +187,12 @@ class GcpModelArmor(BaseGuardrail):
 
     @property
     def _template_name(self) -> str:
+        """Return the template name for the GCP Model Armor API."""
         return f"projects/{self.PROJECT_ID}/locations/{self.LOCATION}/templates/{self.TEMPLATE_ID}"
 
     @property
     def _model_armor_client(self) -> ModelArmorClient:
+        """Return the GCP Model Armor API client."""
         if self._client is None:
             self._client = ModelArmorClient(
                 transport="rest",

@@ -20,6 +20,9 @@ class OllamaGenerator:
 
     @staticmethod
     def get_chatbot() -> OllamaModel:
+        """
+        Get the local Ollama model.
+        """
         model_id = os.environ.get("LOCAL_MODEL_ID", False)
         if OllamaGenerator._chatbot is None and model_id is not False:
             OllamaGenerator._chatbot = OllamaModel(
@@ -33,6 +36,9 @@ class OllamaGenerator:
 
     @staticmethod
     def start_model_if_not_running():
+        """
+        Start the local Ollama model if it is not already running.
+        """
         if not OllamaGenerator._has_local_models():
             model_id = os.environ.get("LOCAL_MODEL_ID", False)
             safe_model_id = shlex.quote(model_id)
@@ -41,7 +47,9 @@ class OllamaGenerator:
 
     @staticmethod
     def require_local_model_shutdown() -> None:
-        """Wait until `ollama ps` no longer lists a model or the user overrides."""
+        """
+        Wait until `ollama ps` no longer lists a model or the user overrides the shutdown requirement.
+        """
         # try to stop the local model automatically
         model_id = os.environ.get("LOCAL_MODEL_ID", False)
         if model_id:
@@ -75,6 +83,8 @@ class OllamaGenerator:
 
     @staticmethod
     def _has_local_models() -> bool:
-        """Return whether `ollama ps` currently lists at least one running model."""
+        """
+        Return whether `ollama ps` currently lists at least one running model.
+        """
         running_models = os.popen("ollama ps").read().strip().splitlines()
         return len(running_models) > 1

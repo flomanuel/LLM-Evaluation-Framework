@@ -61,8 +61,9 @@ class BaseTestCase(ABC):
         raise NotImplementedError
 
     def execute(self) -> TestCaseResult:
-        """Run the test case and return a mapping from attack_id to TestCaseResult.
-            Build the attacks and add the techniques. Then execute the attacks on the guardrails.
+        """
+        Run the test case and return a mapping from attack_id to TestCaseResult.
+        Build the attacks and add the techniques. Then execute the attacks on the guardrails.
         """
         self.setup_attack_builder()
         test_case_id = self._test_case_identifier()
@@ -147,6 +148,7 @@ class BaseTestCase(ABC):
 
     def _start_attacks(self, attack_results: dict[str, Attack], chatbots: dict[ChatbotName, BaseChatbot],
                        enhanced_attacks: list[EnhancedAttack], skip_chatbot_execution: bool | Any, test_case_id: str):
+        """Start the attacks."""
         OllamaGenerator.require_local_model_shutdown()
         total_attacks = len(enhanced_attacks)
         for counter, attack in enumerate(enhanced_attacks, start=1):
@@ -187,6 +189,7 @@ class BaseTestCase(ABC):
     def _generate_attacks(self, attack_list_enhancer: AttackListEnhancer, attacks_per_vulnerability_type: int,
                           test_case_id: str) -> List[
         List[EnhancedAttack], AttackEnhancementResult | None, bool]:
+        """Generate attacks for the test case."""
         logger.info(f"Generating attacks for test case '{test_case_id}'")
         generation_started = perf_counter()
         attacks: List[RTTestCase] = self.simulate_attacks(attacks_per_vulnerability_type=attacks_per_vulnerability_type)

@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from testframework.metrics.tool_call_code_injection import ToolCallCodeInjectionMetric
 from testframework.metrics.privacy_violations import PrivacyViolationsMetric
 

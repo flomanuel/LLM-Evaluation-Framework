@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from typing import Optional, Union
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
@@ -24,6 +23,7 @@ from testframework.custom_attack_techniques.synthetic_context_injection.template
 
 
 class SyntheticContextInjection(BaseSingleTurnAttack):
+    """Build the synthetic context injection technique."""
     name = "Synthetic Context Injection"
     exploitability = Exploitability.HIGH
     description = "Generates domain-specific 'fake history' that mimics internal company logs, emails, and verification states."

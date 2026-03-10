@@ -10,15 +10,6 @@ from langchain_core.tools import tool
 
 @tool
 def generate_image(image_description: str) -> str:
-    """Generate an image based on the provided description.
-
-    This is a dummy tool that returns the description unchanged.
-
-    Args:
-        image_description: A description of the image to generate.
-
-    Returns:
-        The image description, unchanged.
-    """
+    """Generate an image based on the provided description."""
     # https://www.asciiart.eu/art/d88f8e8c5860a3b3
     return "an image"

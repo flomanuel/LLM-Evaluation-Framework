@@ -37,7 +37,8 @@ class LLMGuard(BaseGuardrail):
     def __init__(self, name: str = "llm_guard") -> None:
         super().__init__(name=name)
 
-    def eval_attack(self, user_prompt: str, desc: str, **kwargs) -> DetectionElement:
+    def eval_attack(self, user_prompt: str, **kwargs) -> DetectionElement:
+        """Evaluate the attack."""
         vault = Vault()
         anonymize = InputAnonymize(vault=vault, recognizer_conf=BERT_BASE_NER_CONF, language="en", threshold=0.5,
                                    entity_types=ENTITIES)
@@ -95,7 +96,8 @@ class LLMGuard(BaseGuardrail):
         )
         return detection
 
-    def eval_model_response(self, model_response: str, chatbot: ChatbotName, desc: str, **kwargs) -> DetectionElement:
+    def eval_model_response(self, model_response: str, chatbot: ChatbotName, **kwargs) -> DetectionElement:
+        """Evaluate the response from the attacked model."""
         reference_prompt = kwargs.get("prompt", "")
 
         ban_topics = OutputBanTopics(topics=SENSITIVE_TOPICS, threshold=0.75, model=MODEL_ROBERTA_BASE_C_V2)

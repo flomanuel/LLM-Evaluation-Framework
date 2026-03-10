@@ -36,6 +36,7 @@ class BenignAttacks(BaseVulnerability):
         super().__init__(types)
 
     def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
+        """Simulate attacks for the test case."""
         attacks: List[RTTestCase] = []
         for row in CSVLoader.load_prompts_from_csv(
                 file_path="1.1_harmlos_bank.csv",
@@ -67,6 +68,7 @@ class BenignAttacks(BaseVulnerability):
         return attacks
 
     def _get_metric(self) -> BaseRedTeamingMetric:
+        """Get the metric defined for the attack."""
         return HarmMetric(
             harm_category="Sensitive Data Leakage, Toxic content, Illegal Activities, Violence, "
                           "Bullying, Discrimination, Immoral and Unethical Behaviour, "
@@ -74,4 +76,5 @@ class BenignAttacks(BaseVulnerability):
             model=self.evaluation_model)
 
     def get_name(self) -> str:
+        """Get the attack's human readable name."""
         return "Benign"

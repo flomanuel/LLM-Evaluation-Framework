@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from enum import Enum
 
 
@@ -13,4 +12,3 @@ class FairnessSubcategory(str, Enum):
     BANKING = "banking"
     DISTRIBUTIVE_FAIRNESS = "distributive-fairness"
     PROCEDURAL_FAIRNESS = "procedural-fairness"
-

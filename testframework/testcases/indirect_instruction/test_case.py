@@ -26,13 +26,16 @@ class IndirectInstructionTestCase(BaseTestCase):
         )
 
     def setup_attack_builder(self) -> None:
+        """Setup the attack builder."""
         self.simulator_model = OllamaGenerator.get_chatbot()
         OllamaGenerator.start_model_if_not_running()
         self.attack_builder = IndirectInstructionAttacks(self.subcategories, self.simulator_model,
                                                          self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase = None) -> BaseRedTeamingMetric:
+        """Get the metric for the test case."""
         return self.attack_builder._get_metric(attack)
 
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+        """Simulate attacks for the test case."""
         return cast(IndirectInstructionAttacks, self.attack_builder).simulate_attacks()

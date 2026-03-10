@@ -6,13 +6,11 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from __future__ import annotations
 
 import os
 from typing import List
 from urllib.parse import urlsplit
-
 from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
 from langchain_postgres import PGVector
@@ -31,13 +29,8 @@ class VectorStore:
             connection_string: str | None = None,
             collection_name: str | None = None,
     ) -> None:
-        """Initialize the vector store.
-
-        Args:
-            connection_string: PostgreSQL connection string. If None, builds from env vars.
-            collection_name: Name of the collection to use. Defaults to COLLECTION_NAME.
-        """
-        self._connection_string = connection_string or self._build_connection_string()
+        """Initialize the vector store."""
+        self._connection_string = connection_string or self._connection_string
         self._collection_name = collection_name or self.COLLECTION_NAME
 
         self._embeddings = OpenAIEmbeddings(
@@ -61,25 +54,18 @@ class VectorStore:
             f"using embedding model '{self.EMBEDDING_MODEL}'"
         )
 
-    @staticmethod
-    def _build_connection_string() -> str:
+    @property
+    def _connection_string() -> str:
         """Build PostgreSQL connection string from environment variables."""
-        host = os.getenv("POSTGRES_HOST", "localhost")
-        port = os.getenv("POSTGRES_PORT", "5432")
-        user = os.getenv("POSTGRES_USER", "postgres")
-        password = os.getenv("POSTGRES_PASSWORD", "postgres")
         db = os.getenv("POSTGRES_DB", "vectordb")
-        return f"postgresql+psycopg://{user}:{password}@{host}:{port}/{db}"
+        p = os.getenv("POSTGRES_PORT", "5432")
+        h = os.getenv("POSTGRES_HOST", "localhost")
+        pw = os.getenv("POSTGRES_PASSWORD", "postgres")
+        u = os.getenv("POSTGRES_USER", "postgres")
+        return f"postgresql+psycopg://{u}:{pw}@{h}:{p}/{db}"
 
     def add_documents(self, documents: List[Document]) -> List[str]:
-        """Add documents to the vector store.
-
-        Args:
-            documents: List of LangChain Document objects to add.
-
-        Returns:
-            List of document IDs.
-        """
+        """Add documents to the vector store."""
         logger.info(
             f"Adding {len(documents)} document chunk(s) to collection '{self._collection_name}'"
         )
@@ -90,15 +76,7 @@ class VectorStore:
         return ids
 
     def similarity_search(self, query: str, k: int = 4) -> List[Document]:
-        """Search for similar documents.
-
-        Args:
-            query: The query text to search for.
-            k: Number of documents to return.
-
-        Returns:
-            List of similar Document objects.
-        """
+        """Search for similar documents."""
         results = self._vector_store.similarity_search(query, k=k)
         logger.debug(f"Found {len(results)} similar documents for query")
         return results

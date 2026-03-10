@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from testframework.testcases.toxicity.test_case import ToxicityTestCase
 
 __all__ = [

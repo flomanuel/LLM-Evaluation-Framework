@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 GUARD_NAMES = [
     "thesis_guard_sensitive_topic",
     "thesis_guard_detect_jailbreak",

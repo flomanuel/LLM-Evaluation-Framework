@@ -26,6 +26,7 @@ class DummyChatbot(BaseChatbot):
             file_path: str | None = None,
             system_prompt: str | None = None,
     ) -> ChatbotResponse:
+        """Query the chatbot."""
         message = f"Lorem ipsum dolor sit amet, consectetur adipiscing elit.{uuid.uuid4()}"
         return ChatbotResponse(
             prompt=user_prompt,

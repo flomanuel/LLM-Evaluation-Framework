@@ -31,6 +31,7 @@ class DefaultTest(Test):
         super().__init__(name="baseline", results_dir=results_dir)
 
     def setup_chatbots(self) -> None:
+        """Register chatbots in the ChatbotStore."""
         logger.debug("Setting up baseline chatbots")
         vector_store = VectorStore()
         gpt_5 = LangChainChatbot(
@@ -46,6 +47,7 @@ class DefaultTest(Test):
         logger.debug("Baseline chatbot setup complete")
 
     def get_test_cases(self) -> List[BaseTestCase]:
+        """Return a list of TestCases to execute."""
         ethics = [EthicsSubcategory.BANKING, EthicsSubcategory.HARM_PREVENTION, EthicsSubcategory.MORAL_INTEGRITY]
         ind_inst = [IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS]
         return [

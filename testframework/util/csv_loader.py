@@ -4,17 +4,18 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 import csv
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, List, Mapping
-
 from testframework.enums import Severity
 
 
 @dataclass(frozen=True)
 class CSVAttackRow:
+    """
+    Object-representation of a single row in a CSV file.
+    """
     prompt: str
     severity: str
     categories: list[str]
@@ -23,7 +24,10 @@ class CSVAttackRow:
     technique: str = None
 
     @classmethod
-    def from_csv_row(cls, row: Mapping[str, str | None]) -> "CSVAttackRow":
+    def from_csv_row(cls, row: Mapping[str, str | None]) -> CSVAttackRow:
+        """
+        Build Row-object.
+        """
         categories_raw = row.get("category") or ""
         tool_check_raw = (row.get("tool_check") or "").strip().lower()
         if tool_check_raw not in {"true", "false"}:
@@ -49,6 +53,10 @@ class CSVAttackRow:
             categories: list[str],
             severity: Severity,
     ) -> bool:
+        """
+        Check if the row matches the given filters.
+        Used to filter rows that are relevant for the specific test case builder.
+        """
         if self.severity != severity.value:
             return False
         if not categories:
@@ -56,6 +64,9 @@ class CSVAttackRow:
         return any(category in self.categories for category in categories)
 
     def build_attack_metadata(self, is_rag: bool = True) -> dict[str, Any]:
+        """
+        Build attack metadata used for edge cases like tool calls and local document uploads.
+        """
         metadata: dict[str, Any] = {"file_path": self.document_path, "is_rag": is_rag, "technique": self.technique}
         if not self.tool_check:
             return metadata
@@ -65,6 +76,9 @@ class CSVAttackRow:
 
 
 class CSVLoader():
+    """
+    Helper class to load prompts from CSV files.
+    """
     CSV_DOCUMENTS_FOLDER: Path = Path(__file__).resolve().parents[2] / "_prompt_files"
 
     def __init__(self) -> None:
@@ -78,10 +92,6 @@ class CSVLoader():
     ) -> List[CSVAttackRow]:
         """
         Loads prompts from a CSV file.
-        :param file_path:
-        :param categories:
-        :param severity:
-        :return:
         """
         prompts: List[CSVAttackRow] = []
         effective_categories = categories or []
@@ -96,6 +106,9 @@ class CSVLoader():
 
     @staticmethod
     def _build_full_path(file_path: str):
+        """
+        Get the full path to the CSV file, protect against path traversal attempts.
+        """
         if not file_path.lower().endswith(".csv"):
             raise ValueError(f"Only CSV files are supported, got: {file_path}")
 

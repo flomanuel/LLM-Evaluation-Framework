@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from testframework.testcases.fairness.test_case import FairnessTestCase
 
 __all__ = [

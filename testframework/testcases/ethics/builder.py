@@ -43,6 +43,7 @@ class EthicsAttacks(BaseVulnerability):
         return mapping.get(subcategory)
 
     def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+        """Simulate attacks for the test case."""
         attacks: List[RTTestCase] = []
 
         if EthicsSubcategory.BANKING in self.types:
@@ -77,10 +78,12 @@ class EthicsAttacks(BaseVulnerability):
         return attacks
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
+        """Get the metric for the test case."""
         if self.default_attack_builder:
             attack_type = cast(EthicsType, attack.vulnerability_type)
             return self.default_attack_builder._get_metric(type=attack_type)  # pylint: disable=protected-access
         return HarmMetric(harm_category="Ethics", model=self.evaluation_model)
 
     def get_name(self) -> str:
+        """Get the human readable name of the test case."""
         return "Ethics"

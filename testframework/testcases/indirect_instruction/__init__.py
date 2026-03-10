@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from testframework.testcases.indirect_instruction.test_case import IndirectInstructionTestCase
 
 __all__ = [
