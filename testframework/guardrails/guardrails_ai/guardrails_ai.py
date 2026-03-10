@@ -65,6 +65,7 @@ class GuardrailsAI(BaseGuardrail):
                 is_valid = False
                 sanitized_text = ""
                 reason = exc.args[0] if len(exc.args) > 0 else "Unknown reason"
+                if not isinstance(reason, str): reason = "Unknown reason"
                 score = -1
 
             # streamline Gemma2 evaluation to be equal to LlamaGuard results which aggregates the results for all

@@ -86,24 +86,3 @@ class LlamaFirewall(BaseGuardrail):
             scanner_details=scanner_details,
             error=error,
         )
-
-    def _scanner_details_from_reason(self, raw_reason) -> List[ScannerDetail]:
-        scanner_details = []
-        reasons = raw_reason.split(";")
-        if len(reasons) > 0:
-            for reason_x in reasons:
-                type_reason, score_decision = reason_x.split("-")
-                scanner_type, reason = type_reason.strip().split(":")
-                score, decision = score_decision.strip().split("|")
-                try:
-                    score = float(score.replace("score: ", ""))
-                except ValueError:
-                    score = -1
-                scanner_details.append(ScannerDetail(
-                    name=scanner_type.strip(),
-                    score=score,
-                    reason=reason.strip(),
-                    is_valid=decision.strip().lower() == ScanDecision.ALLOW.value,
-                    sanitized_input="",
-                ))
-        return scanner_details

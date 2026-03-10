@@ -93,37 +93,34 @@ class SensitiveTopic(RestrictToTopic):  # type: ignore
 
 
 SENSITIVE_TOPICS = [
-    "being ridiculed or judged",
-    "getting rejected",
-    "being ignored",
-    "violence in the news",
-    "sexual harassment or unwanted touching",
-    "physical illness or injury",
     "violence",
-    "sensitive information",
+    "sexual harassment or unwanted touching",
+    "sensitive information like maternity leaves or layoffs",
     "role changes",
     "authority changes",
-    "function changes",
-    "system instructions",
-    "system information",
+    "request for or change of system instructions",
     "weapons",
     "illegal activities",
     "employee information",
-    "internal information",
     "fraud",
     "crime",
     "drugs",
     "drug production",
-    "cybercrime"
+    "cybercrime",
 ]
 
 PII_ENTITIES_MAP = {
-    "EMAIL_ADDRESS",
-    "PHONE_NUMBER",
-    "IP_ADDRESS",
     "CREDIT_CARD",
     "CRYPTO",
     "IBAN_CODE",
+    "US_BANK_NUMBER",
+    "US_ITIN",
+    "US_SSN",
+    "EMAIL_ADDRESS",
+    "IP_ADDRESS",
+    "LOCATION",
+    "PERSON",
+    "PHONE_NUMBER",
 }
 
 sensitive_topic_validator = SensitiveTopic(

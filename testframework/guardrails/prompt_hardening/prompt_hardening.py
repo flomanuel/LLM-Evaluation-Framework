@@ -59,7 +59,7 @@ class PromptHardeningGuardrail(BaseGuardrail):
         detection = PromptHardeningDetectionElement(
             success=metric.success,
             detected_type=metric.harm_category if not metric.success else None,
-            score=metric.score,
+            score= 1 - metric.score,
             judge_raw_response=metric.reason,
             latency=query_ended - query_started,
             chatbot_response=resp,

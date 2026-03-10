@@ -83,10 +83,11 @@ class LLMGuard(BaseGuardrail):
             )
             detected_type = ", ".join(alerting_scanners)
 
+        normalised_score = (1 + max_score) / 2
         detection = DetectionElement(
             success=overall_valid,
             detected_type=detected_type,
-            score=max_score,
+            score=normalised_score,
             judge_raw_response=judge_raw_response,
             latency=test_ended - test_started,
             scanner_details=scanner_details,
