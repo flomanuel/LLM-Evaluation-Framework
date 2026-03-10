@@ -14,7 +14,8 @@ from pathlib import Path
 from time import perf_counter
 from typing import Dict, List, Any
 from deepeval.models import DeepEvalBaseLLM
-from deepteam.metrics import BaseRedTeamingMetric
+from deepeval.test_case import ToolCall
+from deepteam.metrics import BaseRedTeamingMetric, IndirectInstructionMetric
 from deepteam.test_case import RTTestCase
 from deepteam.vulnerabilities import BaseVulnerability
 from loguru import logger
@@ -267,30 +268,34 @@ class BaseTestCase(ABC):
         test_case_id = self._test_case_identifier()
         logger.info(f"Querying chatbot '{name.value}' for test case '{test_case_id}'")
         query_started = perf_counter()
-        model_resp: ChatbotResponse = chatbot.query(attack.input, **query_kwargs)
+        chatbot_resp: ChatbotResponse = chatbot.query(attack.input, **query_kwargs)
         query_duration = perf_counter() - query_started
 
-        if model_resp.is_error:
+        if chatbot_resp.is_error:
             logger.warning(
                 f"Chatbot '{name.value}' query failed for '{test_case_id}' "
-                f"(duration={query_duration:.2f}s, error_type={model_resp.error.error_type.value})"
+                f"(duration={query_duration:.2f}s, error_type={chatbot_resp.error.error_type.value})"
             )
-            return ChatbotResponseEvaluation.from_error(model_resp)
+            return ChatbotResponseEvaluation.from_error(chatbot_resp)
 
         logger.info(
             f"Chatbot '{name.value}' returned a response for '{test_case_id}' "
             f"(duration={query_duration:.2f}s)"
         )
 
-        attack.actual_output = model_resp.response
+        attack.actual_output = chatbot_resp.response
         try:
             logger.info(
                 f"Evaluating response from chatbot '{name.value}' for '{test_case_id}'"
             )
             evaluation_started = perf_counter()
             metric = self._find_metric(attack)
+            t_info = chatbot_resp.tool
+            rag_context = chatbot_resp.rag_context.nodes if chatbot_resp.rag_context else None
+            doc_content = [chatbot_resp.document_content]
+            attack.retrieval_context = doc_content if doc_content else rag_context
             if isinstance(metric, ToolCallCodeInjectionMetric):
-                metric.measure(attack, model_resp.tool)
+                metric.measure(attack, t_info)
             else:
                 metric.measure(attack)
             # todo: in the final evaluation, consider response evaluations with a score of -1 due to an error
@@ -300,7 +305,7 @@ class BaseTestCase(ABC):
                 f"(score={score}, duration={perf_counter() - evaluation_started:.2f}s)"
             )
             return ChatbotResponseEvaluation(
-                model_resp,
+                chatbot_resp,
                 1 - score,
                 str(metric.reason),
                 metric.success,
@@ -312,7 +317,7 @@ class BaseTestCase(ABC):
                 f"Metric evaluation failed for '{name.value}' in '{test_case_id}' "
                 f"({eval_error.error_type.value}): {eval_error.message}"
             )
-            return ChatbotResponseEvaluation.from_error(model_resp, eval_error)
+            return ChatbotResponseEvaluation.from_error(chatbot_resp, eval_error)
 
     def _find_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         metadata = getattr(attack, "metadata", None)

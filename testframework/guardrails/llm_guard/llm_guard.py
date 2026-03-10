@@ -58,17 +58,18 @@ class LLMGuard(BaseGuardrail):
         for scanner in input_scanners:
             sanitized_prompt, is_valid, risk_score = scanner.scan(current_prompt)
             scanner_name = scanner.__class__.__name__
+            normalised_score = (1 + risk_score) / 2
             scanner_details.append(
                 ScannerDetail(
                     name=scanner_name,
-                    score=risk_score,
+                    score=normalised_score,
                     reason="Input accepted" if is_valid else "Input rejected by scanner",
                     is_valid=is_valid,
                     sanitized_input=sanitized_prompt,
                 )
             )
             overall_valid = overall_valid and is_valid
-            max_score = max(max_score, risk_score)
+            max_score = max(max_score, normalised_score)
             if not is_valid:
                 alerting_scanners.append(scanner_name)
 
@@ -83,11 +84,10 @@ class LLMGuard(BaseGuardrail):
             )
             detected_type = ", ".join(alerting_scanners)
 
-        normalised_score = (1 + max_score) / 2
         detection = DetectionElement(
             success=overall_valid,
             detected_type=detected_type,
-            score=normalised_score,
+            score=max_score,
             judge_raw_response=judge_raw_response,
             latency=test_ended - test_started,
             scanner_details=scanner_details,
@@ -122,17 +122,18 @@ class LLMGuard(BaseGuardrail):
         for scanner in output_scanners:
             sanitized_output, is_valid, risk_score = scanner.scan(reference_prompt, current_output)
             scanner_name = scanner.__class__.__name__
+            normalised_score = (1 + risk_score) / 2
             scanner_details.append(
                 ScannerDetail(
                     name=scanner_name,
-                    score=risk_score,
+                    score=normalised_score,
                     reason="Output accepted" if is_valid else "Output rejected by scanner",
                     is_valid=is_valid,
                     sanitized_input=sanitized_output,
                 )
             )
             overall_valid = overall_valid and is_valid
-            max_score = max(max_score, risk_score)
+            max_score = max(max_score, normalised_score)
             if not is_valid:
                 alerting_scanners.append(scanner_name)
 

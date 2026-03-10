@@ -138,7 +138,8 @@ class AttackListEnhancer:
                                                            error_threshold_percent=error_threshold_percent,
                                                            stopped_early=True)
                 enhanced_attack_count += 1
-            if enhanced_attack_count % 5 == 0:
+            if enhanced_attack_count % 3 == 0 and any(
+                    a.vulnerability_type != "document-embedded-instructions" for a in attacks):
                 self._cooldown_with_model_shutdown(time.sleep, self.ATTACK_GENERATION_COOLDOWN_SECONDS)
         logger.info(f"Enhanced {len(enhanced_attacks)} attacks.")
         return AttackEnhancementResult(enhanced_attacks=enhanced_attacks, planned_attack_count=planned_attack_count,

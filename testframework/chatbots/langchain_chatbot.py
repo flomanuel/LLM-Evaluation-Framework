@@ -5,7 +5,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from __future__ import annotations
 
 import os
@@ -225,13 +224,14 @@ Use the given context to answer the question, if needed.
         This method contains the core query logic, separated for cleaner error handling.
         """
         context_docs: List[Document] = []
+        document_content: str | None = None
         enhanced_prompt: str = user_prompt
         if file_path:
             logger.info(
                 f"Loading attack document for chatbot '{self.name.value}' "
                 f"(file_path={file_path})"
             )
-            document_content: str | None = self._load_document(file_path)
+            document_content = self._load_document(file_path)
             logger.debug(f"Loaded document from '{file_path}'")
             if document_content is not None:
                 enhanced_prompt = self._build_prompt_with_document(user_prompt, document_content)
@@ -298,5 +298,6 @@ Use the given context to answer the question, if needed.
             prompt_tokens=prompt_tokens,
             response_tokens=response_tokens,
             rag_context=rag_context,
+            document_content=document_content,
             file_path=file_path,
         )

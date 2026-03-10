@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from __future__ import annotations
 from typing import cast, List
 from deepteam.metrics import BaseRedTeamingMetric

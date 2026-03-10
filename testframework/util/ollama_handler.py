@@ -37,30 +37,41 @@ class OllamaGenerator:
             model_id = os.environ.get("LOCAL_MODEL_ID", False)
             safe_model_id = shlex.quote(model_id)
             os.system(f"ollama run {safe_model_id} >/dev/null 2>&1 &")
-            time.sleep(5)
+            time.sleep(2)
 
     @staticmethod
     def require_local_model_shutdown() -> None:
         """Wait until `ollama ps` no longer lists a model or the user overrides."""
-        while True:
-            user_choice = input(
-                "🔨 Please shut down the local model 🔨"
-                "Then press Enter to continue, or type 'override' to proceed."
-            ).strip().lower()
+        # try to stop the local model automatically
+        model_id = os.environ.get("LOCAL_MODEL_ID", False)
+        if model_id:
+            logger.info(f"Stopping local model {model_id}")
+            safe_model_id = shlex.quote(model_id)
+            os.system(f"ollama stop {safe_model_id} >/dev/null 2>&1")
+            time.sleep(2)
 
-            if user_choice == "override":
+        # check if the model is running
+        if OllamaGenerator._has_local_models():
+            # require manual shutdown
+            while True:
+                user_choice = input(
+                    "🔨 Please shut down the local model 🔨\n"
+                    "Then press Enter to continue, or type 'override' to proceed"
+                ).strip().lower()
+
+                if user_choice == "override":
+                    logger.warning(
+                        "Proceeding with cooldown, even though `ollama ps` might still list a model"
+                    )
+                    return
+
+                if not OllamaGenerator._has_local_models():
+                    logger.info("No local model could be found. Starting cooldown")
+                    return
+
                 logger.warning(
-                    "Proceeding with cooldown, even though `ollama ps` might still list a model."
+                    "`ollama ps` still lists running models; can't start the cooldown"
                 )
-                return
-
-            if not OllamaGenerator._has_local_models():
-                logger.info("No local model could be found. Starting retry cooldown.")
-                return
-
-            logger.warning(
-                "`ollama ps` still lists running models; can't start the cooldown."
-            )
 
     @staticmethod
     def _has_local_models() -> bool:

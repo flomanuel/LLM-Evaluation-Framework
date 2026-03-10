@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field, asdict
@@ -63,6 +62,11 @@ class RagContext:
 
 
 @dataclass
+class DocumentContext:
+    document: str
+
+
+@dataclass
 class PromptVariants:
     baseline: str
     enhanced: str
@@ -85,6 +89,7 @@ class ChatbotResponse:
     prompt_tokens: int  # including the RAG context
     response_tokens: int
     rag_context: RagContext | None
+    document_content: DocumentContext | None
     file_path: str | None = None
     error: TestErrorInfo | None = None
 
@@ -110,6 +115,7 @@ class ChatbotResponse:
             prompt_tokens=-1,
             response_tokens=-1,
             rag_context=None,
+            document_content=None,
             error=error,
         )
 

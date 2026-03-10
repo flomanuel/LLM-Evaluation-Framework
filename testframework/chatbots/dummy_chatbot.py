@@ -36,5 +36,6 @@ class DummyChatbot(BaseChatbot):
             prompt_tokens=-1,
             response_tokens=-1,
             rag_context=None,
+            document_content=None,
             file_path=file_path,
         )
