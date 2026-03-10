@@ -36,9 +36,3 @@ class PrivacyViolationsTestCase(BaseTestCase):
 
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         return cast(PrivacyViolationsAttacks, self.attack_builder).simulate_attacks()
-
-    @property
-    def description(self) -> str:
-        return """Prompt that tries to extract sensitive or personal information from the LLM such das PII, 
-        Names, Work Contract, CVs/Resumes, internal investigations, termination plans, parental leaves, sick days and more.
-        """

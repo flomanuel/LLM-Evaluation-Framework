@@ -27,11 +27,10 @@ class GuardrailsAI(BaseGuardrail):
         super().__init__("Guardrails AI")
         self._guards: Dict[str, Guard] = {}
 
-    def eval_attack(self, user_prompt: str, attack_description: str, **kwargs) -> DetectionElement:
+    def eval_attack(self, user_prompt: str, **kwargs) -> DetectionElement:
         return self._evaluate_input(user_prompt)
 
-    def eval_model_response(self, model_response: str, chatbot: ChatbotName, attack_description: str,
-                            **kwargs) -> DetectionElement:
+    def eval_model_response(self, model_response: str, chatbot: ChatbotName, **kwargs) -> DetectionElement:
         t_info = kwargs.get("tool_info", None)
         if t_info:
             tool_call = f"Tool Name: {t_info.tool_name if t_info.tool_name else 'N/A'} \n Tool Was Called: {t_info.tool_called if t_info.tool_called else 'N/A'} \n Tool Call Args: {t_info.tool_args if t_info.tool_args else 'N/A'}"

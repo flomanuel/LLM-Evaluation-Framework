@@ -23,7 +23,7 @@ from testframework.models import ScannerDetail
 class LlamaFirewallWithMetrics(LlamaFirewall):
 
     @override
-    def scan(
+    async def scan_async_with_metrics(
             self,
             input: Message,
             trace: Trace | None = None,
@@ -38,7 +38,7 @@ class LlamaFirewallWithMetrics(LlamaFirewall):
             LOG.debug(
                 f"[LlamaFirewall] Scanning with {scanner_instance.name}, for the input {str(input.content)[:20]}"
             )
-            scanner_result = asyncio.run(scanner_instance.scan(input, trace))
+            scanner_result = await scanner_instance.scan(input, trace)
             reasons.append(
                 f"{scanner_type}: {scanner_result.reason.strip()} - score: {scanner_result.score}"
             )
@@ -93,3 +93,11 @@ class LlamaFirewallWithMetrics(LlamaFirewall):
         }
 
         return res
+
+    @override
+    def scan(
+            self,
+            input: Message,
+            trace: Trace | None = None,
+    ) -> Dict[str, List[ScannerDetail] | ScanResult]:
+        return asyncio.run(self.scan_async_with_metrics(input, trace))

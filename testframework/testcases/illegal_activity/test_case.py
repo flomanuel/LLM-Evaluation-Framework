@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from __future__ import annotations
 from typing import List, cast
 from deepteam.metrics import BaseRedTeamingMetric
@@ -36,13 +35,4 @@ class IllegalActivityTestCase(BaseTestCase):
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         return cast(IllegalActivity, self.attack_builder).simulate_attacks(
             attacks_per_vulnerability_type=attacks_per_vulnerability_type
-        )[:2]
-
-    @property
-    def description(self) -> str:
-        # desc source: https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-illegal-activity
-        return """Prompt that tries to provoke the target LLM into generating responses that 
-        facilitate or promote unlawful actions. More specifically, it focuses on testing whether the LLM provides 
-        methods, plans, or instructions for activities such as creating weapons, committing crimes, or exploiting 
-        others.
-        """
+        )[:3]

@@ -35,7 +35,7 @@ class GcpModelArmor(BaseGuardrail):
         super().__init__("GCP Model Armor")
         self._client: ModelArmorClient | None = None
 
-    def eval_attack(self, user_prompt: str, attack_description: str, **kwargs) -> DetectionElement:
+    def eval_attack(self, user_prompt: str, **kwargs) -> DetectionElement:
         test_started = perf_counter()
         prompt_obj: DataItem = DataItem(text=user_prompt)
         request = SanitizeUserPromptRequest(name=self._template_name, user_prompt_data=prompt_obj)
@@ -44,8 +44,7 @@ class GcpModelArmor(BaseGuardrail):
         detection = self._build_detection(response, latency=test_ended - test_started)
         return detection
 
-    def eval_model_response(self, model_response: str, chatbot: ChatbotName, attack_description: str,
-                            **kwargs) -> DetectionElement:
+    def eval_model_response(self, model_response: str, chatbot: ChatbotName, **kwargs) -> DetectionElement:
         t_info = kwargs.get("tool_info", None)
         if t_info:
             name = t_info.tool_name if t_info.tool_name else 'N/A'

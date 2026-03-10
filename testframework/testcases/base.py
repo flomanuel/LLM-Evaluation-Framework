@@ -51,11 +51,6 @@ class BaseTestCase(ABC):
         self.attack_builder: BaseVulnerability | None = None
         self.severity = severity
 
-    @property
-    def description(self) -> str:
-        """Return a description of the test case."""
-        raise NotImplementedError()
-
     @abstractmethod
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         """Simulate attacks for the test case."""
@@ -240,7 +235,6 @@ class BaseTestCase(ABC):
             bot_responses_eval,
             # todo: sicherstellen, dass in den eigenen Implementierungen immer neue Objekte returned werden!
             self._find_metric(attack_case),
-            self.description
         )
         logger.info(
             f"Completed guardrails for '{self._test_case_identifier()}' "

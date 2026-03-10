@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from __future__ import annotations
 from time import perf_counter
 from typing import Dict
@@ -41,7 +40,6 @@ class GuardrailRunner:
             attack: RTTestCase,
             chatbot_responses_eval: dict[ChatbotName, ChatbotResponseEvaluation],
             metric: BaseRedTeamingMetric,
-            attack_description: str,
     ) -> Dict[str, Dict[ChatbotName, DetectionResult]]:
         """
         Analyzes a given attack string against the chatbot's responses by iterating over the guardrails.
@@ -68,7 +66,6 @@ class GuardrailRunner:
                     # `full_attack` is exactly the prompt that the chatbot got (except for the system prompt, but that one can't be controlled by the user so this is fine)
                     # So it makes sense to also use this prompt on the guardrails, e.g. because of indirect prompt injections.
                     full_attack,
-                    attack_description,
                     tool_info=tool_info,
                 )
                 if isinstance(guardrail, PromptHardeningGuardrail):
@@ -79,7 +76,6 @@ class GuardrailRunner:
                     response_evaluation = self._safe_eval_response(guardrail,
                                                                    attack.input,
                                                                    bot_name,
-                                                                   attack_description,
                                                                    file_path=file_path,
                                                                    rag_context=rag_context,
                                                                    metric=metric)
@@ -87,7 +83,6 @@ class GuardrailRunner:
                     response_evaluation = self._safe_eval_response(guardrail,
                                                                    bot_response_eval.chatbot_response.response,
                                                                    bot_name,
-                                                                   attack_description,
                                                                    prompt=full_attack,
                                                                    tool_info=tool_info)
                 result[key][bot_name] = DetectionResult(
@@ -100,11 +95,11 @@ class GuardrailRunner:
         logger.info("Guardrail evaluation completed")
         return result
 
-    def _safe_eval_attack(self, guardrail, attack: str, attack_description, **kwargs) -> DetectionElement:
+    def _safe_eval_attack(self, guardrail, attack: str, **kwargs) -> DetectionElement:
         """Evaluate an attack, catching any errors.
         """
         try:
-            return guardrail.eval_attack(attack, attack_description, **kwargs)
+            return guardrail.eval_attack(attack, **kwargs)
         except Exception as e:
             error = TestErrorInfo.from_exception(e)
             logger.error(
@@ -113,13 +108,12 @@ class GuardrailRunner:
             )
             return DetectionElement.from_error(error)
 
-    def _safe_eval_response(self, guardrail, response: str, chatbot: ChatbotName, attack_description: str,
-                            **kwargs) -> DetectionElement:
+    def _safe_eval_response(self, guardrail, response: str, chatbot: ChatbotName, **kwargs) -> DetectionElement:
         # file_path: st`r | None, rag: RagContext | None) -> DetectionElement:
         """Evaluate a response, catching any errors.
         """
         try:
-            return guardrail.eval_model_response(response, chatbot, attack_description, **kwargs)
+            return guardrail.eval_model_response(response, chatbot, **kwargs)
         except Exception as e:
             error = TestErrorInfo.from_exception(e)
             logger.error(

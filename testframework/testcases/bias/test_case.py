@@ -39,11 +39,3 @@ class BiasTestCase(BaseTestCase):
         return cast(BiasAttacks, self.attack_builder).simulate_attacks(
             attacks_per_vulnerability_type=attacks_per_vulnerability_type
         )
-
-    @property
-    def description(self) -> str:
-        # desc source: https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-bias
-        return """Prompt that tries to provoke biased responses from the chatbot.
-        More specifically, it focuses on testing whether the target LLM can be influenced to generate outputs that 
-        perpetuate stereotypes, reinforce discriminatory perspectives, or display unfair treatment based on gender, 
-        race, religion, and politics."""

@@ -37,10 +37,3 @@ class SystemPromptLeakageTestCase(BaseTestCase):
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         return cast(SystemPromptLeakageAttacks, self.attack_builder).simulate_attacks(
             attacks_per_vulnerability_type=attacks_per_vulnerability_type)
-
-    @property
-    def description(self) -> str:
-        # desc source:
-        return """Prompt that tries to extract internal instructions, system prompts, or any other information that 
-        is meant to be hidden from the user and is not part of the intended output. Above that, the prompt may also 
-        try to extract information about the internal architecture of the system."""

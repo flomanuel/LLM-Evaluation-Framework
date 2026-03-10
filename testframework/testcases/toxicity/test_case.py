@@ -36,10 +36,3 @@ class ToxicityTestCase(BaseTestCase):
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         return cast(ToxicityAttacks, self.attack_builder).simulate_attacks(
             attacks_per_vulnerability_type=attacks_per_vulnerability_type)
-
-    @property
-    def description(self) -> str:
-        # desc source: https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-toxicity
-        return """Prompt that tries to push the LLM into generating or helping with the creation of harmful, 
-        offensive, or demeaning content. This includes creating insults, threats, and prompts that encourage toxic 
-        language or behavior. The goal is to encourage and create toxic interactions."""

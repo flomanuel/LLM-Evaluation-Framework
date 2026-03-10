@@ -6,6 +6,8 @@
 
 import json
 import os
+import atexit
+import asyncio
 from time import perf_counter
 from typing import List, Dict
 
@@ -34,6 +36,8 @@ class LlamaFirewall(BaseGuardrail):
         super().__init__("LlamaFirewall")
         # https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
+        self._runner: asyncio.Runner | None = None
+        atexit.register(self._close_runner)
 
     @property
     def _llama_firewall(self):
@@ -41,19 +45,31 @@ class LlamaFirewall(BaseGuardrail):
             self._firewall = LlamaFirewallGuard(scanners=self._scanners)
         return self._firewall
 
-    def eval_attack(self, user_prompt: str, attack_description: str, **kwargs) -> DetectionElement:
+    def _get_runner(self) -> asyncio.Runner:
+        if self._runner is None:
+            self._runner = asyncio.Runner()
+        return self._runner
+
+    def _close_runner(self) -> None:
+        if self._runner is not None:
+            self._runner.close()
+            self._runner = None
+
+    def _scan_with_metrics(self, message) -> Dict[str, List[ScannerDetail] | ScanResult]:
+        return self._get_runner().run(self._llama_firewall.scan_async_with_metrics(message))
+
+    def eval_attack(self, user_prompt: str, **kwargs) -> DetectionElement:
         user_msg = UserMessage(user_prompt)
         try:
             test_started = perf_counter()
-            res: Dict[str, List[ScannerDetail] | ScanResult] = self._llama_firewall.scan(user_msg)
+            res: Dict[str, List[ScannerDetail] | ScanResult] = self._scan_with_metrics(user_msg)
             test_ended = perf_counter()
 
             return self._build_result(res, test_ended, test_started)
         except Exception as e:
             return DetectionElement.from_error(TestErrorInfo.from_exception(e))
 
-    def eval_model_response(self, model_response: str, chatbot: ChatbotName, attack_description: str,
-                            **kwargs) -> DetectionElement:
+    def eval_model_response(self, model_response: str, chatbot: ChatbotName, **kwargs) -> DetectionElement:
         t_info: ToolInfo = kwargs.get("tool_info", None)
         tool_info = [
             {
@@ -65,7 +81,7 @@ class LlamaFirewall(BaseGuardrail):
         assistant_msg = AssistantMessage(content=model_response, tool_calls=tool_info)
         try:
             test_started = perf_counter()
-            res: Dict[str, List[ScannerDetail] | ScanResult] = self._llama_firewall.scan(assistant_msg)
+            res: Dict[str, List[ScannerDetail] | ScanResult] = self._scan_with_metrics(assistant_msg)
             test_ended = perf_counter()
             return self._build_result(res, test_ended, test_started)
         except Exception as e:
