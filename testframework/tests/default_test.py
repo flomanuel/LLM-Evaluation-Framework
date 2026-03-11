@@ -34,10 +34,14 @@ class DefaultTest(Test):
         """Register chatbots in the ChatbotStore."""
         logger.debug("Setting up baseline chatbots")
         vector_store = VectorStore()
+        # OpenAI runs into timeouts due to overly long reasoning (sometimes more than 2 minutes)
+        reasoning = {"effort": "medium", "summary": "auto"}
         gpt_5 = LangChainChatbot(
             name=ChatbotName.LANGCHAIN_GPT_5,
             model="gpt-5",
-            vector_store=vector_store)
+            vector_store=vector_store,
+            reasoning=reasoning,
+        )
         ChatbotStore.add_chatbot(gpt_5)
         gpt_41 = LangChainChatbot(
             name=ChatbotName.LANGCHAIN_GPT_41,

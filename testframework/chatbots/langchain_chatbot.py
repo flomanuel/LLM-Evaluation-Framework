@@ -9,13 +9,16 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from time import perf_counter
+from time import perf_counter, time
 from typing import List
+
+import httpx
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.documents import Document
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_openai import ChatOpenAI
 from loguru import logger
+from openai import APITimeoutError
 from testframework.chatbots.base import BaseChatbot
 from testframework.chatbots.rag.vector_store import VectorStore
 from testframework.chatbots.tools import generate_image
@@ -27,7 +30,8 @@ from testframework.models import (
 
 class LangChainChatbot(BaseChatbot):
     """LangChain-based chatbot with manual RAG and tool support."""
-    DEFAULT_TIMEOUT: float = 120.0
+    DEFAULT_TIMEOUT: float = 300.0
+    DEFAULT_TIMEOUT_RETRIES: int = 1
     ATTACK_DOCUMENTS_FOLDER: Path = Path(__file__).resolve().parents[2] / "_attack_documents"
     DEFAULT_SYSTEM_PROMPT = (
         "You are a helpful bank assistant. Use the provided information to answer questions accurately. "
@@ -40,12 +44,16 @@ class LangChainChatbot(BaseChatbot):
             vector_store: VectorStore | None = None,
             rag_k: int = 4,
             timeout: float | None = None,
+            timeout_retries: int = DEFAULT_TIMEOUT_RETRIES,
+            **kwargs
     ) -> None:
         """Init the LangChain chatbot."""
         super().__init__(name=name)
         self._model_name = model
         self._rag_k = rag_k
         self._timeout = timeout or self.DEFAULT_TIMEOUT
+        self._timeout_retries = max(0, timeout_retries)
+        reasoning = kwargs.get("reasoning", False)
 
         self._llm = ChatOpenAI(
             model=model,
@@ -53,7 +61,8 @@ class LangChainChatbot(BaseChatbot):
             api_key=os.getenv("OPENAI_API_KEY"),
             timeout=self._timeout,
             use_responses_api=True,
-            store=False
+            store=False,
+            reasoning=reasoning,
         )
 
         # RAG is not implemented as a tool since the current approach streamlines the test process without giving too much control to the chatbot which introduces more uncertainty / less control.
@@ -65,7 +74,8 @@ class LangChainChatbot(BaseChatbot):
 
         logger.debug(
             f"LangChainChatbot initialized with model '{model}', "
-            f"RAG k={rag_k}, tools={[t.name for t in self._tools]}"
+            f"RAG k={rag_k}, timeout_retries={self._timeout_retries}, "
+            f"tools={[t.name for t in self._tools]}"
         )
 
     @property
@@ -167,29 +177,43 @@ Use the given context to answer the question, if needed.
             f"is_rag={is_rag}, file_path={file_path}, prompt_chars={len(user_prompt)})"
         )
         query_started = perf_counter()
+        attempts = self._timeout_retries + 1
 
-        try:
-            response = self._execute_query(
-                user_prompt, is_rag, file_path, effective_system_prompt
-            )
-            logger.info(
-                f"Completed chatbot query (chatbot={self.name.value}, model={self._model_name}, "
-                f"tool_called={response.tool.tool_called}, prompt_tokens={response.prompt_tokens}, "
-                f"response_tokens={response.response_tokens}, duration={perf_counter() - query_started:.2f}s)"
-            )
-            return response
-        except Exception as e:
-            error_info = TestErrorInfo.from_exception(e)
-            logger.error(
-                f"LLM query failed (chatbot={self.name.value}, model={self._model_name}, "
-                f"duration={perf_counter() - query_started:.2f}s, "
-                f"error_type={error_info.error_type.value}): {error_info.message}"
-            )
-            return ChatbotResponse.from_error(
-                error_info,
-                effective_system_prompt,
-                user_prompt,
-            )
+        for attempt in range(1, attempts + 1):
+            try:
+                response = self._execute_query(
+                    user_prompt, is_rag, file_path, effective_system_prompt
+                )
+                logger.info(
+                    f"Completed chatbot query (chatbot={self.name.value}, model={self._model_name}, "
+                    f"attempt={attempt}/{attempts}, tool_called={response.tool.tool_called}, "
+                    f"prompt_tokens={response.prompt_tokens}, response_tokens={response.response_tokens}, "
+                    f"duration={perf_counter() - query_started:.2f}s)"
+                )
+                return response
+            except Exception as e:
+                if attempt < attempts:
+                    logger.warning(
+                        f"LLM query timed out, retrying "
+                        f"(chatbot={self.name.value}, model={self._model_name}, "
+                        f"attempt={attempt}/{attempts}, duration={perf_counter() - query_started:.2f}s)"
+                    )
+                    # time.sleep(60)
+                    continue
+
+                error_info = TestErrorInfo.from_exception(e)
+                logger.error(
+                    f"LLM query failed (chatbot={self.name.value}, model={self._model_name}, "
+                    f"attempt={attempt}/{attempts}, duration={perf_counter() - query_started:.2f}s, "
+                    f"error_type={error_info.error_type.value}): {error_info.message}"
+                )
+                return ChatbotResponse.from_error(
+                    error_info,
+                    effective_system_prompt,
+                    user_prompt,
+                )
+
+        raise RuntimeError("Unreachable timeout retry state in LangChainChatbot.query")
 
     def _execute_query(
             self,

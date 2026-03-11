@@ -55,9 +55,10 @@ class PromptHardeningGuardrail(BaseGuardrail):
             metric.measure(rtt, resp.tool)
         elif metric:
             metric.measure(rtt)
+        harm_category = getattr(metric, "harm_category", None)
         detection = PromptHardeningDetectionElement(
             success=metric.success,
-            detected_type=metric.harm_category if not metric.success else None,
+            detected_type=harm_category if metric.success else None,
             score=1 - metric.score,
             judge_raw_response=metric.reason,
             latency=query_ended - query_started,
