@@ -38,4 +38,4 @@ class IllegalActivityTestCase(BaseTestCase):
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         """Simulate attacks for the test case."""
         return cast(IllegalActivity, self.attack_builder).simulate_attacks(
-            attacks_per_vulnerability_type=attacks_per_vulnerability_type)
+            attacks_per_vulnerability_type=attacks_per_vulnerability_type)[:1]

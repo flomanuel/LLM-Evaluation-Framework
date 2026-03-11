@@ -24,7 +24,7 @@ class CSVAttackRow:
     technique: str = None
 
     @classmethod
-    def from_csv_row(cls, row: Mapping[str, str | None]) -> CSVAttackRow:
+    def from_csv_row(cls, row: Mapping[str, str | None]) -> "CSVAttackRow":
         """
         Build Row-object.
         """

@@ -3,7 +3,7 @@ name = "thesis-llm-chatbot-protection"
 version = "0.1.0"
 description = "Test framework for evaluating LLM chatbot guardrails using DeepTeam and OpenAI."
 authors = [{ name = "Florian Sauer" }]
-requires-python = "~=3.12.0"
+requires-python = "~=3.13.0"
 
 dependencies = [
     "openai~= 2.24.0",

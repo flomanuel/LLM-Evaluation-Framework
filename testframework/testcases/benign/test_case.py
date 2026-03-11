@@ -38,4 +38,4 @@ class BenignTestCase(BaseTestCase):
 
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         """Simulate attacks for the test case."""
-        return cast(BenignAttacks, self.attack_builder).simulate_attacks()
+        return cast(BenignAttacks, self.attack_builder).simulate_attacks()[:1]

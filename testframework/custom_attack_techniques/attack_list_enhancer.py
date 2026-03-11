@@ -195,7 +195,7 @@ class AttackListEnhancer:
         prompt = (
             f"Enhancement '{enhancement_name}' failed on attempt {attempt} "
             f"({enhancement_error.error_type.value}): {enhancement_error.message}. "
-            "Type 'break' to stop retrying or 'retry' to start a new try: "
+            "\nType 'break' to stop retrying or 'retry' to start a new try: "
         )
 
         while True:

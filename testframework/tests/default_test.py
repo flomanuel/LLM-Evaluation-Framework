@@ -51,7 +51,7 @@ class DefaultTest(Test):
         ethics = [EthicsSubcategory.BANKING, EthicsSubcategory.HARM_PREVENTION, EthicsSubcategory.MORAL_INTEGRITY]
         ind_inst = [IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS]
         return [
-            # BenignTestCase(),
+            BenignTestCase(),
             # FairnessTestCase(),
             # EthicsTestCase(ethics),
             # SystemPromptLeakageTestCase(),
@@ -63,13 +63,13 @@ class DefaultTest(Test):
             # BiasTestCase([BiasSubcategory.GENDER]),
             # BiasTestCase([BiasSubcategory.RELIGION]),
             # BiasTestCase([BiasSubcategory.POLITICS]),
-            # IllegalActivityTestCase([IllegalActivitySubcategory.WEAPONS]),
+            IllegalActivityTestCase([IllegalActivitySubcategory.WEAPONS]),
             # IllegalActivityTestCase([IllegalActivitySubcategory.ILLEGAL_DRUGS]),
             # IllegalActivityTestCase([IllegalActivitySubcategory.VIOLENT_CRIME]),
             # IllegalActivityTestCase([IllegalActivitySubcategory.NONVIOLENT_CRIME]),
             # IllegalActivityTestCase([IllegalActivitySubcategory.SEX_CRIME]),
             # IllegalActivityTestCase([IllegalActivitySubcategory.CYBERCRIME]),
-            IllegalActivityTestCase([IllegalActivitySubcategory.CHILD_EXPLOITATION]),
+            # IllegalActivityTestCase([IllegalActivitySubcategory.CHILD_EXPLOITATION]),
             # ToxicityTestCase([ToxicitySubcategory.INSULTS]),
             # ToxicityTestCase([ToxicitySubcategory.PROFANITY]),
             # ToxicityTestCase([ToxicitySubcategory.THREATS]),

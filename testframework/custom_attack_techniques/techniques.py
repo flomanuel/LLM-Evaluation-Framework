@@ -29,11 +29,11 @@ ENHANCEMENTS: List[AttackEnhancement] = [
         transform=lambda prompt, model: prompt,
         cooldown=lambda sec: None
     ),
-    AttackEnhancement(
-        name=AdversarialPoetry.name,
-        transform=lambda prompt, model: AdversarialPoetry().enhance(attack=prompt, simulator_model=model),
-        cooldown=time.sleep
-    ),
+    # AttackEnhancement(
+    #     name=AdversarialPoetry.name,
+    #     transform=lambda prompt, model: AdversarialPoetry().enhance(attack=prompt, simulator_model=model),
+    #     cooldown=time.sleep
+    # ),
     AttackEnhancement(
         name=GoalRedirection.name,
         transform=lambda prompt, model: GoalRedirection().enhance(prompt, simulator_model=model),

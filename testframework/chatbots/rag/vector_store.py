@@ -26,11 +26,10 @@ class VectorStore:
 
     def __init__(
             self,
-            connection_string: str | None = None,
             collection_name: str | None = None,
     ) -> None:
         """Initialize the vector store."""
-        self._connection_string = connection_string or self._connection_string
+        self._connection_string = self._get_connection_string()
         self._collection_name = collection_name or self.COLLECTION_NAME
 
         self._embeddings = OpenAIEmbeddings(
@@ -54,8 +53,8 @@ class VectorStore:
             f"using embedding model '{self.EMBEDDING_MODEL}'"
         )
 
-    @property
-    def _connection_string() -> str:
+    @staticmethod
+    def _get_connection_string() -> str:
         """Build PostgreSQL connection string from environment variables."""
         db = os.getenv("POSTGRES_DB", "vectordb")
         p = os.getenv("POSTGRES_PORT", "5432")
