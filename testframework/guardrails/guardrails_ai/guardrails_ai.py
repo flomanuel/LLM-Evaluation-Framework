@@ -22,10 +22,11 @@ class GuardrailsAI(BaseGuardrail):
 
     SHIELDGEMMA2_IDENTIFIER = "thesis_guard_shieldgemma_2b_"
     SHIELDGEMMA2_AGGREGATED_GUARD_NAME = "thesis_guard_shieldgemma_2b"
+    BASE_URL = "http://localhost:8000"
+    _cached_guards: Dict[str, Guard] = {}
 
     def __init__(self) -> None:
         super().__init__("Guardrails AI")
-        self._guards: Dict[str, Guard] = {}
 
     def eval_attack(self, user_prompt: str, **kwargs) -> DetectionElement:
         """Evaluate the attack prompt."""
@@ -115,20 +116,24 @@ class GuardrailsAI(BaseGuardrail):
             error=None,
         )
 
-    def _load_all_guards(self) -> None:
+    @staticmethod
+    def _load_all_guards() -> None:
         """Load all Guardrails AI scanners / guards."""
+        if GuardrailsAI._cached_guards:
+            return
         for guard_name in GUARD_NAMES:
-            self._get_guards(guard_name)
-
-    def _get_guards(self, guard_name: str) -> Guard:
-        """Get a Guardrails AI scanner / guard by name."""
-        if guard_name not in self._guards:
-            guard = Guard(history_max_length=0, base_url="http://localhost:8000").load(
+            guard = Guard(history_max_length=0, base_url=GuardrailsAI.BASE_URL).load(
                 name=guard_name,
-                base_url="http://localhost:8000",
+                base_url=GuardrailsAI.BASE_URL,
                 history_max_length=0,
             )
             if guard is None:
                 raise ValueError(f"Failed to load guard '{guard_name}'.")
-            self._guards[guard_name] = guard
-        return self._guards[guard_name]
+            GuardrailsAI._cached_guards[guard_name] = guard
+
+    @staticmethod
+    def _get_guards(guard_name: str) -> Guard:
+        """Get a Guardrails AI scanner / guard by name."""
+        if guard_name not in GuardrailsAI._cached_guards:
+            raise ValueError(f"Guard '{guard_name}' is not loaded.")
+        return GuardrailsAI._cached_guards[guard_name]
