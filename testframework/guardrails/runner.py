@@ -56,13 +56,21 @@ class GuardrailRunner:
             use_tool_trace = isinstance(metric, ToolCallCodeInjectionMetric)
 
             for bot_name, bot_response_eval in chatbot_responses_eval.items():
+                if bot_response_eval.chatbot_response.is_error:
+                    logger.info(
+                        f"Skipping guardrail '{guardrail.name}' for chatbot '{bot_name.value}' "
+                        f"because the chatbot query failed"
+                    )
+                    result[key][bot_name] = self._skipped_detection_result(bot_response_eval)
+                    continue
+
                 full_attack = bot_response_eval.chatbot_response.raw_prompt
                 tool_info = bot_response_eval.chatbot_response.tool if use_tool_trace else None
                 enhanced_attack_evaluation = self._safe_eval_attack(
                     guardrail,
                     # todo: decide whether to use `enhanced_attack` (attack + technique) or full_attack (attack + technique + RAG/Documents -> no system prompt)
                     # `full_attack` is exactly the prompt that the chatbot got (except for the system prompt, but that one can't be controlled by the user so this is fine)
-                    # So it makes sense to also use this prompt on the guardrails, e.g. because of indirect prompt injections.
+                    # Thus, it makes sense to also use this prompt on the guardrails, e.g. because of indirect prompt injections.
                     full_attack,
                     tool_info=tool_info,
                 )
@@ -92,6 +100,27 @@ class GuardrailRunner:
             )
         logger.info("Guardrail evaluation completed")
         return result
+
+    @staticmethod
+    def _skipped_detection_result(
+            bot_response_eval: ChatbotResponseEvaluation,
+    ) -> DetectionResult:
+        """Return an error detection result when the chatbot query failed."""
+        res_error = bot_response_eval.chatbot_response.error or bot_response_eval.error
+        if res_error is None:
+            res_error = TestErrorInfo.from_exception(
+                RuntimeError("Chatbot query failed without error details")
+            )
+
+        error = TestErrorInfo(
+            error_type=res_error.error_type,
+            message=f"Skipped guardrail evaluation because chatbot query failed: {res_error.message}",
+        )
+        skipped_detection = DetectionElement.from_error(error)
+        return DetectionResult(
+            input_detection=skipped_detection,
+            output_detection=skipped_detection,
+        )
 
     def _safe_eval_attack(self, guardrail, attack: str, **kwargs) -> DetectionElement:
         """Evaluate an attack, catching any errors."""
