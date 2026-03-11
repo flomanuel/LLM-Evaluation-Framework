@@ -15,7 +15,7 @@ from loguru import logger
 class OllamaGenerator:
     """Handle the local Ollama model needed for generating attacks and techniques."""
 
-    _ollama_inference_request_timeout = 120
+    _default_ollama_inference_request_timeout_seconds = 240.0
     _chatbot: OllamaModel | None = None
 
     @staticmethod
@@ -25,14 +25,32 @@ class OllamaGenerator:
         """
         model_id = os.environ.get("LOCAL_MODEL_ID", False)
         if OllamaGenerator._chatbot is None and model_id is not False:
+            timeout = OllamaGenerator._get_timeout()
             OllamaGenerator._chatbot = OllamaModel(
                 model=model_id,
                 # https://huggingface.co/mlabonne/gemma-3-27b-it-abliterated-GGUF
                 generation_kwargs={"top_p": 0.95, "top_k": 64},
                 temperature=1.0,
-                timeout=OllamaGenerator._ollama_inference_request_timeout,
+                timeout=timeout,
             )
         return OllamaGenerator._chatbot
+
+    @staticmethod
+    def _get_timeout() -> float:
+        """Read the timeout from DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE."""
+        timeout_raw = os.environ.get(
+            "DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE", ""
+        ).strip()
+        if timeout_raw == "":
+            return OllamaGenerator._default_ollama_inference_request_timeout_seconds
+        try:
+            timeout = float(timeout_raw)
+            if timeout <= 0:
+                raise ValueError
+            return timeout
+        except ValueError:
+            logger.warning("Timeout configured for DeepEval / DeepTeam is no number")
+            return OllamaGenerator._default_ollama_inference_request_timeout_seconds
 
     @staticmethod
     def start_model_if_not_running():

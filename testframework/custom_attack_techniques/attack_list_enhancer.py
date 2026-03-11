@@ -26,8 +26,8 @@ class AttackListEnhancer:
     ERROR_THRESHOLD_ENV_VAR = "ENHANCED_ATTACK_ERROR_THRESHOLD_PERCENT"
     DEFAULT_ERROR_THRESHOLD_PERCENT = 100.0
     ERROR_RETRY_COOLDOWN_SECONDS = 420
-    ATTACK_GENERATION_COOLDOWN_SECONDS = 120
-    SUCCESS_COOLDOWN_SECONDS = 30
+    ATTACK_GENERATION_COOLDOWN_SECONDS = ERROR_RETRY_COOLDOWN_SECONDS
+    SUCCESS_COOLDOWN_SECONDS = 15
     LOCAL_MODEL_ID = os.environ.get("LOCAL_MODEL_ID", False)
 
     def __init__(self, simulator_model: DeepEvalBaseLLM | None | str):
@@ -138,9 +138,6 @@ class AttackListEnhancer:
                                                            error_threshold_percent=error_threshold_percent,
                                                            stopped_early=True)
                 enhanced_attack_count += 1
-            if enhanced_attack_count % 4 == 0 and any(
-                    a.vulnerability_type != "document-embedded-instructions" for a in attacks):
-                self._cooldown_with_model_shutdown(time.sleep, self.ATTACK_GENERATION_COOLDOWN_SECONDS)
         logger.info(f"Enhanced {len(enhanced_attacks)} attacks.")
         return AttackEnhancementResult(enhanced_attacks=enhanced_attacks, planned_attack_count=planned_attack_count,
                                        failed_attack_count=failed_attack_count,
