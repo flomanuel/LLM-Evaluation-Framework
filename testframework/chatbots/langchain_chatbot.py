@@ -53,7 +53,7 @@ class LangChainChatbot(BaseChatbot):
         self._rag_k = rag_k
         self._timeout = timeout or self.DEFAULT_TIMEOUT
         self._timeout_retries = max(0, timeout_retries)
-        reasoning = kwargs.get("reasoning", False)
+        reasoning = kwargs.get("reasoning", None)
 
         self._llm = ChatOpenAI(
             model=model,
