@@ -1,16 +1,21 @@
-# thesis_llm-chatbot_protection
+# Security Evaluation Tool for LLM-Architectures and Guardrails
 
-This repository contains a **test framework for evaluating guardrail applications for LLM chatbots** as part of a
+This repository contains a **test framework for evaluating guardrail applications for LLM-architectures**. Is is part of my
 bachelor's thesis.
 
-Key characteristics:
+## Key characteristics:
 
 - **Architecture-driven**: Follows a modular architecture with `BaseChatbot`, `Test`, `BaseTestCase`, `GuardrailRunner`,
   `BaseGuardrail`, and `ChatbotStore`.
 - **Attack generation with DeepTeam**: Uses DeepTeam vulnerabilities (including a custom CSV-based vulnerability) and
   single-turn adversarial attacks to generate and enhance prompts.
-- **Result schema**: Persists each test run as a JSON file containing categories, attacks, RAG context, LLM
-  parameters/responses, and guardrail evaluation results.
+- **Result schema**: Persists each test run as a JSON file. Summary file can be added via an additional script
+- **CLI based"": Interact with the Project via CLI commands
+- **Modular**
+  - add any data source you like for generating attacks (APIs, DeepTeam, CSV files, etc.)
+  - add any LLM, LLM-based or agentic architecture as the attack target (it doesn't matter whether it is a local model or an agentic architecture hosted on a hyperscaler)
+	- add your own custom techniques and evaluation criterias
+
 
 ## Quickstart
 
