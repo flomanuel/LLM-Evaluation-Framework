@@ -1,4 +1,3 @@
-"""LangChain-based chatbots with manual RAG integration."""
 #  Copyright (c) 2026 Florian Emanuel Sauer
 #
 #  This source code is licensed under the MIT license found in the
@@ -10,7 +9,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from time import perf_counter
-from typing import List
+from typing import Any, List
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.documents import Document
 from langchain_community.document_loaders import PyPDFLoader
@@ -26,7 +25,7 @@ from testframework.models import (
 
 
 class LangChainChatbot(BaseChatbot):
-    """LangChain-based chatbot with manual RAG and tool support."""
+    """LangChain-based chatbot with RAG and tool support."""
     DEFAULT_TIMEOUT: float = 300.0
     DEFAULT_TIMEOUT_RETRIES: int = 1
     ATTACK_DOCUMENTS_FOLDER: Path = Path(__file__).resolve().parents[2] / "_attack_documents"
@@ -161,6 +160,34 @@ Use the given context to answer the question, if needed.
 
         return enhanced_prompt
 
+    @staticmethod
+    def _extract_response_text(response: Any) -> str:
+        """
+        Extract all relevant and possible text blocks from LangChain/OpenAI responses.
+        See https://developers.openai.com/api/reference/resources/conversations/
+        """
+        content = getattr(response, "content", None)
+        if isinstance(content, str):
+            return content
+
+        if isinstance(content, list):
+            parts: list[str] = []
+            for block in content:
+                if isinstance(block, str):
+                    parts.append(block)
+                    continue
+                if not isinstance(block, dict):
+                    continue
+                if block.get("type") not in {"text", "output_text", "refusal"}:
+                    continue
+                text = block.get("text")
+                if isinstance(text, str):
+                    parts.append(text)
+            if parts:
+                return "".join(parts)
+
+        return str(getattr(response, "text", "") or "")
+
     def query(
             self,
             user_prompt: str,
@@ -286,7 +313,7 @@ Use the given context to answer the question, if needed.
         return ChatbotResponse(
             prompt=user_prompt,
             raw_prompt=enhanced_prompt,
-            response=response.text,
+            response=self._extract_response_text(response),
             system_prompt=effective_system_prompt,
             tool=ToolInfo(
                 tool_called=tool_called,

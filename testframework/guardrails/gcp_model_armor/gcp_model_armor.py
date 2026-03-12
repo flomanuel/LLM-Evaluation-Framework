@@ -53,7 +53,19 @@ class GcpModelArmor(BaseGuardrail):
             was_called = t_info.tool_called if t_info.tool_called else 'N/A'
             args = t_info.tool_args if t_info.tool_args else 'N/A'
             tool_call = f"Tool Name: {name} \n Tool Was Called: {was_called} \n Tool Call Args: {args}"
-        resp_obj = DataItem(text=model_response) if not t_info else DataItem(text=f"=== Tool Call ===\n{tool_call}")
+            payload = f"=== Tool Call ===\n{tool_call}"
+        else:
+            payload = model_response
+
+        if not payload or not payload.strip():
+            return DetectionElement.from_error(
+                TestErrorInfo(
+                    LLMErrorType.UNKNOWN,
+                    "Skipping evaluation of GCP Model Armor, since the model response is empty.",
+                )
+            )
+
+        resp_obj = DataItem(text=payload)
         test_started = perf_counter()
         request = SanitizeModelResponseRequest(name=self._template_name, model_response_data=resp_obj)
         response: SanitizeModelResponseResponse = self._model_armor_client.sanitize_model_response(request=request)

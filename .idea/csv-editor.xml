@@ -17,27 +17,6 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="/_runs/_outputs/res/LANGCHAIN_GPT_41/errors.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="/_runs/_outputs/res/LANGCHAIN_GPT_41/summary.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="/_runs/_outputs/res/LANGCHAIN_GPT_5/summary.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
       </map>
     </option>
   </component>
