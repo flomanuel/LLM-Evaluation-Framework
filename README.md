@@ -1,4 +1,4 @@
-![Static Badge](https://img.shields.io/badge/License_MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # Security Evaluation Tool for LLM-Architectures and Guardrails
 
