@@ -1,3 +1,5 @@
+![Static Badge](https://img.shields.io/badge/License_MIT)
+
 # Security Evaluation Tool for LLM-Architectures and Guardrails
 
 This repository contains a **test framework for evaluating guardrail applications for LLM-architectures**. Is is part of my
