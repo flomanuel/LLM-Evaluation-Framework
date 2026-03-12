@@ -71,4 +71,3 @@ class DefaultTest(Test):
             ToxicityTestCase([ToxicitySubcategory.INSULTS]),
             ToxicityTestCase([ToxicitySubcategory.THREATS]),
         ]
-

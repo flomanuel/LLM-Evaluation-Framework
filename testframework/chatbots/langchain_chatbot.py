@@ -59,7 +59,6 @@ class LangChainChatbot(BaseChatbot):
             use_responses_api=True,
             store=False,
             reasoning=reasoning,
-            max_tokens=1500,
         )
 
         # RAG is not implemented as a tool since the current approach streamlines the test process without giving too much control to the chatbot which introduces more uncertainty / less control.
