@@ -231,7 +231,7 @@ activated the venv.
 The same may apply for other guardrails-related error, e.g. if one filter can't be found when installing it from the
 hub.
 
-### Deleting a ml-model
+### Deleting an ML model
 
 From the code:
 

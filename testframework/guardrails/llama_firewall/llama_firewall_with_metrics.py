@@ -3,11 +3,9 @@
 #
 #  This source code is licensed under the MIT license found in the
 #  LICENSE file in the root directory of this source tree.
+
 from typing import override, Dict, List
-
 from llamafirewall import LlamaFirewall
-import asyncio
-
 from llamafirewall.llamafirewall import create_scanner, LOG
 from llamafirewall.llamafirewall_data_types import (
     Message,
@@ -16,25 +14,21 @@ from llamafirewall.llamafirewall_data_types import (
     ScanStatus,
     Trace,
 )
-
 from testframework.models import ScannerDetail
 
 
 class LlamaFirewallWithMetrics(LlamaFirewall):
     """
     Cstom LlamaFirewall with metrics instance.
-    Change 1: async scan behaviour (since by default the async loop sometimes gets closed before all scanners have finished).
-    Change 2: return dict instead of ScanResult to enhance the logging detauls for the statistical evalation.
+    Change 1: async scan behavior (since by default the async loop sometimes gets closed before all scanners have finished).
+    Change 2: return dict instead of ScanResult to enhance the logging details for the statistical evaluation.
     """
 
     @override
-    async def scan_async_with_metrics(
-            self,
-            input: Message,
-            trace: Trace | None = None,
-    ) -> Dict[str, List[ScannerDetail] | ScanResult]:
+    async def scan(self, input_msg: Message, trace: Trace | None = None) -> Dict[
+        str, List[ScannerDetail] | ScanResult]:
         """Scan the input with the scanners."""
-        scanners = self.scanners.get(input.role, [])
+        scanners = self.scanners.get(input_msg.role, [])
         reasons = []
         decisions = {}
         last_reason = ""
@@ -42,9 +36,9 @@ class LlamaFirewallWithMetrics(LlamaFirewall):
         for scanner_type in scanners:
             scanner_instance = create_scanner(scanner_type)
             LOG.debug(
-                f"[LlamaFirewall] Scanning with {scanner_instance.name}, for the input {str(input.content)[:20]}"
+                f"[LlamaFirewall] Scanning with {scanner_instance.name}, for the input {str(input_msg.content)[:20]}"
             )
-            scanner_result = await scanner_instance.scan(input, trace)
+            scanner_result = await scanner_instance.scan(input_msg, trace)
             reasons.append(
                 f"{scanner_type}: {scanner_result.reason.strip()} - score: {scanner_result.score}"
             )
@@ -99,12 +93,3 @@ class LlamaFirewallWithMetrics(LlamaFirewall):
         }
 
         return res
-
-    @override
-    def scan(
-            self,
-            input: Message,
-            trace: Trace | None = None,
-    ) -> Dict[str, List[ScannerDetail] | ScanResult]:
-        """Scan the input with the scanners."""
-        return asyncio.run(self.scan_async_with_metrics(input, trace))

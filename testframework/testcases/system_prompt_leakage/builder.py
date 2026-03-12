@@ -32,7 +32,7 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
             async_mode: bool = True,
             verbose_mode: bool = True,
     ):
-        self.types = [SystemPromptLeakageSubcategory.INSTRUCTIONS, SystemPromptLeakageSubcategory.GUARD_EXPOSURE]
+        self.types = []
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self.simulator_model = simulator_model

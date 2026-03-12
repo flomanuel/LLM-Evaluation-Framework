@@ -5,29 +5,36 @@ skinparam componentStyle rectangle
 
 title LLM Chatbot Protection Framework - Current Runtime Architecture
 
-package "CLI Entry Points" {
+package "CLI" {
+'    [llm-test-baseline\n(cli.main)] as CLI
     [run-baseline] as RunBaseline
     [populate-db] as PopulateDb
+    [summarize-run] as SummarizeRun
 }
 
-package "Test Execution Pipeline" {
+package "Test Orchestration" {
     [DefaultTest] as DefaultTest
-    [Test orchestrator] as TestOrchestrator
+    [Test.run / _execute_test_cases] as TestOrchestrator
     [BaseTestCase + concrete test cases] as TestCases
     [Attack builders\n(CSV-backed + DeepTeam-backed)] as AttackBuilders
     [AttackListEnhancer] as AttackEnhancer
     [ChatbotStore] as ChatbotStore
     [LangChainChatbot] as LangChainChatbot
     [GuardrailRunner] as GuardrailRunner
-    [LLMGuard] as LLMGuard
     [PromptHardeningGuardrail] as PromptHardeningGuardrail
-    [GuardrailsAI Guardrail\n(implemented, not default)] as GuardrailsAI
+    [LLMGuard] as LLMGuard
+    [LlamaFirewall] as LlamaFirewall
+    [LakeraGuard] as LakeraGuard
+    [GuardrailsAI] as GuardrailsAI
+    [GcpModelArmor] as GcpModelArmor
     [Storage helpers] as Storage
+    [Run Summary Builder] as RunSummary
 }
 
-package "RAG + Tooling Path" {
+package "RAG + Document Path" {
     [DocumentLoader] as DocumentLoader
     [VectorStore] as VectorStore
+    [PyPDF attack document loader\ninside LangChainChatbot] as AttackDocumentLoader
     [generate_image tool] as GenerateImage
 }
 
@@ -38,20 +45,26 @@ package "Utility Layer" {
 
 package "External Libraries / Services" {
     [DeepTeam] as DeepTeam
-    [DeepEval + OllamaModel] as DeepEval
+    [DeepEval + GEval] as DeepEval
     [LangChain + ChatOpenAI] as LangChain
-    [LLM Guard library] as LLMGuardLib
-    [Guardrails AI API\n(local Docker service)] as GuardrailsAPI
     [OpenAI API] as OpenAI
-    [Postgres + pgvector] as Postgres
+    [PGVector / langchain-postgres] as PGVectorLib
+    [llm-guard library] as LLMGuardLib
+    [LlamaFirewall library] as LlamaFirewallLib
+    [Lakera Guard API] as LakeraAPI
+    [Guardrails AI API\n(local Docker service)] as GuardrailsAPI
+    [GCP Model Armor API] as GcpModelArmorAPI
     [PyPDFLoader] as PyPDFLoader
+    [Postgres + pgvector] as Postgres
 }
 
 database "Project Data" {
     [CSV prompt files\n_prompt_files] as CsvFiles
     [Attack PDFs\n_attack_documents] as AttackDocs
     [RAG PDFs\n_rag_documents] as RagDocs
-    [Run results JSON\n_runs] as RunResults
+    [Run results JSON\n_runs/<run>/result.json] as RunResultJson
+    [Per-testcase JSON\n_runs/<run>/testcase/*.json] as TestcaseJson
+    [Run summary JSON/CSV] as SummaryExports
     [Log files\n_logs] as Logs
 }
 
@@ -60,60 +73,83 @@ package "Local Infrastructure" {
     [pgAdmin] as PgAdmin
 }
 
-RunBaseline --> DefaultTest
-DefaultTest --> TestOrchestrator : concrete implementation
-DefaultTest --> ChatbotStore : registers chatbots
-DefaultTest --> VectorStore : shares instance
+CLI --> RunBaseline
+CLI --> PopulateDb
+CLI --> SummarizeRun
 
-TestOrchestrator --> TestCases : executes
+RunBaseline --> DefaultTest
+DefaultTest --> TestOrchestrator : inherited run()
+DefaultTest --> ChatbotStore : registers GPT-5 / GPT-4.1
+DefaultTest --> VectorStore : shared RAG store
+
+TestOrchestrator --> TestCases : execute()
 TestOrchestrator --> Storage : save_test_run()
 
-TestCases --> AttackBuilders : simulate_attacks()
+TestCases --> AttackBuilders : setup_attack_builder()\nsimulate_attacks()
 TestCases --> AttackEnhancer : enhance()
 TestCases --> ChatbotStore : get_chatbots()
 TestCases --> LangChainChatbot : query()
-TestCases --> GuardrailRunner : evaluate responses
+TestCases --> DeepTeam : built-in metrics
+TestCases --> DeepEval : custom GEval metrics
+TestCases --> GuardrailRunner : run()
 TestCases --> Storage : save_test_case_result()
 TestCases --> OllamaGenerator : local model lifecycle
 
-AttackBuilders --> DeepTeam : vulnerabilities + metrics
-AttackBuilders --> CSVLoader : load custom attacks
-CSVLoader ..> CsvFiles : load CSV prompts
+AttackBuilders --> DeepTeam : vulnerabilities + attack simulation
+AttackBuilders --> CSVLoader : custom prompt loading
+CSVLoader ..> CsvFiles : read CSV prompts
 
 AttackEnhancer --> DeepTeam : built-in attack transforms
-AttackEnhancer --> DeepEval : simulator model
-AttackEnhancer --> OllamaGenerator : cooldown / retries
+AttackEnhancer --> DeepEval : simulator model abstraction
+AttackEnhancer --> OllamaGenerator : cooldown / shutdown / restart
 
-GuardrailRunner --> LLMGuard : default guardrail
-GuardrailRunner --> PromptHardeningGuardrail : default guardrail
-GuardrailRunner ..> GuardrailsAI : optional extension
-LLMGuard --> LLMGuardLib : input/output scanners
-PromptHardeningGuardrail --> ChatbotStore : guarded re-query
+GuardrailRunner --> PromptHardeningGuardrail
+GuardrailRunner --> LLMGuard
+GuardrailRunner --> LlamaFirewall
+GuardrailRunner --> LakeraGuard
+GuardrailRunner --> GuardrailsAI
+GuardrailRunner --> GcpModelArmor
+
+PromptHardeningGuardrail --> ChatbotStore : re-query same chatbot
 PromptHardeningGuardrail --> DeepTeam : metric reuse
-GuardrailsAI --> GuardrailsAPI : parse/validate
+LLMGuard --> LLMGuardLib
+LlamaFirewall --> LlamaFirewallLib
+LakeraGuard --> LakeraAPI
+GuardrailsAI --> GuardrailsAPI
+GcpModelArmor --> GcpModelArmorAPI
 
 LangChainChatbot --> LangChain
 LangChainChatbot --> VectorStore : similarity_search()
+LangChainChatbot --> AttackDocumentLoader : _load_document()
 LangChainChatbot --> GenerateImage : optional tool call
-LangChainChatbot ..> AttackDocs : optional PDF load
 LangChainChatbot --> OpenAI : model inference
+AttackDocumentLoader --> PyPDFLoader
+AttackDocumentLoader ..> AttackDocs : load PDFs
 
 PopulateDb --> DocumentLoader
 PopulateDb --> VectorStore : add_documents()
 DocumentLoader --> PyPDFLoader
 DocumentLoader ..> RagDocs : load PDFs
 
-VectorStore --> LangChain : PGVector + embeddings
+VectorStore --> PGVectorLib
 VectorStore --> OpenAI : embeddings API
-VectorStore --> Postgres : persistent vectors
+VectorStore --> Postgres : vector persistence
 
-Storage --> RunResults
+SummarizeRun --> RunSummary
+RunSummary --> Storage : resolve run folder
+RunSummary ..> TestcaseJson : read testcase JSON
+RunSummary --> SummaryExports : write JSON + CSV
+
+Storage --> RunResultJson
+Storage --> TestcaseJson
+
 RunBaseline ..> Logs
 PopulateDb ..> Logs
+SummarizeRun ..> Logs
 
 Docker ..> Postgres : provisions service
 Docker ..> PgAdmin : provisions service
-Docker ..> GuardrailsAPI : provisions optional service
+Docker ..> GuardrailsAPI : optional local service
 PgAdmin ..> Postgres : inspects DB
 
 @enduml

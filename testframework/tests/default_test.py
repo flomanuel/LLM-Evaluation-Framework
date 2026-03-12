@@ -11,11 +11,10 @@ from loguru import logger
 from testframework import ChatbotName
 from testframework.chatbots import LangChainChatbot, VectorStore
 from testframework.chatbots.store import ChatbotStore
-from testframework.testcases import BenignTestCase, BiasTestCase, CompetitionTestCase, EthicsTestCase, \
-    ExcessiveAgencyTestCase, FairnessTestCase, IllegalActivityTestCase, IndirectInstructionTestCase, \
-    PrivacyViolationsTestCase, RobustnessTestCase, SystemPromptLeakageTestCase, ToxicityTestCase, FairnessSubcategory
+from testframework.testcases import BenignTestCase, BiasTestCase, EthicsTestCase, \
+    ExcessiveAgencyTestCase, IllegalActivityTestCase, IndirectInstructionTestCase, \
+    PrivacyViolationsTestCase, SystemPromptLeakageTestCase, ToxicityTestCase
 from testframework.testcases.base import BaseTestCase
-from testframework.testcases.benign.subcategory import BenignSubcategory
 from testframework.testcases.bias.subcategory import BiasSubcategory
 from testframework.testcases.ethics.subcategory import EthicsSubcategory
 from testframework.testcases.illegal_activity.subcategory import IllegalActivitySubcategory
@@ -35,7 +34,7 @@ class DefaultTest(Test):
         logger.debug("Setting up baseline chatbots")
         vector_store = VectorStore()
         # OpenAI runs into timeouts due to overly long reasoning (sometimes more than 2 minutes)
-        reasoning = {"effort": "medium", "summary": "auto"}
+        reasoning = {"effort": "low", "summary": "auto"}
         gpt_5 = LangChainChatbot(
             name=ChatbotName.LANGCHAIN_GPT_5,
             model="gpt-5",
@@ -52,30 +51,24 @@ class DefaultTest(Test):
 
     def get_test_cases(self) -> List[BaseTestCase]:
         """Return a list of TestCases to execute."""
-        ethics = [EthicsSubcategory.BANKING, EthicsSubcategory.HARM_PREVENTION, EthicsSubcategory.MORAL_INTEGRITY]
+        ethics = [EthicsSubcategory.BANKING, EthicsSubcategory.HARM_PREVENTION]
         ind_inst = [IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS]
         return [
             BenignTestCase(),
-            # FairnessTestCase(),
-            # EthicsTestCase(ethics),
-            # SystemPromptLeakageTestCase(),
-            # ExcessiveAgencyTestCase(),
-            # IndirectInstructionTestCase(ind_inst),
-            # # todo: PrivacyViolations prüfen, ob die zugehörigen Einträge aus der CSV-Datei richtig ausgewertet und im JSON kategorisiert werden!
-            # PrivacyViolationsTestCase(),
-            # BiasTestCase([BiasSubcategory.RACE]),
-            # BiasTestCase([BiasSubcategory.GENDER]),
-            # BiasTestCase([BiasSubcategory.RELIGION]),
-            # BiasTestCase([BiasSubcategory.POLITICS]),
+            EthicsTestCase(ethics),
+            SystemPromptLeakageTestCase(),
+            ExcessiveAgencyTestCase(),
+            IndirectInstructionTestCase(ind_inst),
+            # todo: PrivacyViolations prüfen, ob die zugehörigen Einträge aus der CSV-Datei richtig ausgewertet und im JSON kategorisiert werden!
+            PrivacyViolationsTestCase(),
+            BiasTestCase([BiasSubcategory.RACE]),
             IllegalActivityTestCase([IllegalActivitySubcategory.WEAPONS]),
-            # IllegalActivityTestCase([IllegalActivitySubcategory.ILLEGAL_DRUGS]),
-            # IllegalActivityTestCase([IllegalActivitySubcategory.VIOLENT_CRIME]),
-            # IllegalActivityTestCase([IllegalActivitySubcategory.NONVIOLENT_CRIME]),
-            # IllegalActivityTestCase([IllegalActivitySubcategory.SEX_CRIME]),
-            # IllegalActivityTestCase([IllegalActivitySubcategory.CYBERCRIME]),
-            # IllegalActivityTestCase([IllegalActivitySubcategory.CHILD_EXPLOITATION]),
-            # ToxicityTestCase([ToxicitySubcategory.INSULTS]),
-            # ToxicityTestCase([ToxicitySubcategory.PROFANITY]),
-            # ToxicityTestCase([ToxicitySubcategory.THREATS]),
-            # ToxicityTestCase([ToxicitySubcategory.MOCKERY]),
+            IllegalActivityTestCase([IllegalActivitySubcategory.ILLEGAL_DRUGS]),
+            IllegalActivityTestCase([IllegalActivitySubcategory.VIOLENT_CRIME]),
+            IllegalActivityTestCase([IllegalActivitySubcategory.SEX_CRIME]),
+            IllegalActivityTestCase([IllegalActivitySubcategory.CYBERCRIME]),
+            IllegalActivityTestCase([IllegalActivitySubcategory.CHILD_EXPLOITATION]),
+            ToxicityTestCase([ToxicitySubcategory.INSULTS]),
+            ToxicityTestCase([ToxicitySubcategory.THREATS]),
         ]
+

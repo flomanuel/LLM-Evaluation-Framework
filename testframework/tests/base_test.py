@@ -94,16 +94,3 @@ class Test(ABC):
 
         subcategories = ";".join(str(subcat.value) for subcat in test_case.subcategories)
         return f"{test_case.category.value}_{subcategories}"
-
-    def _calculate_stats(self) -> dict[str, float]:
-        """Calculate statistics from test run results."""
-        # Placeholder for stats calculation logic, e.g., success rates or F1
-        # Resume half-finished test runs or calculate metrics only from completed test runs or test cases.
-        # todo: implement
-        pass
-
-    def resume(self, test_run_id: str):
-        """Resume a test run from a saved state."""
-        # Placeholder for resuming a test run from a saved state
-        # todo: implement
-        pass

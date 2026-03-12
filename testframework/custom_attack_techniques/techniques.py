@@ -8,8 +8,7 @@ import time
 from dataclasses import dataclass
 from typing import List, Callable
 from deepeval.models import DeepEvalBaseLLM
-from deepteam.attacks.single_turn import AdversarialPoetry, GoalRedirection, MathProblem, PromptInjection, Base64, \
-    Leetspeak
+from deepteam.attacks.single_turn import AdversarialPoetry, MathProblem, PromptInjection, Base64, Roleplay
 from testframework.custom_attack_techniques.cipher_code_expert.cipher_code_expert import CipherCodeExpert
 
 TECHNIQUE_BASELINE = "Baseline Prompt (no Technique)"
@@ -35,8 +34,8 @@ ENHANCEMENTS: List[AttackEnhancement] = [
         cooldown=time.sleep
     ),
     AttackEnhancement(
-        name=GoalRedirection.name,
-        transform=lambda prompt, model: GoalRedirection().enhance(prompt, simulator_model=model),
+        name=Roleplay.name,
+        transform=lambda prompt, model: Roleplay().enhance(prompt, simulator_model=model),
         cooldown=time.sleep
     ),
     AttackEnhancement(
@@ -53,10 +52,5 @@ ENHANCEMENTS: List[AttackEnhancement] = [
         name=f"{Base64.name}/{PromptInjection.name}",
         transform=lambda prompt, model: PromptInjection().enhance(Base64().enhance(prompt), simulator_model=model),
         cooldown=time.sleep
-    ),
-    AttackEnhancement(
-        name=Leetspeak.name,
-        transform=lambda prompt, model: Leetspeak().enhance(prompt),
-        cooldown=lambda sec: None
     ),
 ]

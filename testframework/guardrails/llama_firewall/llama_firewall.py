@@ -8,6 +8,7 @@ import json
 import os
 import atexit
 import asyncio
+import unicodedata
 from time import perf_counter
 from typing import List, Dict
 from testframework import ChatbotName, LLMErrorType
@@ -35,8 +36,6 @@ class LlamaFirewall(BaseGuardrail):
         super().__init__("LlamaFirewall")
         # https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
-        self._runner: asyncio.Runner | None = None
-        atexit.register(self._close_runner)
 
     @property
     def _llama_firewall(self):
@@ -45,26 +44,34 @@ class LlamaFirewall(BaseGuardrail):
             self._firewall = LlamaFirewallGuard(scanners=self._scanners)
         return self._firewall
 
-    def _get_runner(self) -> asyncio.Runner:
-        """Get the asyncio runner instance since LlamaFirewallGuard is calls async filters that by default get handled
-        by asyncio which sometimes closes the async loop (?) before all scanners have finished."""
-        if self._runner is None:
-            self._runner = asyncio.Runner()
-        return self._runner
-
-    def _close_runner(self) -> None:
-        """Close the asyncio runner instance."""
-        if self._runner is not None:
-            self._runner.close()
-            self._runner = None
-
     def _scan_with_metrics(self, message) -> Dict[str, List[ScannerDetail] | ScanResult]:
-        """Scan a message with metrics."""
-        return self._get_runner().run(self._llama_firewall.scan_async_with_metrics(message))
+        """
+        Scan a message with metrics.
+        Use asyncio runner instance since LlamaFirewallGuard calls filters asynchronously. By default, they get handled
+        by asyncio, which sometimes closes the async loop (?) before all scanners have finished. So it seems, at least.
+        https://stackoverflow.com/a/45600858
+        https://docs.python.org/3/library/asyncio-runner.html#asyncio.Runner.run
+        https://docs.python.org/3/library/asyncio-eventloop.html#asyncio-event-loop
+        """
+        with asyncio.Runner() as runner:
+            return runner.run(self._llama_firewall.scan(message))
+
+    @staticmethod
+    def _normalize_text_for_scanner(text: str) -> str:
+        """
+        Normalize scanner input since some scanner implementations seem to have problems handling UTF-8.
+        https://stackoverflow.com/questions/16467479/normalizing-unicode
+        https://stackoverflow.com/questions/43953293/how-to-convert-symbols-into-their-respective-unicode-representation-using-python
+        """
+        if not text:
+            return ""
+
+        normalized = unicodedata.normalize("NFKD", unicodedata.normalize("NFD", text))
+        return normalized.encode("ascii", "ignore").decode("ascii")
 
     def eval_attack(self, user_prompt: str, **kwargs) -> DetectionElement:
         """Avaluate an attack."""
-        user_msg = UserMessage(user_prompt)
+        user_msg = UserMessage(self._normalize_text_for_scanner(user_prompt))
         try:
             test_started = perf_counter()
             res: Dict[str, List[ScannerDetail] | ScanResult] = self._scan_with_metrics(user_msg)
@@ -84,7 +91,10 @@ class LlamaFirewall(BaseGuardrail):
                 "was_called": t_info.tool_called,
             }
         ] if t_info is not None else []
-        assistant_msg = AssistantMessage(content=model_response, tool_calls=tool_info)
+        assistant_msg = AssistantMessage(
+            content=self._normalize_text_for_scanner(model_response),
+            tool_calls=tool_info,
+        )
         try:
             test_started = perf_counter()
             res: Dict[str, List[ScannerDetail] | ScanResult] = self._scan_with_metrics(assistant_msg)

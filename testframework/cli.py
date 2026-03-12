@@ -12,9 +12,11 @@ from argparse import ArgumentParser, _SubParsersAction
 from pathlib import Path
 from dotenv import load_dotenv
 from loguru import logger
-from .tests.default_test import DefaultTest
-from testframework.chatbots.rag.document_loader import DocumentLoader
-from testframework.chatbots.rag.vector_store import VectorStore
+
+from testframework.chatbots import VectorStore, DocumentLoader
+from testframework.enums import CliArgs
+from testframework.reporting import write_run_summary
+from testframework.tests.default_test import DefaultTest
 
 
 def configure_logging() -> None:
@@ -53,14 +55,14 @@ def main() -> None:
     args = parser.parse_args()
     logger.info(f"CLI command received: {args.command}")
 
-    if args.command == "run-baseline":
+    if args.command == CliArgs.RUN_BASELINE.value:
         results_dir = Path(args.results_dir)
         logger.info(f"Starting default test suite (results_dir={results_dir})")
         test = DefaultTest(results_dir=results_dir)
         test.run()
         logger.info("Default test suite completed")
 
-    elif args.command == "populate-db":
+    elif args.command == CliArgs.POPULATE_DB.value:
         documents_dir = Path(args.documents_dir)
         collection_name = args.collection_name or VectorStore.COLLECTION_NAME
         logger.info(
@@ -87,45 +89,78 @@ def main() -> None:
 
         logger.info(f"Successfully ingested {len(ids)} document chunks into the vector store")
 
+    elif args.command == CliArgs.SUMMARIZE_RUN.value:
+        logger.info(
+            f"Summarizing run folder '{args.run}'"
+        )
+
+        if args.output is not None:
+            output_path = Path(args.output)
+            write_run_summary(
+                run_folder=args.run,
+                output_path=output_path,
+            )
+            logger.info(f"Run summary written to {output_path}")
+
 
 def add_arguments(subparsers: _SubParsersAction[ArgumentParser]):
     """Add command line arguments."""
 
-    run_baseline_parser = subparsers.add_parser("run-baseline", help="Run the default test suite.")
+    run_baseline_parser = subparsers.add_parser(
+        CliArgs.RUN_BASELINE.value,
+        help="Run the default test suite."
+    )
     run_baseline_parser.add_argument(
-        "--results-dir",
+        CliArgs.RESULTS_DIR.value,
         type=str,
         default="_runs",
         help="Directory to store test run results.",
     )
 
     populate_db_parser = subparsers.add_parser(
-        "populate-db",
+        CliArgs.POPULATE_DB.value,
         help="Populate the vector database with documents from a directory.",
     )
     populate_db_parser.add_argument(
-        "--documents-dir",
+        CliArgs.DOC_DIR.value,
         type=str,
         default="_rag_documents",
         help="Directory containing documents to ingest (default: _rag_documents).",
     )
     populate_db_parser.add_argument(
-        "--chunk-size",
+        CliArgs.CHUNK_SIZE.value,
         type=int,
         default=1000,
         help="Size of text chunks for splitting (default: 1000).",
     )
     populate_db_parser.add_argument(
-        "--chunk-overlap",
+        CliArgs.CHUNK_OVERLAP.value,
         type=int,
         default=200,
         help="Overlap between chunks (default: 200).",
     )
     populate_db_parser.add_argument(
-        "--collection-name",
+        CliArgs.COLLECTION_NAME.value,
         type=str,
         default=None,
         help="Name of the vector store collection (default: rag_documents).",
+    )
+
+    summarize_run_parser = subparsers.add_parser(
+        CliArgs.SUMMARIZE_RUN.value,
+        help="Summarize a persisted run into per-model confusion matrices.",
+    )
+    summarize_run_parser.add_argument(
+        CliArgs.RUN.value,
+        required=True,
+        help="Path to the run folder containing the testcase directory.",
+    )
+    summarize_run_parser.add_argument(
+        CliArgs.OUTPUT.value,
+        type=str,
+        required=True,
+        default=None,
+        help="Optional output path for the generated summary JSON.",
     )
 
 

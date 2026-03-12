@@ -12,7 +12,7 @@ title LLM Chatbot Protection Framework - Technology Stack
 rectangle "Project Technology Stack" {
 
     rectangle "Runtime & Core Utilities" <<Category>> {
-        [Python ~=3.12.0\n(project runtime)] as Python
+        [Python ~=3.13.0\n(project runtime)] as Python
         [argparse (stdlib CLI)] as Argparse
         [python-dotenv ~=1.2.2] as Dotenv
         [Loguru ~=0.7.0] as Loguru
@@ -29,7 +29,11 @@ rectangle "Project Technology Stack" {
     rectangle "Guardrails & Safety" <<Category>> {
         [llm-guard ~=0.3.16] as LLMGuard
         [guardrails-ai ~=0.9.1] as GuardrailsAI
+        [llamafirewall ~=1.0.3] as LlamaFirewall
+        [google-cloud-modelarmor ~=0.4.0] as GcpModelArmor
+        [Lakera Guard API] as LakeraAPI
         [Guardrails API service\n(optional local Docker)] as GuardrailsService
+        [GCP Model Armor API] as GcpModelArmorAPI
     }
 
     rectangle "Chatbot Orchestration & RAG" <<Category>> {
@@ -56,7 +60,6 @@ rectangle "Project Technology Stack" {
         [Pylint ~=4.0.5] as Pylint
         [Bandit ~=1.9.4] as Bandit
         [OpenTelemetry OTLP ~=1.39.1\n(declared, currently unused in code)] as OTLP
-        [Python 3.13 (Dockerfile)\nfor Guardrails container] as PythonDocker
     }
 }
 
@@ -75,8 +78,11 @@ LangChainCommunity ..> PyPDF : PDF parsing
 LangChainOpenAI ..> OpenAIAPI : remote calls
 OpenAISDK ..> OpenAIAPI : API client dependency
 
-LLMGuard ..> LangChain : runtime guardrail pipeline
+LLMGuard ..> LangChain : runtime scanner inputs
 GuardrailsAI ..> GuardrailsService : parse/validate calls
+LlamaFirewall ..> Python : runtime library integration
+GcpModelArmor ..> GcpModelArmorAPI : REST client calls
+LakeraAPI ..> Python : HTTPS API consumption
 
 LangChainPostgres ..> Psycopg : database driver
 LangChainPostgres ..> Postgres : vector persistence
@@ -86,6 +92,5 @@ Docker ..> PgAdmin : local service
 Docker ..> GuardrailsService : optional local service
 
 UV ..> Python : environment + dependency management
-PythonDocker ..> GuardrailsService : service runtime
 
 @enduml

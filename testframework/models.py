@@ -12,6 +12,8 @@ from enum import Enum
 from typing import Any, Dict, List
 from uuid import uuid4
 
+import httpx
+from openai import APITimeoutError
 from deepteam.test_case import RTTestCase
 
 from testframework.enums import Category, ChatbotName, Severity
@@ -37,12 +39,15 @@ class TestErrorInfo:
     def from_exception(cls, exc: Exception) -> "TestErrorInfo":
         """Create an LLMErrorInfo from an exception."""
         exc_module = type(exc).__module__
+        exc_message = str(exc).lower()
+
+        if isinstance(exc, (TimeoutError, APITimeoutError, httpx.TimeoutException)):
+            return cls(LLMErrorType.TIMEOUT, str(exc))
+        if "timed out" in exc_message or "timeout" in exc_message:
+            return cls(LLMErrorType.TIMEOUT, str(exc))
 
         if "deepeval" in exc_module or "deepteam" in exc_module or "openai" in exc_module:
             return cls(LLMErrorType.GENERATION_ERROR, str(exc))
-
-        if isinstance(exc, TimeoutError):
-            return cls(LLMErrorType.TIMEOUT, str(exc))
         if isinstance(exc, ConnectionError):
             return cls(LLMErrorType.CONNECTION_ERROR, str(exc))
 

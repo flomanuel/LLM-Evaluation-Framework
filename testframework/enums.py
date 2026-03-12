@@ -39,3 +39,17 @@ class Severity(str, Enum):
     """Define whether a test case (i.e. a prompt / attack) is harmful."""
     UNSAFE = "unsafe"
     SAFE = "safe"
+
+
+class CliArgs(str, Enum):
+    """Define the CLI arguments."""
+    RUN_BASELINE = "run-baseline"
+    RESULTS_DIR = "--results-dir"
+    POPULATE_DB = "populate-db"
+    DOC_DIR = "--documents-dir"
+    CHUNK_SIZE = "--chunk-size"
+    CHUNK_OVERLAP = "--chunk-overlap"
+    COLLECTION_NAME = "--collection-name"
+    SUMMARIZE_RUN = "summarize-run"
+    RUN = "--run"
+    OUTPUT = "--output"

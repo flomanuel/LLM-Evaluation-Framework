@@ -13,7 +13,6 @@ from testframework.testcases.base import BaseTestCase
 from testframework.testcases.illegal_activity.builder import IllegalActivity
 from testframework.testcases.illegal_activity.subcategory import IllegalActivitySubcategory
 from testframework.util.ollama_handler import OllamaGenerator
-from loguru import logger
 
 
 class IllegalActivityTestCase(BaseTestCase):
@@ -38,4 +37,4 @@ class IllegalActivityTestCase(BaseTestCase):
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         """Simulate attacks for the test case."""
         return cast(IllegalActivity, self.attack_builder).simulate_attacks(
-            attacks_per_vulnerability_type=attacks_per_vulnerability_type)[:1]
+            attacks_per_vulnerability_type=attacks_per_vulnerability_type)

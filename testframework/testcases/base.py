@@ -235,7 +235,6 @@ class BaseTestCase(ABC):
         protection: Dict[str, Dict[ChatbotName, DetectionResult]] = self.guardrail_runner.run(
             attack_case,
             bot_responses_eval,
-            # todo: sicherstellen, dass in den eigenen Implementierungen immer neue Objekte returned werden!
             self._find_metric(attack_case),
         )
         logger.info(

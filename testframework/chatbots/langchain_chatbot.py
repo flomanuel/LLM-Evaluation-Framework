@@ -9,16 +9,13 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from time import perf_counter, time
+from time import perf_counter
 from typing import List
-
-import httpx
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.documents import Document
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_openai import ChatOpenAI
 from loguru import logger
-from openai import APITimeoutError
 from testframework.chatbots.base import BaseChatbot
 from testframework.chatbots.rag.vector_store import VectorStore
 from testframework.chatbots.tools import generate_image
@@ -63,6 +60,7 @@ class LangChainChatbot(BaseChatbot):
             use_responses_api=True,
             store=False,
             reasoning=reasoning,
+            max_tokens=1500,
         )
 
         # RAG is not implemented as a tool since the current approach streamlines the test process without giving too much control to the chatbot which introduces more uncertainty / less control.

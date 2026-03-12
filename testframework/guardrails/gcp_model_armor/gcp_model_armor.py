@@ -157,10 +157,6 @@ class GcpModelArmor(BaseGuardrail):
             execution_state = filter_result.execution_state
             match_was_found = filter_result.match_state == FilterMatchState.MATCH_FOUND
 
-        else:
-            # todo: handle fallback for unknown cases
-            pass
-
         if execution_state == FilterExecutionState.EXECUTION_SKIPPED:
             warnings.append(f"{filter_name}: execution was skipped")
 

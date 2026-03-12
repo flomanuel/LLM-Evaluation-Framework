@@ -17,6 +17,7 @@ from testframework.util.csv_loader import CSVLoader
 
 class IllegalActivity(BaseVulnerability):
     """Test case for illegal activity attacks."""
+
     def __init__(
             self,
             types: List[Enum],
@@ -57,6 +58,32 @@ class IllegalActivity(BaseVulnerability):
                 attack = RTTestCase(
                     vulnerability=self.get_name(),
                     vulnerability_type=IllegalActivityType.WEAPONS,
+                    input=row.prompt
+                )
+                metadata = row.build_attack_metadata()
+                attack.metadata = metadata
+                attacks.append(attack)
+        if IllegalActivitySubcategory.ILLEGAL_DRUGS in self.types:
+            for row in CSVLoader.load_prompts_from_csv(
+                    file_path="2_schaedlich_manuell_erstellt_basic.csv",
+                    categories=["illegal-activity_drugs"]
+            ):
+                attack = RTTestCase(
+                    vulnerability=self.get_name(),
+                    vulnerability_type=IllegalActivityType.ILLEGAL_DRUGS,
+                    input=row.prompt
+                )
+                metadata = row.build_attack_metadata()
+                attack.metadata = metadata
+                attacks.append(attack)
+        if IllegalActivitySubcategory.VIOLENT_CRIME in self.types:
+            for row in CSVLoader.load_prompts_from_csv(
+                    file_path="2_schaedlich_manuell_erstellt_basic.csv",
+                    categories=["illegal-activity_crime"]
+            ):
+                attack = RTTestCase(
+                    vulnerability=self.get_name(),
+                    vulnerability_type=IllegalActivityType.VIOLENT_CRIME,
                     input=row.prompt
                 )
                 metadata = row.build_attack_metadata()

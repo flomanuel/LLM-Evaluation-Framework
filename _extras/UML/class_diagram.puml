@@ -26,6 +26,10 @@ package "testframework" {
             +nodes: List[str]
         }
 
+        class DocumentContext <<dataclass>> {
+            +document: str
+        }
+
         class PromptVariants <<dataclass>> {
             +baseline: str
             +enhanced: str
@@ -46,6 +50,7 @@ package "testframework" {
             +prompt_tokens: int
             +response_tokens: int
             +rag_context: RagContext?
+            +document_content: DocumentContext?
             +file_path: str?
             +error: TestErrorInfo?
             +is_error: bool
@@ -67,7 +72,7 @@ package "testframework" {
             +name: str
             +score: float
             +reason: str
-            +is_valid: bool
+            +is_valid: bool?
             +sanitized_input: str
         }
 
@@ -78,7 +83,6 @@ package "testframework" {
             +judge_raw_response: str
             +latency: float?
             +scanner_details: List[ScannerDetail]
-            +coverage_score: float?
             +error: TestErrorInfo?
             +is_error: bool
             {static} +from_error(...): DetectionElement
@@ -126,7 +130,7 @@ package "testframework" {
             {static} +from_enhancement_error(...): Attack
         }
 
-        class TestCaseResultModelInfo <<dataclass>> {
+        class "TestCaseResult.ModelInfo" as TestCaseResultModelInfo <<dataclass>> {
             +attack_and_vulnerability_generation: str?
         }
 
@@ -191,10 +195,12 @@ package "testframework" {
             +severity: Severity
             +simulator_model: DeepEvalBaseLLM/str?
             +evaluation_model: DeepEvalBaseLLM/str?
-            +description: str
+            +run_folder: Path?
             {abstract} +simulate_attacks(...): List[RTTestCase]
             {abstract} +setup_attack_builder(): None
             +execute(): TestCaseResult
+            -_generate_attacks(...): tuple
+            -_start_attacks(...): None
             -_execute_single_attack(...): Attack
             -_query_and_evaluate(...): ChatbotResponseEvaluation
             -_find_metric(...): BaseRedTeamingMetric
@@ -240,13 +246,13 @@ package "testframework" {
 
         class LangChainChatbot extends BaseChatbot {
             +DEFAULT_TIMEOUT: float
+            +DEFAULT_TIMEOUT_RETRIES: int
             +ATTACK_DOCUMENTS_FOLDER: Path
             +DEFAULT_SYSTEM_PROMPT: str
-            +vector_store: VectorStore?
             +query(...): ChatbotResponse
             -_retrieve_context(...): List[Document]
             -_build_prompt_with_context(...): str
-            -_load_document(file_path: str): str
+            -_load_document(...): str
             -_build_prompt_with_document(...): str
             -_execute_query(...): ChatbotResponse
         }
@@ -290,10 +296,7 @@ package "testframework" {
             +name: str
             {abstract} +eval_attack(...): DetectionElement
             {abstract} +eval_model_response(...): DetectionElement
-            -_score_detection_coverage(...): float?
         }
-
-        class LLMGuard extends BaseGuardrail
 
         class PromptHardeningGuardrail extends BaseGuardrail {
             +eval_attack(...): PromptHardeningDetectionElement
@@ -301,11 +304,16 @@ package "testframework" {
             -_rebuild_rag_call(...): str
         }
 
+        class LLMGuard extends BaseGuardrail
+        class LlamaFirewall extends BaseGuardrail
+        class LakeraGuard extends BaseGuardrail
         class GuardrailsAI extends BaseGuardrail
+        class GcpModelArmor extends BaseGuardrail
 
         class GuardrailRunner {
             +guardrails: List[BaseGuardrail]
             +run(...): Dict[str, Dict[ChatbotName, DetectionResult]]
+            -_skipped_detection_result(...): DetectionResult
             -_safe_eval_attack(...): DetectionElement
             -_safe_eval_response(...): DetectionElement
         }
@@ -351,13 +359,21 @@ package "testframework" {
         class CSVLoader {
             {static} +CSV_DOCUMENTS_FOLDER: Path
             {static} +load_prompts_from_csv(...): List[CSVAttackRow]
-            {static} -_build_full_path(file_path: str): Path
+            {static} -_build_full_path(...): Path
         }
 
         class OllamaGenerator {
             {static} +get_chatbot(): OllamaModel
             {static} +start_model_if_not_running(): None
             {static} +require_local_model_shutdown(): None
+        }
+    }
+
+    package "reporting" {
+        class RunSummary <<module>> {
+            {static} +resolve_run_folder(...): Path
+            {static} +build_run_summary(...): dict
+            {static} +write_run_summary(...): dict
         }
     }
 }
@@ -432,11 +448,14 @@ VectorStore ..> PGVector
 VectorStore ..> OpenAIEmbeddings
 
 GuardrailRunner *-- BaseGuardrail
-BaseGuardrail <|-- LLMGuard
 BaseGuardrail <|-- PromptHardeningGuardrail
+BaseGuardrail <|-- LLMGuard
+BaseGuardrail <|-- LlamaFirewall
+BaseGuardrail <|-- LakeraGuard
 BaseGuardrail <|-- GuardrailsAI
+BaseGuardrail <|-- GcpModelArmor
 PromptHardeningGuardrail ..> ChatbotStore : guarded re-query
-GuardrailsAI ..> Guard : remote/local API wrappers
+GuardrailsAI ..> Guard : loads validators
 
 BaseMetric --|> BaseRedTeamingMetric
 PrivacyViolationsMetric --|> BaseMetric
@@ -468,6 +487,7 @@ PromptHardeningDetectionElement --|> DetectionElement
 DetectionElement *-- ScannerDetail
 ChatbotResponse *-- ToolInfo
 ChatbotResponse *-- RagContext
+ChatbotResponse *-- DocumentContext
 ChatbotResponse ..> TestErrorInfo
 Attack ..> DetectionResult
 Attack ..> TestErrorInfo
@@ -485,5 +505,8 @@ SystemPromptLeakageAttacks ..> CSVLoader
 
 Storage ..> TestRunResult
 Storage ..> TestCaseResult
+RunSummary ..> Storage
+RunSummary ..> TestCaseResult
+RunSummary ..> DetectionResult
 
 @enduml

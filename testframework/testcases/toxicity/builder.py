@@ -60,7 +60,7 @@ class ToxicityAttacks(BaseVulnerability):
             )
             attacks.extend(
                 self.toxicity_attack_builder.simulate_attacks(
-                    attacks_per_vulnerability_type=attacks_per_vulnerability_type))
+                    attacks_per_vulnerability_type=(attacks_per_vulnerability_type // 2)))
 
         personal_safety_types: List[str | None] = [
             self.subcategory_to_illegal_activity_type(category)
@@ -74,7 +74,7 @@ class ToxicityAttacks(BaseVulnerability):
             )
             attacks.extend(
                 self.personal_safety_attack_builder.simulate_attacks(
-                    attacks_per_vulnerability_type=attacks_per_vulnerability_type))
+                    attacks_per_vulnerability_type=(attacks_per_vulnerability_type // 2)))
 
         return attacks
 

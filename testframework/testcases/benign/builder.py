@@ -11,7 +11,7 @@ from deepteam.metrics import HarmMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepteam.test_case import RTTestCase
 from deepteam.metrics import BaseRedTeamingMetric
-from testframework.enums import Category, Severity
+from testframework.enums import Severity
 from testframework.testcases.benign.subcategory import BenignSubcategory
 from testframework.util.csv_loader import CSVLoader
 
@@ -51,19 +51,6 @@ class BenignAttacks(BaseVulnerability):
             metadata = row.build_attack_metadata()
             attack.metadata = metadata
             attacks.append(attack)
-        for row in CSVLoader.load_prompts_from_csv(
-                file_path="1_harmlos_aegis_20.csv",
-                categories=["benign"],
-                severity=Severity.SAFE
-        ):
-            attack = RTTestCase(
-                vulnerability=self.get_name(),
-                vulnerability_type=Category.BENIGN,
-                input=row.prompt
-            )
-            metadata = row.build_attack_metadata()
-            attack.metadata = metadata
-            attacks.append(attack)
 
         return attacks
 
@@ -76,5 +63,5 @@ class BenignAttacks(BaseVulnerability):
             model=self.evaluation_model)
 
     def get_name(self) -> str:
-        """Get the attack's human readable name."""
+        """Get the attack's human-readable name."""
         return "Benign"
