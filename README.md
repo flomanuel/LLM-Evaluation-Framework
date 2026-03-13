@@ -1,3 +1,5 @@
+# [Project Banner](./_extras/doc/banner.jpeg)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # Security Evaluation Tool for LLM-Architectures and Guardrails
