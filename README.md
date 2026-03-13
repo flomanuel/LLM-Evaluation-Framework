@@ -7,7 +7,7 @@
 This repository contains a **test framework for evaluating guardrail applications for LLM-architectures**. Is is part of my
 bachelor's thesis.
 
-## Key characteristics:
+## Key characteristics
 
 - **Architecture-driven**: Follows a modular architecture with `BaseChatbot`, `Test`, `BaseTestCase`, `GuardrailRunner`,
   `BaseGuardrail`, and `ChatbotStore`.
@@ -18,8 +18,7 @@ bachelor's thesis.
 - **Modular**
   - add any data source you like for generating attacks (APIs, DeepTeam, CSV files, etc.)
   - add any LLM, LLM-based or agentic architecture as the attack target (it doesn't matter whether it is a local model or an agentic architecture hosted on a hyperscaler)
-	- add your own custom techniques and evaluation criterias
-
+  - add your own custom techniques and evaluation criterias
 
 ## Quickstart
 

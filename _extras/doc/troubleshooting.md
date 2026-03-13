@@ -22,18 +22,6 @@ docker compose up
 If the cli command `guardrails` is not available, try runinng `source ./.venv/bin/activate`, even if you've already
 activated the venv.
 
-### filter can't be found when installing from the hub
+## Deleting ML models (*NIX)
 
-The same may apply for other guardrails-related error, e.g. if one filter can't be found when installing it from the
-hub.
-
-### Deleting an ML model
-
-From the code:
-
-```python
-MODEL_CACHE_DIR = os.environ.get(
-    "GUARDRAILS_MODEL_CACHE_PATH_OVERRIDE",
-    Path.home() / ".cache" / "guardrails_cache"
-)
-```
+By default, most ML models can be found under `~/.cache/...`
