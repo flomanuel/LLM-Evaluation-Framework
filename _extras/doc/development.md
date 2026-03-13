@@ -29,7 +29,7 @@ uv run bandit -r testframework
 
 3. Start Containers via Docker Compose
 
-´docker compose up´
+`docker compose up`
 
 ## Populate the database
 
