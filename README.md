@@ -20,6 +20,12 @@ bachelor's thesis.
   - add any LLM, LLM-based or agentic architecture as the attack target (it doesn't matter whether it is a local model or an agentic architecture hosted on a hyperscaler)
   - add your own custom techniques and evaluation criterias
 
+## One note on the architecture
+
+This framework relies on the libraries DeepTeam and especially DeepEval.
+
+Both are developed and maintained by [Confident AI](https://www.confident-ai.com/docs).
+
 ## Quickstart
 
 1. Install dependencies (using `uv`):

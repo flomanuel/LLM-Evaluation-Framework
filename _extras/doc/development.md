@@ -45,7 +45,7 @@ uv run llm-test-baseline populate-db
 
 This framework relies on the libraries DeepTeam and especially DeepEval.
 
-Both are deeloped and maintained by [Confident AI](https://www.confident-ai.com/docs).
+Both are developed and maintained by [Confident AI](https://www.confident-ai.com/docs).
 
 ## Test Runs
 

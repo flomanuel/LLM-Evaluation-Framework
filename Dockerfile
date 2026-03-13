@@ -1,4 +1,4 @@
-#Source: https://github.com/guardrails-ai/guardrails-lite-server/blob/main/Dockerfile
+# Source: https://github.com/guardrails-ai/guardrails-lite-server/blob/main/Dockerfile
 
 # Start our builder image in the multi-stage build
 FROM public.ecr.aws/docker/library/python:3.13-slim AS builder
