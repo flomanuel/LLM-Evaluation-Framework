@@ -1,4 +1,4 @@
-# [Project Banner](./_extras/doc/banner.jpeg)
+![Project Banner](./_extras/doc/banner.jpeg)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
