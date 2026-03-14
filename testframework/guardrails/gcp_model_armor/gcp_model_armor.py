@@ -5,8 +5,8 @@
 
 import json
 import os
-from time import perf_counter
-from typing import List
+from time import perf_counter, sleep
+from typing import Callable, List, TypeVar
 import proto
 from google.api_core.client_options import ClientOptions
 from google.cloud.modelarmor_v1 import (ModelArmorClient, DataItem, SanitizeUserPromptRequest,
@@ -14,6 +14,7 @@ from google.cloud.modelarmor_v1 import (ModelArmorClient, DataItem, SanitizeUser
                                         SanitizeModelResponseResponse, RaiFilterResult,
                                         FilterMatchState, SdpFilterResult, SdpInspectResult, PiAndJailbreakFilterResult,
                                         CsamFilterResult, FilterExecutionState, InvocationResult)
+from loguru import logger
 from testframework import ChatbotName, LLMErrorType
 from testframework.guardrails.base import BaseGuardrail
 from testframework.models import DetectionElement, TestErrorInfo, ScannerDetail
@@ -30,6 +31,8 @@ class GcpModelArmor(BaseGuardrail):
     LOCATION: str = os.environ.get("GCP_MODEL_ARMOR_LOCATION", "europe-west3")
     PROJECT_ID: str = os.environ.get("GCP_MODEL_ARMOR_PROJECT_ID", "N/A")
     TEMPLATE_ID: str = os.environ.get("GCP_MODEL_ARMOR_TEMPLATE_ID", "N/A")
+    TIMEOUT_RETRY_COOLDOWN_SECONDS: int = 60
+    MAX_ATTEMPTS: int = 1
 
     def __init__(self):
         super().__init__("GCP Model Armor")
@@ -40,10 +43,23 @@ class GcpModelArmor(BaseGuardrail):
         test_started = perf_counter()
         prompt_obj: DataItem = DataItem(text=user_prompt)
         request = SanitizeUserPromptRequest(name=self._template_name, user_prompt_data=prompt_obj)
-        response: SanitizeUserPromptResponse = self._model_armor_client.sanitize_user_prompt(request=request)
-        test_ended = perf_counter()
-        detection = self._build_detection(response, latency=test_ended - test_started)
-        return detection
+
+        for attempt in range(1, self.MAX_ATTEMPTS + 1):
+            try:
+                response: SanitizeUserPromptResponse = self._model_armor_client.sanitize_user_prompt(request=request)
+                test_ended = perf_counter()
+                detection = self._build_detection(response, latency=test_ended - test_started)
+                return detection
+            except Exception as exc:
+                error = TestErrorInfo.from_exception(exc)
+                is_timeout = error.error_type == LLMErrorType.TIMEOUT
+                if not is_timeout or attempt >= self.MAX_ATTEMPTS:
+                    raise
+                logger.warning(
+                    f"GCP Model Armor request timed out, retrying after {self.TIMEOUT_RETRY_COOLDOWN_SECONDS}s "
+                )
+                sleep(self.TIMEOUT_RETRY_COOLDOWN_SECONDS)
+        raise RuntimeError("Unknown GCP Model Armor request failure.")
 
     def eval_model_response(self, model_response: str, chatbot: ChatbotName, **kwargs) -> DetectionElement:
         """Evaluate the response from the attacked model."""
@@ -68,10 +84,24 @@ class GcpModelArmor(BaseGuardrail):
         resp_obj = DataItem(text=payload)
         test_started = perf_counter()
         request = SanitizeModelResponseRequest(name=self._template_name, model_response_data=resp_obj)
-        response: SanitizeModelResponseResponse = self._model_armor_client.sanitize_model_response(request=request)
-        test_ended = perf_counter()
-        detection = self._build_detection(response, latency=test_ended - test_started)
-        return detection
+
+        for attempt in range(1, self.MAX_ATTEMPTS + 1):
+            try:
+                response: SanitizeModelResponseResponse = self._model_armor_client.sanitize_model_response(
+                    request=request)
+                test_ended = perf_counter()
+                detection = self._build_detection(response, latency=test_ended - test_started)
+                return detection
+            except Exception as exc:
+                error = TestErrorInfo.from_exception(exc)
+                is_timeout = error.error_type == LLMErrorType.TIMEOUT
+                if not is_timeout or attempt >= self.MAX_ATTEMPTS:
+                    raise
+                logger.warning(
+                    f"GCP Model Armor request timed out, retrying after {self.TIMEOUT_RETRY_COOLDOWN_SECONDS}s "
+                )
+                sleep(self.TIMEOUT_RETRY_COOLDOWN_SECONDS)
+        raise RuntimeError("Unknown GCP Model Armor request failure.")
 
     def _build_detection(
             self,

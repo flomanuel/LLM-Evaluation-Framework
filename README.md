@@ -4,8 +4,8 @@
 
 # Security Evaluation Tool for LLM Architectures and Guardrails
 
-This repository contains a **test framework for evaluating guardrail applications for LLM-architectures**. Is is part of my
-bachelor's thesis.
+This repository contains a **test framework for evaluating guardrail applications for LLM-architectures**. It is part of
+my bachelor's thesis.
 
 ## Key characteristics
 
@@ -16,9 +16,10 @@ bachelor's thesis.
 - **Result schema**: Persists each test run as a JSON file. Summary file can be added via an additional script
 - **CLI based"": Interact with the Project via CLI commands
 - **Modular**
-  - add any data source you like for generating attacks (APIs, DeepTeam, CSV files, etc.)
-  - add any LLM, LLM-based or agentic architecture as the attack target (it doesn't matter whether it is a local model or an agentic architecture hosted on a hyperscaler)
-  - add your own custom techniques and evaluation criterias
+    - add any data source you like for generating attacks (APIs, DeepTeam, CSV files, etc.)
+    - add any LLM, LLM-based or agentic architecture as the attack target (it doesn't matter whether it is a local model
+      or an agentic architecture hosted on a hyperscaler)
+    - add your own custom techniques and evaluation criterias
 
 ## One note on the architecture
 
@@ -47,15 +48,21 @@ cp .env.template .env
 uv run llm-test-baseline run-baseline
 ```
 
+4. Run the summary script
+
+```bash
+uv run llm-test-baseline summarize-run --run absolute_path_to_run_folder --output absolute_path_to_output.json
+```
+
 # Details on development
 
-See the [sub page](./_extras/doc/development.md).
+See the [subpage](./_extras/doc/development.md).
 
 # Guardrail config and details
 
-See the [sub page](./_extras/doc/guardrails.md).
+See the [subpage](./_extras/doc/guardrails.md).
 
-# Generating and analysing the result summary
+# Generating and analyzing the result summary
 
 # Interpreting the results
 
@@ -71,4 +78,4 @@ whether a protection guardrail was successful or not.
 
 # Troubleshooting
 
-See the [sub page](./_extras/doc/troubleshooting.md).
+See the [subpage](./_extras/doc/troubleshooting.md).

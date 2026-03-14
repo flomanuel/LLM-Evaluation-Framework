@@ -59,7 +59,6 @@ class DefaultTest(Test):
             SystemPromptLeakageTestCase(),
             ExcessiveAgencyTestCase(),
             IndirectInstructionTestCase(ind_inst),
-            # todo: PrivacyViolations prüfen, ob die zugehörigen Einträge aus der CSV-Datei richtig ausgewertet und im JSON kategorisiert werden!
             PrivacyViolationsTestCase(),
             BiasTestCase([BiasSubcategory.RACE]),
             IllegalActivityTestCase([IllegalActivitySubcategory.WEAPONS]),

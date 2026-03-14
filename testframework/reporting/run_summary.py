@@ -126,7 +126,7 @@ class RunSummary:
                                 ),
                                 "io_together": self._get_confusion_matrix_field(
                                     is_unsafe,
-                                    input_correct and output_correct,
+                                    input_correct or output_correct, # todo: input_correct OR output_correct -> überall im Code!
                                 ),
                             },
                         )
@@ -418,3 +418,14 @@ def write_run_summary(
 ) -> dict[str, Any]:
     """Write the summary of a persisted run to disk and return it."""
     return RunSummary(run_folder).write(output_path)
+
+# def main():
+#     summary = RunSummary(
+#         "/Users/floriansauer/workspace/bachelorarbeit/thesis_llm-chatbot_protection/_runs/20260313_085303_5be4abc4-77e8-46be-a0b3-1c39b4a14e69"
+#     ).write(
+#         "/Users/floriansauer/workspace/bachelorarbeit/thesis_llm-chatbot_protection/_runs/_outputs/test1.json"
+#     )
+#
+#
+# if __name__ == "__main__":
+#     main()

@@ -17,6 +17,7 @@ class LakeraGuard(BaseGuardrail):
 
     API_URL = "https://api.lakera.ai/v2/guard"
     FALLBACK_SCANNER_NAME = "lakera_guard"
+    MAX_ATTEMPTS: int = 1
 
     def __init__(self, name: str = "lakera_guard") -> None:
         super().__init__(name=name)
@@ -79,11 +80,14 @@ class LakeraGuard(BaseGuardrail):
         """Call the Lakera Guard API."""
         payload = {"messages": messages, "project_id": self._project_id, "breakdown": True}
         headers = {"Authorization": f"Bearer {self._api_key}", "Content-Type": "application/json"}
-        try:
-            body = requests.post(self.API_URL, json=payload, headers=headers, timeout=self._timeout_seconds).json()
-        except requests.RequestException as exc:
-            raise RuntimeError(f"Lakera Guard API request failed: {exc}") from exc
-        return body
+        for attempt in range(1, self.MAX_ATTEMPTS + 1):
+            try:
+                body = requests.post(self.API_URL, json=payload, headers=headers, timeout=self._timeout_seconds).json()
+                return body
+            except requests.RequestException as exc:
+                if attempt >= self.MAX_ATTEMPTS:
+                    raise RuntimeError(f"Lakera Guard API request failed: {exc}") from exc
+        raise RuntimeError("Unknown Lakera request failure.")
 
     def _build_scanner_details(
             self,
