@@ -53,3 +53,4 @@ class CliArgs(str, Enum):
     SUMMARIZE_RUN = "summarize-run"
     RUN = "--run"
     OUTPUT = "--output"
+    EXCLUDE_SCANNERS = "--exclude-scanners"

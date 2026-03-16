@@ -99,6 +99,7 @@ def main() -> None:
             write_run_summary(
                 run_folder=args.run,
                 output_path=output_path,
+                exclude_scanners=args.exclude_scanners,
             )
             logger.info(f"Run summary written to {output_path}")
 
@@ -161,6 +162,11 @@ def add_arguments(subparsers: _SubParsersAction[ArgumentParser]):
         required=True,
         default=None,
         help="Optional output path for the generated summary JSON.",
+    )
+    summarize_run_parser.add_argument(
+        CliArgs.EXCLUDE_SCANNERS.value,
+        action="store_true",
+        help="Exclude configured scanners from the summary and recompute guardrail success.",
     )
 
 
