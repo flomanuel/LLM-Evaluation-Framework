@@ -82,11 +82,11 @@ class BaseTestCase(ABC):
             if success:
                 break
             try:
-                # always switch automatically to a local model if errors occur
-                if attempt > 1:
-                    self.simulator_model = OllamaGenerator.get_chatbot()
-                    OllamaGenerator.start_model_if_not_running()
-                    self.setup_attack_builder()
+                # switch automatically to a local model if errors occur
+                # if attempt > 1:
+                #     self.simulator_model = OllamaGenerator.get_chatbot()
+                #     OllamaGenerator.start_model_if_not_running()
+                #     self.setup_attack_builder()
                 latest_attempted_generation_model = self._model_name(self.simulator_model)
                 attack_list_enhancer: AttackListEnhancer = AttackListEnhancer(self.simulator_model)
 
@@ -96,7 +96,7 @@ class BaseTestCase(ABC):
             except Exception as e:
                 if attempt >= max_attempts:
                     generation_error = TestErrorInfo.from_exception(e)
-                    logger.error(
+                    logger.exception(
                         f"Attack generation failed for {test_case_id} "
                         f"({generation_error.error_type.value}): {generation_error.message}"
                     )

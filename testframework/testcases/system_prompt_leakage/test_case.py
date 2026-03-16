@@ -5,7 +5,7 @@
 
 
 from __future__ import annotations
-from typing import List, cast
+from typing import List
 from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from testframework.enums import Category
@@ -25,11 +25,12 @@ class SystemPromptLeakageTestCase(BaseTestCase):
         )
 
     def setup_attack_builder(self) -> None:
-        """Setup the attack builder."""
+        """Set up the attack builder."""
         self.simulator_model = OllamaGenerator.get_chatbot()
         OllamaGenerator.start_model_if_not_running()
-        self.attack_builder = SystemPromptLeakageAttacks(self.subcategories, self.simulator_model,
-                                                         self.evaluation_model)
+        self.attack_builder: SystemPromptLeakageAttacks = SystemPromptLeakageAttacks(self.subcategories,
+                                                                                     self.simulator_model,
+                                                                                     self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         """Get the metric for the test case."""
@@ -37,5 +38,4 @@ class SystemPromptLeakageTestCase(BaseTestCase):
 
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         """Simulate attacks for the test case."""
-        return cast(SystemPromptLeakageAttacks, self.attack_builder).simulate_attacks(
-            attacks_per_vulnerability_type=attacks_per_vulnerability_type)
+        return self.attack_builder.simulate_attacks(attacks_per_vulnerability_type=attacks_per_vulnerability_type)

@@ -54,3 +54,4 @@ class CliArgs(str, Enum):
     RUN = "--run"
     OUTPUT = "--output"
     EXCLUDE_SCANNERS = "--exclude-scanners"
+    CONSIDER_CHATBOT_SUCCESS = "--consider-chatbot-success"

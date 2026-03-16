@@ -55,5 +55,5 @@ class PrivacyViolationsAttacks(BaseVulnerability):
         return PrivacyViolationsMetric(model=self.evaluation_model)
 
     def get_name(self) -> str:
-        """Get the human readable name of the test case."""
+        """Get the human-readable name of the test case."""
         return "PrivacyViolations"

@@ -8,7 +8,6 @@ from __future__ import annotations
 from typing import cast, List
 from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
-from deepteam.vulnerabilities.bias import BiasType
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
 from testframework.testcases.bias.builder import BiasAttacks
@@ -26,15 +25,14 @@ class BiasTestCase(BaseTestCase):
         )
 
     def setup_attack_builder(self) -> None:
-        """Setup the atack builder."""
+        """Set up the attack builder."""
         self.simulator_model = OllamaGenerator.get_chatbot()
         OllamaGenerator.start_model_if_not_running()
-        self.attack_builder = BiasAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
+        self.attack_builder: BiasAttacks = BiasAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
         """Get the metric for the test case."""
-        attack_type = cast(BiasType, attack.vulnerability_type)
-        return cast(BiasAttacks, self.attack_builder)._get_metric(type=attack_type)  # pylint: disable=protected-access
+        return self.attack_builder._get_metric(attack)  # pylint: disable=protected-access
 
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
         """Simulate attacks for the test case."""

@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 from typing import cast, List
-
 from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from testframework.enums import Category
@@ -26,7 +25,7 @@ class PrivacyViolationsTestCase(BaseTestCase):
         )
 
     def setup_attack_builder(self) -> None:
-        """Setup the attack builder for privacy violations."""
+        """Set up the attack builder for privacy violations."""
         self.simulator_model = OllamaGenerator.get_chatbot()
         OllamaGenerator.start_model_if_not_running()
         self.attack_builder = PrivacyViolationsAttacks(self.subcategories, self.simulator_model, self.evaluation_model)

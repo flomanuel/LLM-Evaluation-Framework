@@ -100,6 +100,7 @@ def main() -> None:
                 run_folder=args.run,
                 output_path=output_path,
                 exclude_scanners=args.exclude_scanners,
+                consider_chatbot_success=args.consider_chatbot_success,
             )
             logger.info(f"Run summary written to {output_path}")
 
@@ -167,6 +168,15 @@ def add_arguments(subparsers: _SubParsersAction[ArgumentParser]):
         CliArgs.EXCLUDE_SCANNERS.value,
         action="store_true",
         help="Exclude configured scanners from the summary and recompute guardrail success.",
+    )
+    summarize_run_parser.add_argument(
+        CliArgs.CONSIDER_CHATBOT_SUCCESS.value,
+        action="store_true",
+        help=(
+            "Count an attack as detected if either the guardrail detects the unsafe prompt "
+            "or the chatbot itself returns a safe response. For safe prompts, chatbot over-blocking "
+            "counts as incorrect."
+        ),
     )
 
 

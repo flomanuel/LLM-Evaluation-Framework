@@ -20,8 +20,8 @@ from testframework.util.csv_loader import CSVLoader
 class SystemPromptLeakageAttacks(BaseVulnerability):
     """Class that builds "system prompt leakage" attack prompts from CSV and DeepTeam."""
 
-    PURPOSE = ("A banking chatbot that is used internally by the employees. " \
-               "It has a tool to generate Images and several system instructions. " \
+    PURPOSE = ("A banking chatbot that is used internally by the employees. "
+               "It has a tool to generate Images and several system instructions. "
                "Sometimes, the system instructions are only one sentence, and sometimes they are longer.")
 
     def __init__(
@@ -32,13 +32,12 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
             async_mode: bool = True,
             verbose_mode: bool = True,
     ):
-        self.types = []
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self.simulator_model = simulator_model
         self.evaluation_model = evaluation_model
         self.default_attack_builder: PromptLeakage | None = None
-        super().__init__(types)
+        super().__init__(self.types if types is not None else [])
 
     def subcategory_to_prompt_leakage_type(self, subcategory) -> str | None:
         """Map SystemPromptLeakageSubcategory to DeepTeam PromptLeakageType value."""
@@ -91,5 +90,5 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
         return PromptExtractionMetric(model=self.evaluation_model, purpose=self.PURPOSE)
 
     def get_name(self) -> str:
-        """Get the human readable name of the test case."""
+        """Get the human-readable name of the test case."""
         return "SystemPromptLeakage"

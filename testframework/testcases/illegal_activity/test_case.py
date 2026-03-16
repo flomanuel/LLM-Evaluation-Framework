@@ -25,7 +25,7 @@ class IllegalActivityTestCase(BaseTestCase):
         )
 
     def setup_attack_builder(self) -> None:
-        """Setup the attack builder."""
+        """Set up the attack builder."""
         self.simulator_model = OllamaGenerator.get_chatbot()
         OllamaGenerator.start_model_if_not_running()
         self.attack_builder = IllegalActivity(self.subcategories, self.simulator_model, self.evaluation_model)
