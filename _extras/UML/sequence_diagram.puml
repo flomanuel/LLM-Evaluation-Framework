@@ -2,165 +2,54 @@
 !theme plain
 autonumber
 
-title LLM Chatbot Protection Framework - Baseline Run and Summary Sequence
+title LLM Chatbot Protection Framework - Conceptual Run Flow
 
 actor User
-participant "CLI\ncli.main()" as CLI
-participant "DefaultTest /\nTest.run()" as TestRun
-participant "ChatbotStore" as Store
-participant "VectorStore" as VS
-participant "BaseTestCase" as BTC
-participant "Attack Builder\n(BaseVulnerability / DeepTeam / CSV)" as Builder
-participant "AttackListEnhancer" as Enhancer
-participant "LangChainChatbot" as Chatbot
-participant "OpenAI / LangChain" as OpenAI
-participant "DeepTeam / DeepEval\nMetric" as Metric
-participant "GuardrailRunner" as Runner
-participant "PromptHardeningGuardrail" as PH
-participant "Other Guardrails\nLLM Guard, LlamaFirewall,\nLakera, Guardrails AI, GCP Model Armor" as OtherGuards
-participant "Storage" as Storage
-participant "Run Summary\nbuild_run_summary()" as Summary
+participant "CLI" as CLI
+participant "Test Run\n(DefaultTest / Test)" as TestRun
+participant "Test Cases" as TestCases
+participant "Attack Generation\n+ Enhancement" as AttackFlow
+participant "Chatbots" as Chatbots
+participant "Evaluation + Guardrails" as Evaluation
+participant "Storage / Summary" as Storage
 
 == Baseline Run ==
 
-User -> CLI: llm-test-baseline run-baseline
-CLI -> TestRun: DefaultTest(results_dir)\nrun()
+User -> CLI: run-baseline
+CLI -> TestRun: create suite and start run()
 activate TestRun
 
-TestRun -> Storage: get_run_folder(run_id, timestamp)
-Storage --> TestRun: run_folder
+TestRun -> TestCases: iterate configured test cases
 
-TestRun -> VS: VectorStore()
-VS --> TestRun: vector store instance
-TestRun -> Store: add_chatbot(gpt-5)
-TestRun -> Store: add_chatbot(gpt-4.1)
+loop for each test case
+    TestCases -> AttackFlow: load or generate attacks
+    AttackFlow --> TestCases: attacks + enhanced variants
 
-loop for each test case returned by get_test_cases()
-    TestRun -> BTC: execute()
-    activate BTC
-
-    BTC -> BTC: setup_attack_builder()
-    BTC -> Builder: simulate_attacks(attacks_per_vulnerability_type)
-    note right of Builder
-      Builders may combine:
-      - CSVLoader-based custom prompts
-      - DeepTeam vulnerability generation
+    TestCases -> Chatbots: execute attacks
+    note right of Chatbots
+      Chatbots may use:
+      - plain prompting
+      - RAG context
+      - attack documents
+      - optional tools
     end note
-    Builder --> BTC: List[RTTestCase]
+    Chatbots --> TestCases: chatbot responses
 
-    BTC -> Enhancer: enhance(attacks)
-    activate Enhancer
-    loop for each base RTTestCase
-        alt vulnerability_type == document-embedded-instructions
-            Enhancer -> Enhancer: keep attack as-is\nreuse technique from metadata
-        else for each enhancement technique
-            Enhancer -> Enhancer: apply transform(...)\ncreate EnhancedAttack
-        end
-    end
-    alt failed enhancement rate > threshold
-        Enhancer --> BTC: AttackEnhancementResult\n(stopped_early, threshold_exceeded)
-    else threshold not exceeded
-        Enhancer --> BTC: AttackEnhancementResult\n(enhanced_attacks)
-    end
-    deactivate Enhancer
+    TestCases -> Evaluation: score responses and run guardrails
+    Evaluation --> TestCases: baseline result + protection result
 
-    alt enhancement threshold exceeded
-        BTC -> BTC: record enhancement_error\nskip chatbot execution
-    else execute enhanced attacks
-        BTC -> Store: get_chatbots()
-        Store --> BTC: registered chatbots
-
-        loop for each EnhancedAttack
-            alt attack enhancement failed
-                BTC -> BTC: Attack.from_enhancement_error(...)
-            else enhanced attack executable
-                loop for each chatbot
-                    BTC -> Chatbot: query(attack.input, file_path?, is_rag?)
-                    activate Chatbot
-                    alt file_path present
-                        Chatbot -> Chatbot: load PDF from _attack_documents\nbuild prompt with document
-                    else RAG enabled
-                        Chatbot -> VS: similarity_search(query, k)
-                        VS --> Chatbot: matching documents
-                        Chatbot -> Chatbot: build prompt with retrieved context
-                    else direct prompt
-                        Chatbot -> Chatbot: use raw enhanced prompt
-                    end
-                    Chatbot -> OpenAI: invoke(messages + optional tool binding)
-                    OpenAI --> Chatbot: model response + tool call metadata
-                    Chatbot --> BTC: ChatbotResponse
-                    deactivate Chatbot
-
-                    alt chatbot query error
-                        BTC -> BTC: ChatbotResponseEvaluation.from_error(...)
-                    else chatbot response available
-                        BTC -> Metric: measure(RTTestCase,\nToolInfo?)
-                        note right of Metric
-                          Uses either:
-                          - DeepTeam metric from the builder
-                          - Custom DeepEval GEval metric
-                          - ToolCallCodeInjectionMetric for tool traces
-                        end note
-                        Metric --> BTC: ChatbotResponseEvaluation
-                    end
-                end
-
-                BTC -> Runner: run(attack, chatbot_responses_eval, metric)
-                activate Runner
-                loop for each configured guardrail
-                    Runner -> Runner: eval_attack(full prompt seen by chatbot)
-                    alt PromptHardeningGuardrail
-                        Runner -> PH: eval_model_response(original attack,\nchatbot, file_path?, rag_context?, metric)
-                        activate PH
-                        PH -> Store: get_chatbot(chatbot)
-                        Store --> PH: chatbot instance
-                        PH -> Chatbot: query(hardened prompt,\nhardened system prompt)
-                        Chatbot -> OpenAI: invoke(...)
-                        OpenAI --> Chatbot: hardened response
-                        Chatbot --> PH: ChatbotResponse
-                        PH -> Metric: re-measure hardened response
-                        Metric --> PH: metric outcome
-                        PH --> Runner: PromptHardeningDetectionElement
-                        deactivate PH
-                    else all other guardrails
-                        Runner -> OtherGuards: eval_model_response(response or tool trace)
-                        OtherGuards --> Runner: DetectionElement
-                    end
-                end
-                Runner --> BTC: protection results per guardrail and chatbot
-                deactivate Runner
-
-                BTC -> BTC: build Attack(prompt variants,\nllm_responses, protection)
-            end
-        end
-    end
-
-    BTC -> Storage: save_test_case_result(result, run_folder)
-    Storage --> BTC: testcase/<identifier>.json
-    BTC --> TestRun: TestCaseResult
-    deactivate BTC
+    TestCases -> Storage: write testcase JSON
 end
 
-TestRun -> Storage: save_test_run(TestRunResult)
-Storage --> TestRun: result.json
-TestRun --> CLI: TestRunResult
+TestRun -> Storage: write run result.json
+Storage --> CLI: persisted run
 deactivate TestRun
 
-== Post-Run Summary ==
+== Summary ==
 
-User -> CLI: llm-test-baseline summarize-run --run <id>
-CLI -> Summary: build_run_summary(run_reference)
-activate Summary
-Summary -> Storage: resolve_run_folder(...)
-Storage --> Summary: run folder
-
-loop for each testcase JSON in run_folder/testcase
-    Summary -> Summary: process baseline llm_responses
-    Summary -> Summary: process guardrail protection results
-    Summary -> Summary: aggregate TP/FP/TN/FN\nper model / category / technique / stage
-end
-
-Summary --> CLI: summary dict
-deactivate Summary
+User -> CLI: summarize-run
+CLI -> Storage: load stored testcase JSON files
+Storage -> Storage: aggregate per chatbot,\nper guardrail, per category,\nper technique
+Storage --> CLI: summary JSON + CSV
 
 @enduml
