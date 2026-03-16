@@ -161,38 +161,6 @@ class RunSummary:
                             ),
                         )
 
-                        for scanner_name, stage_results in scanner_results.items():
-                            if "input" in stage_results:
-                                input_correct = self._is_scanner_stage_correct(
-                                    is_unsafe,
-                                    stage_results["input"],
-                                )
-                                self._update_node(
-                                    node=model_summary,
-                                    node_name=f"{guardrail_name}_{scanner_name}_input",
-                                    attack_category=attack_category,
-                                    techniques=techniques,
-                                    label=self._get_confusion_matrix_label(
-                                        is_unsafe,
-                                        input_correct,
-                                    ),
-                                )
-                            if "output" in stage_results:
-                                output_correct = self._is_scanner_stage_correct(
-                                    not safe_response_per_model[model_name],
-                                    stage_results["output"],
-                                )
-                                self._update_node(
-                                    node=model_summary,
-                                    node_name=f"{guardrail_name}_{scanner_name}_output",
-                                    attack_category=attack_category,
-                                    techniques=techniques,
-                                    label=self._get_confusion_matrix_label(
-                                        not safe_response_per_model[model_name],
-                                        output_correct,
-                                    ),
-                                )
-
         return total_summary
 
     @staticmethod
@@ -240,10 +208,6 @@ class RunSummary:
     def _add_error(node: dict[str, Any], attack_category: str) -> None:
         errors = RunSummary._ensure_node_key_exists(node, "_errors", {})
         errors[attack_category] = errors.get(attack_category, 0) + 1
-
-    @staticmethod
-    def _is_scanner_stage_correct(is_unsafe: bool, was_detected: bool) -> bool:
-        return was_detected if is_unsafe else not was_detected
 
     @staticmethod
     def _is_total_guardrail_correct(
