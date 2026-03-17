@@ -1,5 +1,5 @@
 [project]
-name = "LLM Evaluation Framework"
+name = "llm-evaluation-framework"
 version = "1.0.0"
 description = "Test framework for evaluating LLM chatbot guardrails using DeepTeam and OpenAI."
 authors = [{ name = "Florian Sauer" }]
