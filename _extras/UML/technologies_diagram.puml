@@ -1,0 +1,96 @@
+@startuml
+!theme plain
+skinparam componentStyle rectangle
+skinparam rectangle {
+    BackgroundColor<<Category>> #E8EEF5
+    BorderColor<<Category>> #5A6B7A
+    FontStyle bold
+}
+
+title LLM Chatbot Protection Framework - Technology Stack
+
+rectangle "Project Technology Stack" {
+
+    rectangle "Core Runtime & CLI" <<Category>> {
+        [Python ~=3.13.0] as Python
+        [argparse] as Argparse
+        [python-dotenv ~=1.2.2] as Dotenv
+        [loguru ~=0.7.0] as Loguru
+    }
+
+    rectangle "Attack Generation & Evaluation" <<Category>> {
+        [deepteam ~=1.0.6] as DeepTeam
+        [deepeval ~=3.8.8] as DeepEval
+        [ollama ~=0.6.1] as Ollama
+    }
+
+    rectangle "Chatbots & RAG" <<Category>> {
+        [langchain ~=1.2.10] as LangChain
+        [langchain-openai ~=1.1.10] as LangChainOpenAI
+        [langchain-postgres ~=0.0.17] as LangChainPostgres
+        [langchain-community ~=0.4.1] as LangChainCommunity
+        [langchain-text-splitters ~=1.1.1] as LangChainSplitters
+        [openai ~=2.24.0] as OpenAISDK
+        [OpenAI API] as OpenAIAPI
+        [pypdf ~=6.7.5] as PyPDF
+    }
+
+    rectangle "Guardrails" <<Category>> {
+        [llm-guard ~=0.3.16] as LLMGuard
+        [guardrails-ai ~=0.9.1] as GuardrailsAI
+        [llamafirewall ~=1.0.3] as LlamaFirewall
+        [google-cloud-modelarmor ~=0.4.0] as GcpModelArmor
+        [Lakera Guard API] as LakeraAPI
+        [Guardrails AI service] as GuardrailsService
+        [GCP Model Armor API] as GcpModelArmorAPI
+    }
+
+    rectangle "Persistence & Local Infrastructure" <<Category>> {
+        [PostgreSQL] as Postgres
+        [pgvector] as Pgvector
+        [psycopg ~=3.3.3] as Psycopg
+        [Docker Compose] as Docker
+        [pgAdmin 4] as PgAdmin
+    }
+
+    rectangle "Developer Tooling" <<Category>> {
+        [uv] as UV
+        [PlantUML] as PlantUML
+        [Flake8 ~=7.3.0] as Flake8
+        [Pylint ~=4.0.5] as Pylint
+        [Bandit ~=1.9.4] as Bandit
+        [OpenTelemetry OTLP ~=1.39.1\n(declared dependency,\nnot used in testframework code)] as OTLP
+    }
+}
+
+Python ..> Argparse : CLI parsing
+Python ..> Dotenv : env loading
+Python ..> Loguru : logging
+
+DeepTeam ..> DeepEval : metrics / model abstractions
+DeepEval ..> Ollama : local simulator option
+
+LangChain ..> LangChainOpenAI : chatbot + embeddings integration
+LangChain ..> LangChainPostgres : PGVector integration
+LangChain ..> LangChainCommunity : PyPDFLoader
+LangChain ..> LangChainSplitters : chunking
+LangChainCommunity ..> PyPDF : PDF parsing
+LangChainOpenAI ..> OpenAIAPI : model and embedding calls
+OpenAISDK ..> OpenAIAPI : direct SDK usage
+
+LLMGuard ..> Python : in-process library
+GuardrailsAI ..> GuardrailsService : external validation service
+LlamaFirewall ..> Python : in-process library
+GcpModelArmor ..> GcpModelArmorAPI : remote API
+LakeraAPI ..> Python : HTTPS API usage
+
+LangChainPostgres ..> Psycopg : database driver
+LangChainPostgres ..> Postgres : vector storage
+Postgres ..> Pgvector : vector extension
+Docker ..> Postgres : local service
+Docker ..> PgAdmin : local service
+Docker ..> GuardrailsService : optional local service
+
+UV ..> Python : environment + dependency management
+
+@enduml

@@ -1,0 +1,12 @@
+Source 1
+- https://promptfoo.dev/models/reports/deepseek-r1
+- Last access: 2026-02-27 13:14 (MEZ)
+
+Source 2
+- (Yuan et al. 2024)
+- Last access: 2026-02-27 13:18 (MEZ)
+
+
+
+Bibliography:
+Yuan, Youliang, Wenxiang Jiao, Wenxuan Wang, et al. 2024. ‘GPT-4 Is Too Smart To Be Safe: Stealthy Chat with LLMs via Cipher’. arXiv:2308.06463. Preprint, arXiv, March 26. https://doi.org/10.48550/arXiv.2308.06463.

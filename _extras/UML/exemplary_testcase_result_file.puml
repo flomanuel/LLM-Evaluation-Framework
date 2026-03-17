@@ -1,0 +1,286 @@
+@startjson
+{
+   "category":"benign",
+   "subcategories":[
+      "banking"
+   ],
+   "model":{
+      "attack_and_vulnerability_generation":"aqualaguna/gemma-3-27b-it-abliterated-GGUF:q2_k (Ollama)"
+   },
+   "attacks":{
+      "c4bd4a86-47b8-4ef6-a9c2-c08acdc77a5c":{
+         "category":"benign",
+         "subcategory":"banking",
+         "techniques":[
+            "Baseline Prompt (no Technique)"
+         ],
+         "severity":"safe",
+         "prompt":{
+            "baseline":"Some prompt.",
+            "enhanced":"some prompt + technique"
+         },
+         "llm_responses":{
+            "LANGCHAIN_GPT_5":{
+               "chatbot_response":{
+                  "prompt":"Default prompt sent to the chatbot query method",
+                  "raw_prompt":"Default prompt + context",
+                  "response":"the chatbot's response",
+                  "system_prompt":"You are a helpful bank assistant...",
+                  "tool":{
+                     "tool_called":false,
+                     "tool_name":null,
+                     "tool_args":null
+                  },
+                  "prompt_tokens":995,
+                  "response_tokens":464,
+                  "rag_context":{
+                     "embedding_model":"text-embedding-3-small",
+                     "nodes":[
+                        "some node",
+                        "another node"
+                     ]
+                  },
+                  "document_content":null,
+                  "file_path":"",
+                  "error":null
+               },
+               "score":0.0,
+               "reason":"The DeepEval evaluation - e.g. 'The output is a professional business email ...'",
+               "success":true,
+               "metric":"Harm (Red Teaming)",
+               "error":null
+            },
+            "LANGCHAIN_GPT_41":{
+               "chatbot_response":{
+                  "prompt":"Default prompt sent to the chatbot query method",
+                  "raw_prompt":"Default prompt + context",
+                  "response":"the chatbot's response",
+                  "system_prompt":"You are a helpful bank assistant...",
+                  "tool":{
+                     "tool_called":false,
+                     "tool_name":null,
+                     "tool_args":null
+                  },
+                  "prompt_tokens":995,
+                  "response_tokens":464,
+                  "rag_context":{
+                     "embedding_model":"text-embedding-3-small",
+                     "nodes":[
+                        "some node",
+                        "another node"
+                     ]
+                  },
+                  "document_content":null,
+                  "file_path":"",
+                  "error":null
+               },
+               "score":0.0,
+               "reason":"The DeepEval evaluation - e.g. 'The output is a professional business email ...'",
+               "success":true,
+               "metric":"Harm (Red Teaming)",
+               "error":null
+            }
+         },
+         "protection":{
+            "prompt_hardening":{
+               "LANGCHAIN_GPT_5":{
+                  "input_detection":{
+                     "success":false,
+                     "detected_type":null,
+                     "score":1.0,
+                     "judge_raw_response":"Prompt hardening guardrail cannot evaluate the attack without the model response.",
+                     "latency":null,
+                     "scanner_details":[],
+                     "error":null,
+                     "chatbot_response":null
+                  },
+                  "output_detection":{
+                     "success":true,
+                     "detected_type":"Types defined in metric",
+                     "score":0.0,
+                     "judge_raw_response":"The output is a professional business email arranging a me...",
+                     "latency":25.36652395800047,
+                     "scanner_details":[],
+                     "error":null,
+                     "chatbot_response":{
+                        "prompt":"The prompt",
+                        "raw_prompt":"The raw prompt used for the evaluation",
+                        "response":"The chatbot's response",
+                        "system_prompt":"\nSYSTEM INSTRUCTIONS: BEGIN\n\nROLE\n- You are a helpful bank chatbot...",
+                        "tool":{
+                           "tool_called":false,
+                           "tool_name":null,
+                           "tool_args":null
+                        },
+                        "prompt_tokens":1244,
+                        "response_tokens":572,
+                        "rag_context":null,
+                        "document_content":null,
+                        "file_path":null,
+                        "error":null
+                     }
+                  }
+               },
+               "LANGCHAIN_GPT_41":{
+                  "input_detection":{
+                     "success":false,
+                     "detected_type":null,
+                     "score":1.0,
+                     "judge_raw_response":"Prompt hardening guardrail cannot evaluate the attack without the model response.",
+                     "latency":null,
+                     "scanner_details":[],
+                     "error":null,
+                     "chatbot_response":null
+                  },
+                  "output_detection":{
+                     "success":true,
+                     "detected_type":"Types defined in metric",
+                     "score":0.0,
+                     "judge_raw_response":"The output is a professional business email arranging a me...",
+                     "latency":25.36652395800047,
+                     "scanner_details":[
+
+                     ],
+                     "error":null,
+                     "chatbot_response":{
+                        "prompt":"The prompt",
+                        "raw_prompt":"The raw prompt used for the evaluation",
+                        "response":"The chatbot's response",
+                        "system_prompt":"\nSYSTEM INSTRUCTIONS: BEGIN\n\nROLE\n- You are a helpful bank chatbot...",
+                        "tool":{
+                           "tool_called":false,
+                           "tool_name":null,
+                           "tool_args":null
+                        },
+                        "prompt_tokens":1244,
+                        "response_tokens":572,
+                        "rag_context":null,
+                        "document_content":null,
+                        "file_path":null,
+                        "error":null
+                     }
+                  }
+               }
+            },
+            "llm_guard":{
+               "LANGCHAIN_GPT_5":{
+                  "input_detection":{
+                     "success":false,
+                     "detected_type":"Anonymize",
+                     "score":1.0,
+                     "judge_raw_response":"Prompt rejected by: Anonymize.",
+                     "latency":1.6676930419998826,
+                     "scanner_details":[
+                        {
+                           "name":"Anonymize",
+                           "score":1.0,
+                           "reason":"Input rejected by scanner",
+                           "is_valid":false,
+                           "sanitized_input":"the sanitized response"
+                        },
+                        {
+                           "name":"BanCode",
+                           "score":0.0,
+                           "reason":"Input accepted",
+                           "is_valid":true,
+                           "sanitized_input":"the sanitized response"
+                        }
+                     ],
+                     "error":null
+                  },
+                  "output_detection":{
+                     "success":false,
+                     "detected_type":"FactualConsistency, Sensitive",
+                     "score":1.0,
+                     "judge_raw_response":"Model response rejected by: FactualConsistency, Sensitive.",
+                     "latency":0.8045266659974004,
+                     "scanner_details":[
+                        {
+                           "name":"BanCode",
+                           "score":0.0,
+                           "reason":"Output accepted",
+                           "is_valid":true,
+                           "sanitized_input":"..."
+                        },
+                        {
+                           "name":"FactualConsistency",
+                           "score":0.6,
+                           "reason":"Output rejected by scanner",
+                           "is_valid":false,
+                           "sanitized_input":"..."
+                        },
+                        {
+                           "name":"Sensitive",
+                           "score":1.0,
+                           "reason":"Output rejected by scanner",
+                           "is_valid":false,
+                           "sanitized_input":"..."
+                        }
+                     ],
+                     "error":null
+                  }
+               },
+               "LANGCHAIN_GPT_41":{
+                  "input_detection":{
+                     "success":false,
+                     "detected_type":"Anonymize",
+                     "score":1.0,
+                     "judge_raw_response":"Prompt rejected by: Anonymize.",
+                     "latency":1.6676930419998826,
+                     "scanner_details":[
+                        {
+                           "name":"Anonymize",
+                           "score":1.0,
+                           "reason":"Input rejected by scanner",
+                           "is_valid":false,
+                           "sanitized_input":"the sanitized response"
+                        },
+                        {
+                           "name":"BanCode",
+                           "score":0.0,
+                           "reason":"Input accepted",
+                           "is_valid":true,
+                           "sanitized_input":"the sanitized response"
+                        }
+                     ],
+                     "error":null
+                  },
+                  "output_detection":{
+                     "success":false,
+                     "detected_type":"FactualConsistency, Sensitive",
+                     "score":1.0,
+                     "judge_raw_response":"Model response rejected by: FactualConsistency, Sensitive.",
+                     "latency":0.8045266659974004,
+                     "scanner_details":[
+                        {
+                           "name":"BanCode",
+                           "score":0.0,
+                           "reason":"Output accepted",
+                           "is_valid":true,
+                           "sanitized_input":"..."
+                        },
+                        {
+                           "name":"FactualConsistency",
+                           "score":0.6,
+                           "reason":"Output rejected by scanner",
+                           "is_valid":false,
+                           "sanitized_input":"..."
+                        },
+                        {
+                           "name":"Sensitive",
+                           "score":1.0,
+                           "reason":"Output rejected by scanner",
+                           "is_valid":false,
+                           "sanitized_input":"..."
+                        }
+                     ],
+                     "error":null
+                  }
+               }
+            }
+         }
+      },
+      "error":null
+   }
+}
+@endjson

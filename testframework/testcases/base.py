@@ -1,0 +1,365 @@
+#  Copyright (c) 2026 Florian Emanuel Sauer
+#
+#  This source code is licensed under the MIT license found in the
+#  LICENSE file in the root directory of this source tree.
+
+
+from __future__ import annotations
+
+import os
+import uuid
+from abc import ABC, abstractmethod
+from enum import Enum
+from pathlib import Path
+from time import perf_counter
+from typing import Dict, List, Any
+from deepeval.models import DeepEvalBaseLLM
+from deepteam.metrics import BaseRedTeamingMetric
+from deepteam.test_case import RTTestCase
+from deepteam.vulnerabilities import BaseVulnerability
+from loguru import logger
+from testframework.chatbots.base import BaseChatbot
+from testframework.chatbots.store import ChatbotStore
+from testframework.custom_attack_techniques import AttackListEnhancer
+from testframework.enums import Category, ChatbotName, Severity
+from testframework.guardrails.runner import GuardrailRunner
+from testframework.metrics import ToolCallCodeInjectionMetric
+from testframework.models import TestCaseResult, Attack, DetectionResult, PromptVariants, ChatbotResponseEvaluation, \
+    TestErrorInfo, EnhancedAttack, ChatbotResponse, AttackEnhancementResult, LLMErrorType
+from testframework.storage import save_test_case_result
+from testframework.util.ollama_handler import OllamaGenerator
+
+
+class BaseTestCase(ABC):
+    """Abstract base for all test cases."""
+
+    MAX_RETRIES = 1
+    results: TestCaseResult
+    run_folder: Path | None = None
+    simulator_model: DeepEvalBaseLLM | None | str = os.environ.get("DEFAULT_SIMULATOR_MODEL", "gpt-3.5-turbo-0125")
+    evaluation_model: DeepEvalBaseLLM | None | str = os.environ.get("DEFAULT_EVAL_MODEL", "gpt-4o")
+
+    def __init__(self,
+                 category: Category,
+                 subcategories: List[Enum],
+                 severity: Severity = Severity.UNSAFE,
+                 ) -> None:
+        self.category = category
+        self.subcategories = subcategories
+        self.guardrail_runner = GuardrailRunner()
+        self.attack_builder: BaseVulnerability | None = None
+        self.severity = severity
+
+    @abstractmethod
+    def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+        """Simulate attacks for the test case."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def setup_attack_builder(self) -> None:
+        """Build or rebuild the attack builder with the current simulator model."""
+        raise NotImplementedError
+
+    def execute(self) -> TestCaseResult:
+        """
+        Run the test case and return a mapping from attack_id to TestCaseResult.
+        Build the attacks and add the techniques. Then execute the attacks on the guardrails.
+        """
+        self.setup_attack_builder()
+        test_case_id = self._test_case_identifier()
+        attack_results: dict[str, Attack] = {}
+        generation_error: TestErrorInfo | None = None
+        enhancement_error: TestErrorInfo | None = None
+        latest_attempted_generation_model: str | None = None
+
+        attacks_per_vulnerability_type = int(os.environ.get("ATTACKS_PER_VULNERABILITY_TYPE", 1))
+        enhanced_attacks: List[EnhancedAttack] = []
+        enhancement_result: AttackEnhancementResult | None = None
+
+        max_attempts = self.MAX_RETRIES + 1
+        success = False
+        for attempt in range(1, max_attempts + 1):
+            if success:
+                break
+            try:
+                # switch automatically to a local model if errors occur
+                # if attempt > 1:
+                #     self.simulator_model = OllamaGenerator.get_chatbot()
+                #     OllamaGenerator.start_model_if_not_running()
+                #     self.setup_attack_builder()
+                latest_attempted_generation_model = self._model_name(self.simulator_model)
+                attack_list_enhancer: AttackListEnhancer = AttackListEnhancer(self.simulator_model)
+
+                enhanced_attacks, enhancement_result, success = self._generate_attacks(attack_list_enhancer,
+                                                                                       attacks_per_vulnerability_type,
+                                                                                       test_case_id)
+            except Exception as e:
+                if attempt >= max_attempts:
+                    generation_error = TestErrorInfo.from_exception(e)
+                    logger.exception(
+                        f"Attack generation failed for {test_case_id} "
+                        f"({generation_error.error_type.value}): {generation_error.message}"
+                    )
+
+        executable_attacks = sum(1 for attack in enhanced_attacks if not attack.is_error)
+        skipped_attacks = len(enhanced_attacks) - executable_attacks
+        if not enhanced_attacks:
+            logger.warning(f"No executable attacks generated for '{test_case_id}'")
+        elif skipped_attacks:
+            logger.warning(
+                f"Skipping {skipped_attacks} attack(s) for '{test_case_id}' "
+                f"because prompt enhancement failed"
+            )
+
+        skip_chatbot_execution = (enhancement_result is not None and enhancement_result.threshold_exceeded)
+        if skip_chatbot_execution:
+            enhancement_error = TestErrorInfo(
+                error_type=LLMErrorType.THRESHOLD_EXCEEDED,
+                message="Skipped chatbot execution since the threshold for failed enhancements was reached.",
+            )
+            logger.warning(
+                f"Skipped chatbot execution since the threshold for failed enhancements was reached."
+                f"{executable_attacks if executable_attacks else 0} attacks would be executable.")
+        else:
+            chatbots = ChatbotStore.get_chatbots()
+            logger.info(
+                f"Executing {executable_attacks} attack(s) against {len(chatbots)} chatbot(s) "
+                f"for '{test_case_id}'"
+            )
+            self._start_attacks(attack_results, chatbots, enhanced_attacks, skip_chatbot_execution, test_case_id)
+
+        tc_result = TestCaseResult(
+            category=self.category,
+            subcategories=self.subcategories if self.subcategories else [],
+            model=TestCaseResult.ModelInfo(
+                attack_and_vulnerability_generation=latest_attempted_generation_model,
+            ),
+            attacks=attack_results,
+            generation_error=generation_error,
+            enhancement_error=enhancement_error,
+        )
+        self.results = tc_result
+        self.store_results()
+        logger.info(
+            f"Finished test case execution: {test_case_id} "
+            f"(stored_attacks={len(attack_results)})"
+        )
+        return tc_result
+
+    def _start_attacks(self, attack_results: dict[str, Attack], chatbots: dict[ChatbotName, BaseChatbot],
+                       enhanced_attacks: list[EnhancedAttack], skip_chatbot_execution: bool | Any, test_case_id: str):
+        """Start the attacks."""
+        OllamaGenerator.require_local_model_shutdown()
+        total_attacks = len(enhanced_attacks)
+        for counter, attack in enumerate(enhanced_attacks, start=1):
+            techniques = ",".join(attack.techniques) if attack.techniques else "none"
+            if attack.is_error:
+                attack_error = attack.error or TestErrorInfo.from_exception(
+                    RuntimeError("Attack enhancement failed without error details")
+                )
+                logger.warning(
+                    f"Skipping attack {counter}/{total_attacks} for '{test_case_id}' "
+                    f"(techniques={techniques}, error_type={attack_error.error_type.value})"
+                )
+                attack_results[str(uuid.uuid4())] = Attack.from_enhancement_error(
+                    self.category,
+                    self.subcategories if self.subcategories else [],
+                    self.severity,
+                    attack.baseline_input,
+                    attack.enhanced_input,
+                    attack.techniques,
+                    attack_error,
+                )
+                continue
+            if skip_chatbot_execution:
+                continue
+
+            logger.info(
+                f"Starting attack {counter}/{total_attacks} for '{test_case_id}' "
+                f"(techniques={techniques})"
+            )
+            attack_started = perf_counter()
+            attack_result = self._execute_single_attack(attack, chatbots)
+            attack_results[str(uuid.uuid4())] = attack_result
+            logger.info(
+                f"Completed attack {counter}/{total_attacks} for '{test_case_id}' "
+                f"(duration={perf_counter() - attack_started:.2f}s)"
+            )
+
+    def _generate_attacks(self, attack_list_enhancer: AttackListEnhancer, attacks_per_vulnerability_type: int,
+                          test_case_id: str) -> List[
+        List[EnhancedAttack], AttackEnhancementResult | None, bool]:
+        """Generate attacks for the test case."""
+        logger.info(f"Generating attacks for test case '{test_case_id}'")
+        generation_started = perf_counter()
+        attacks: List[RTTestCase] = self.simulate_attacks(attacks_per_vulnerability_type=attacks_per_vulnerability_type)
+        logger.info(
+            f"Generated {len(attacks)} attack(s) for '{test_case_id}' "
+            f"(duration={perf_counter() - generation_started:.2f}s)"
+        )
+        logger.info(f"Enhancing attacks for test case '{test_case_id}'")
+        enhancement_started = perf_counter()
+        enhancement_result = attack_list_enhancer.enhance(attacks)
+        enhanced_attacks = enhancement_result.enhanced_attacks
+        logger.info(
+            f"Prepared {len(enhanced_attacks)} enhanced attack(s) from {len(attacks)} "
+            f"base attack(s) for '{test_case_id}' "
+            f"(duration={perf_counter() - enhancement_started:.2f}s)"
+        )
+        return enhanced_attacks, enhancement_result, True
+
+    def _execute_single_attack(
+            self,
+            attack: EnhancedAttack,
+            chatbots: Dict[ChatbotName, BaseChatbot]
+    ) -> Attack:
+        """Execute a single attack against all chatbots."""
+        base_attack = attack.baseline_input
+        techniques = attack.techniques
+        attack_case = attack.attack_case
+        attack_case.input = attack.enhanced_input
+        bot_responses_eval: dict[ChatbotName, ChatbotResponseEvaluation] = {}
+
+        query_kwargs = self._build_query_kwargs(attack_case)
+
+        for name, chatbot in chatbots.items():
+            bot_responses_eval[name] = self._query_and_evaluate(
+                chatbot, name, attack_case, query_kwargs,  # bot_responses
+            )
+
+        logger.info(
+            f"Running guardrails for '{self._test_case_identifier()}' "
+            f"(chatbots={len(bot_responses_eval)})"
+        )
+        guardrails_started = perf_counter()
+        protection: Dict[str, Dict[ChatbotName, DetectionResult]] = self.guardrail_runner.run(
+            attack_case,
+            bot_responses_eval,
+            self._find_metric(attack_case),
+        )
+        logger.info(
+            f"Completed guardrails for '{self._test_case_identifier()}' "
+            f"(duration={perf_counter() - guardrails_started:.2f}s)"
+        )
+
+        return Attack(
+            category=self.category,
+            subcategory=attack.attack_case.vulnerability_type,
+            techniques=techniques,
+            severity=self.severity,
+            prompt=PromptVariants(base_attack, attack_case.input),
+            llm_responses=bot_responses_eval,
+            protection=protection,
+        )
+
+    def _query_and_evaluate(
+            self,
+            chatbot: BaseChatbot,
+            name: ChatbotName,
+            attack: RTTestCase,
+            query_kwargs: dict,
+    ) -> ChatbotResponseEvaluation:
+        """Query a chatbot and evaluate the response."""
+        test_case_id = self._test_case_identifier()
+        logger.info(f"Querying chatbot '{name.value}' for test case '{test_case_id}'")
+        query_started = perf_counter()
+        chatbot_resp: ChatbotResponse = chatbot.query(attack.input, **query_kwargs)
+        query_duration = perf_counter() - query_started
+
+        if chatbot_resp.is_error:
+            logger.warning(
+                f"Chatbot '{name.value}' query failed for '{test_case_id}' "
+                f"(duration={query_duration:.2f}s, error_type={chatbot_resp.error.error_type.value})"
+            )
+            return ChatbotResponseEvaluation.from_error(chatbot_resp)
+
+        logger.info(
+            f"Chatbot '{name.value}' returned a response for '{test_case_id}' "
+            f"(duration={query_duration:.2f}s)"
+        )
+
+        attack.actual_output = chatbot_resp.response
+        try:
+            logger.info(
+                f"Evaluating response from chatbot '{name.value}' for '{test_case_id}'"
+            )
+            evaluation_started = perf_counter()
+            metric = self._find_metric(attack)
+            t_info = chatbot_resp.tool
+            rag_context = chatbot_resp.rag_context.nodes if chatbot_resp.rag_context else None
+            doc_content = [chatbot_resp.document_content]
+            attack.retrieval_context = doc_content if doc_content else rag_context
+            if isinstance(metric, ToolCallCodeInjectionMetric):
+                metric.measure(attack, t_info)
+            else:
+                metric.measure(attack)
+            score = float(metric.score if not metric.error else -1)
+            logger.info(
+                f"Completed evaluation for chatbot '{name.value}' in '{test_case_id}' "
+                f"(score={score}, duration={perf_counter() - evaluation_started:.2f}s)"
+            )
+            return ChatbotResponseEvaluation(
+                chatbot_resp,
+                1 - score,
+                str(metric.reason),
+                metric.success,
+                metric.__name__,
+            )
+        except Exception as e:
+            eval_error = TestErrorInfo.from_exception(e)
+            logger.error(
+                f"Metric evaluation failed for '{name.value}' in '{test_case_id}' "
+                f"({eval_error.error_type.value}): {eval_error.message}"
+            )
+            return ChatbotResponseEvaluation.from_error(chatbot_resp, eval_error)
+
+    def _find_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
+        metadata = getattr(attack, "metadata", None)
+        if isinstance(metadata, dict) and metadata.get("tool_check") is True:
+            return ToolCallCodeInjectionMetric(model=self.evaluation_model)
+        return self._get_metric(attack)
+
+    @abstractmethod
+    def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
+        """Return the metric to evaluate the attack."""
+        raise NotImplementedError
+
+    def store_results(self) -> Path | None:
+        """Store the test case results as a backup to the run folder."""
+        if self.run_folder is None:
+            return None
+        return save_test_case_result(self.results, self.run_folder)
+
+    @staticmethod
+    def _build_query_kwargs(attack: RTTestCase) -> dict:
+        """Build additional args for custom attack scenarios."""
+
+        query_kwargs = {}
+        if attack.metadata is not None:
+            if "file_path" in attack.metadata:
+                query_kwargs["file_path"] = attack.metadata.get("file_path")
+            if "is_rag" in attack.metadata:
+                query_kwargs["is_rag"] = attack.metadata.get("is_rag")
+
+        return query_kwargs
+
+    def _test_case_identifier(self) -> str:
+        """Build a readable identifier for the current test case."""
+        if not self.subcategories:
+            return self.category.value
+
+        subcategories = ";".join(str(subcat.value) for subcat in self.subcategories)
+        return f"{self.category.value}_{subcategories}"
+
+    @staticmethod
+    def _model_name(model: DeepEvalBaseLLM | None | str) -> str | None:
+        """Get a readable model name for JSON serialization."""
+        if model is None:
+            return None
+        if isinstance(model, str):
+            return model
+
+        try:
+            return model.get_model_name()
+        except Exception:
+            return str(model)
