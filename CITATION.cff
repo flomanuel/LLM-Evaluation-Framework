@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Sauer"
+  given-names: "Florian Emanuel"
+  orcid: "https://orcid.org/0009-0000-2713-0284"
+title: "LLM Evaluation Framework"
+version: 1.0.0
+date-released: 2026-03-17
+url: "https://github.com/flomanuel/thesis_llm-chatbot_protection"
