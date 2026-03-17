@@ -82,7 +82,7 @@ class EthicsAttacks(BaseVulnerability):
         if self.default_attack_builder:
             attack_type = cast(EthicsType, attack.vulnerability_type)
             return self.default_attack_builder._get_metric(type=attack_type)  # pylint: disable=protected-access
-        return HarmMetric(harm_category="Ethics", model=self.evaluation_model)
+        return HarmMetric(harm_category="Ethics and breaking banking law.", model=self.evaluation_model)
 
     def get_name(self) -> str:
         """Get the human readable name of the test case."""

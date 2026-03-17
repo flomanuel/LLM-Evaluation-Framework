@@ -10,6 +10,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/_prompt_files/1_harmlos_aegis_20.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/_prompt_files/2_schaedlich_manuell_erstellt_basic.csv">
           <value>
             <Attribute>
@@ -18,6 +25,13 @@
           </value>
         </entry>
         <entry key="/_runs/_outputs/excluded_scanners/LANGCHAIN_GPT_41/summary.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/_runs/_outputs/excluded_scanners_and_soncider_chatbot_success/LANGCHAIN_GPT_41/summary.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
