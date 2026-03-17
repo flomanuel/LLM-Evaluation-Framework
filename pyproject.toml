@@ -5,6 +5,7 @@ description = "Test framework for evaluating LLM chatbot guardrails using DeepTe
 authors = [{ name = "Florian Sauer" }]
 requires-python = "~=3.13.0"
 
+#lock version due to reproducibility
 dependencies = [
     "openai~= 2.24.0",
     "deepteam~=1.0.6",

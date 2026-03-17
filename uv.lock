@@ -3038,7 +3038,7 @@ wheels = [
 ]
 
 [[package]]
-name = "thesis-llm-chatbot-protection"
+name = "LLM Evaluation Framework"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
