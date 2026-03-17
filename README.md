@@ -1,6 +1,8 @@
 ![Project Banner](./_extras/doc/banner.jpeg)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![GitHub Release](https://img.shields.io/github/v/release/flomanuel/LLM-Evaluation-Framework?include_prereleases)
+
 
 # Security Evaluation Tool for LLM Architectures and Guardrails
 
@@ -9,17 +11,18 @@ my bachelor's thesis.
 
 ## Key characteristics
 
-- **Architecture-driven**: Follows a modular architecture with `BaseChatbot`, `Test`, `BaseTestCase`, `GuardrailRunner`,
-  `BaseGuardrail`, and `ChatbotStore`.
-- **Attack generation with DeepTeam**: Uses DeepTeam vulnerabilities (including a custom CSV-based vulnerability) and
-  single-turn adversarial attacks to generate and enhance prompts.
-- **Result schema**: Persists each test run as a JSON file. Summary file can be added via an additional script
-- **CLI based"": Interact with the Project via CLI commands
-- **Modular**
-    - add any data source you like for generating attacks (APIs, DeepTeam, CSV files, etc.)
-    - add any LLM, LLM-based or agentic architecture as the attack target (it doesn't matter whether it is a local model
-      or an agentic architecture hosted on a hyperscaler)
-    - add your own custom techniques and evaluation criterias
+- **Architecture-first design**: Built around reusable core components such as `BaseChatbot`, `Test`, `BaseTestCase`,
+  `GuardrailRunner`, `BaseGuardrail`, and `ChatbotStore`.
+- **Adversarial attack generation with DeepTeam**: Leverages DeepTeam vulnerabilities, including custom CSV-based
+  vulnerabilities, and single-turn attack strategies to generate and refine prompts.
+- **Structured result artifacts**: Stores each test run as JSON; a separate summarization script can aggregate runs into
+  a consolidated report.
+- **CLI-first workflow**: Run evaluations and post-processing through dedicated CLI commands.
+- **Extensible framework**
+    - Integrate additional attack data sources \(APIs, DeepTeam, CSV, or custom providers\).
+    - Evaluate any target system \(single LLMs, multi-model pipelines, or agentic architectures on local or cloud
+      infrastructure\).
+    - Add custom attack techniques, scoring logic, and evaluation criteria.
 
 ## One note on the architecture
 
