@@ -25,6 +25,7 @@ dependencies = [
     "guardrails-ai~=0.9.1",
     "llamafirewall~=1.0.3",
     "google-cloud-modelarmor~=0.4.0",
+    "langchain-ollama~=1.0.0",
 ]
 
 [project.scripts]

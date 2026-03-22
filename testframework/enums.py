@@ -30,6 +30,7 @@ class ChatbotName(str, Enum):
     """Supported LLM models / Chatbots."""
     LANGCHAIN_GPT_41 = "LANGCHAIN_GPT_41"
     LANGCHAIN_GPT_5 = "LANGCHAIN_GPT_5"
+    LANGCHAIN_OLLAMA_GEMMA3_4B = "LANGCHAIN_OLLAMA_GEMMA3_4B"
     OPENAI = "OPENAI"
     DUMMY = "DUMMY"
     LANGCHAIN = "LANGCHAIN"

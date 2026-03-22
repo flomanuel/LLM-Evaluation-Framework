@@ -75,6 +75,11 @@ class RunSummary:
                     if baseline_error is not None:
                         self._add_error(model_summary, attack_category)
                         continue
+                    # Ignore techniques for baseline prompts since e.g., the technique "prompt injection" turns a
+                    # harmless prompt into an attack (e.g., changing the role) which then correctly triggers the
+                    # scanners and incorrectly counts as a false positive.
+                    if techniques not in ["Baseline Prompt (no Technique)"]:
+                        continue
 
                     is_resp_safe = evaluation[SUCCESS_KEY]
                     safe_response_per_model[model_name] = bool(is_resp_safe)
@@ -389,17 +394,3 @@ def write_run_summary(
         exclude_scanners=exclude_scanners,
         consider_chatbot_success=consider_chatbot_success,
     ).write(output_path)
-
-
-def main():
-    RunSummary(
-        "/Users/floriansauer/workspace/bachelorarbeit/thesis_llm-chatbot_protection/_runs/20260313_085303_5be4abc4-77e8-46be-a0b3-1c39b4a14e69",
-        exclude_scanners=True,
-        consider_chatbot_success=True,
-    ).write(
-        "/Users/floriansauer/workspace/bachelorarbeit/thesis_llm-chatbot_protection/_runs/_outputs/test1.json"
-    )
-
-
-if __name__ == "__main__":
-    main()

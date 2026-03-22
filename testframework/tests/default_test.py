@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import List
 from loguru import logger
 from testframework import ChatbotName
-from testframework.chatbots import LangChainChatbot, VectorStore
+from testframework.chatbots import LangChainChatbot, LangChainOllamaChatbot, VectorStore
 from testframework.chatbots.store import ChatbotStore
 from testframework.testcases import BenignTestCase, BiasTestCase, EthicsTestCase, \
     ExcessiveAgencyTestCase, IllegalActivityTestCase, IndirectInstructionTestCase, \
@@ -47,6 +47,11 @@ class DefaultTest(Test):
             model="gpt-4.1",
             vector_store=vector_store)
         ChatbotStore.add_chatbot(gpt_41)
+        ollama_gemma = LangChainOllamaChatbot(
+            name=ChatbotName.LANGCHAIN_OLLAMA_GEMMA3_4B,
+            vector_store=vector_store,
+        )
+        ChatbotStore.add_chatbot(ollama_gemma)
         logger.debug("Baseline chatbot setup complete")
 
     def get_test_cases(self) -> List[BaseTestCase]:
