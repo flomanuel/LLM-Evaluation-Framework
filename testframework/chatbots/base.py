@@ -17,6 +17,12 @@ class BaseChatbot(ABC):
     def __init__(self, name: ChatbotName) -> None:
         self.name = name
 
+    def prepare_for_test_case(self) -> None:
+        """Prepare chatbot resources before a test case starts."""
+
+    def cleanup_after_test_case(self) -> None:
+        """Release chatbot resources after a test case finishes."""
+
     @abstractmethod
     def query(
             self,

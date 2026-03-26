@@ -88,7 +88,7 @@ class AttackListEnhancer:
                 )
                 enhanced_attack_count += 1
             else:
-                # deactivate the if-branch in line 75, including the else statement in line 87. Then uncomment this
+                # deactivate the if-branch in line 78, including the else statement in line 90. Then uncomment this
                 # section and indent the former-else-flow one to the left.
                 # if is_doc_embedding_attack:
                 #     simulate indirect document injection by adding the injection defined in the prompt

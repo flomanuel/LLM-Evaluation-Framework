@@ -18,6 +18,8 @@ from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from deepteam.vulnerabilities import BaseVulnerability
 from loguru import logger
+
+from testframework.chatbots import LangChainOllamaChatbot
 from testframework.chatbots.base import BaseChatbot
 from testframework.chatbots.store import ChatbotStore
 from testframework.custom_attack_techniques import AttackListEnhancer
@@ -27,6 +29,7 @@ from testframework.metrics import ToolCallCodeInjectionMetric
 from testframework.models import TestCaseResult, Attack, DetectionResult, PromptVariants, ChatbotResponseEvaluation, \
     TestErrorInfo, EnhancedAttack, ChatbotResponse, AttackEnhancementResult, LLMErrorType
 from testframework.storage import save_test_case_result
+from testframework.testcases import ExcessiveAgencyTestCase
 from testframework.util.ollama_handler import OllamaGenerator
 
 
@@ -82,11 +85,6 @@ class BaseTestCase(ABC):
             if success:
                 break
             try:
-                # switch automatically to a local model if errors occur
-                # if attempt > 1:
-                #     self.simulator_model = OllamaGenerator.get_chatbot()
-                #     OllamaGenerator.start_model_if_not_running()
-                #     self.setup_attack_builder()
                 latest_attempted_generation_model = self._model_name(self.simulator_model)
                 attack_list_enhancer: AttackListEnhancer = AttackListEnhancer(self.simulator_model)
 
@@ -121,12 +119,34 @@ class BaseTestCase(ABC):
                 f"Skipped chatbot execution since the threshold for failed enhancements was reached."
                 f"{executable_attacks if executable_attacks else 0} attacks would be executable.")
         else:
-            chatbots = ChatbotStore.get_chatbots()
+            chatbots = self._select_chatbots(ChatbotStore.get_chatbots())
             logger.info(
                 f"Executing {executable_attacks} attack(s) against {len(chatbots)} chatbot(s) "
                 f"for '{test_case_id}'"
             )
-            self._start_attacks(attack_results, chatbots, enhanced_attacks, skip_chatbot_execution, test_case_id)
+            OllamaGenerator.require_local_model_shutdown()
+            prepared_chatbots: list[BaseChatbot] = []
+            try:
+                for chatbot in chatbots.values():
+                    chatbot.prepare_for_test_case()
+                    prepared_chatbots.append(chatbot)
+                self._start_attacks(
+                    attack_results,
+                    chatbots,
+                    enhanced_attacks,
+                    skip_chatbot_execution,
+                    test_case_id,
+                )
+            finally:
+                for chatbot in reversed(prepared_chatbots):
+                    try:
+                        chatbot.cleanup_after_test_case()
+                    except Exception as e:
+                        cleanup_error = TestErrorInfo.from_exception(e)
+                        logger.error(
+                            f"Failed to clean up chatbot '{chatbot.name.value}' for '{test_case_id}' "
+                            f"({cleanup_error.error_type.value}): {cleanup_error.message}"
+                        )
 
         tc_result = TestCaseResult(
             category=self.category,
@@ -149,7 +169,6 @@ class BaseTestCase(ABC):
     def _start_attacks(self, attack_results: dict[str, Attack], chatbots: dict[ChatbotName, BaseChatbot],
                        enhanced_attacks: list[EnhancedAttack], skip_chatbot_execution: bool | Any, test_case_id: str):
         """Start the attacks."""
-        OllamaGenerator.require_local_model_shutdown()
         total_attacks = len(enhanced_attacks)
         for counter, attack in enumerate(enhanced_attacks, start=1):
             techniques = ",".join(attack.techniques) if attack.techniques else "none"
@@ -329,6 +348,27 @@ class BaseTestCase(ABC):
         if self.run_folder is None:
             return None
         return save_test_case_result(self.results, self.run_folder)
+
+    def _select_chatbots(
+            self,
+            chatbots: Dict[ChatbotName, BaseChatbot],
+    ) -> Dict[ChatbotName, BaseChatbot]:
+        """Filter chatbots for the current test case."""
+        if not self._should_skip_ollama_chatbot():
+            return chatbots
+        filtered_chatbots: Dict[ChatbotName, BaseChatbot] = {}
+        for name, chatbot in chatbots.items():
+            if isinstance(chatbot, LangChainOllamaChatbot):
+                logger.info(
+                    f"Skipping chatbot '{name.value}' for test case '{self._test_case_identifier()}'"
+                )
+                continue
+            filtered_chatbots[name] = chatbot
+        return filtered_chatbots
+
+    def _should_skip_ollama_chatbot(self) -> bool:
+        """Return whether the Ollama chatbot should be skipped for this test case."""
+        return isinstance(self, ExcessiveAgencyTestCase)
 
     @staticmethod
     def _build_query_kwargs(attack: RTTestCase) -> dict:

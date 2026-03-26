@@ -8,6 +8,7 @@ from .base import BaseChatbot
 from testframework.chatbots.rag.document_loader import DocumentLoader
 from .dummy_chatbot import DummyChatbot
 from .langchain_chatbot import LangChainChatbot
+from .langchain_ollama_chatbot import LangChainOllamaChatbot
 from testframework.chatbots.rag.vector_store import VectorStore
 from testframework.chatbots.store import ChatbotStore
 
@@ -16,6 +17,7 @@ __all__ = [
     "DocumentLoader",
     "DummyChatbot",
     "LangChainChatbot",
+    "LangChainOllamaChatbot",
     "VectorStore",
     "ChatbotStore",
 ]

@@ -16,6 +16,8 @@ class OllamaGenerator:
     """Handle the local Ollama model needed for generating attacks and techniques."""
 
     _default_ollama_inference_request_timeout_seconds = 240.0
+    _startup_wait_seconds = 2
+    _shutdown_wait_seconds = 2
     _chatbot: OllamaModel | None = None
 
     @staticmethod
@@ -57,11 +59,22 @@ class OllamaGenerator:
         """
         Start the local Ollama model if it is not already running.
         """
-        if not OllamaGenerator._has_local_models():
-            model_id = os.environ.get("LOCAL_MODEL_ID", False)
-            safe_model_id = shlex.quote(model_id)
-            os.system(f"ollama run {safe_model_id} >/dev/null 2>&1 &")
-            time.sleep(2)
+        model_id = os.environ.get("LOCAL_MODEL_ID", False)
+        OllamaGenerator.start_model_by_name_if_not_running(model_id)
+
+    @staticmethod
+    def start_model_by_name_if_not_running(model_id: str | bool | None) -> None:
+        """Start a specific Ollama model if it is not already running."""
+        if not model_id:
+            logger.warning("Cannot start Ollama model because no model id was provided")
+            return
+
+        if OllamaGenerator._is_model_running(str(model_id)):
+            return
+
+        safe_model_id = shlex.quote(str(model_id))
+        os.system(f"ollama run {safe_model_id} >/dev/null 2>&1 &")
+        time.sleep(OllamaGenerator._startup_wait_seconds)
 
     @staticmethod
     def require_local_model_shutdown() -> None:
@@ -70,11 +83,7 @@ class OllamaGenerator:
         """
         # try to stop the local model automatically
         model_id = os.environ.get("LOCAL_MODEL_ID", False)
-        if model_id:
-            logger.info(f"Stopping local model {model_id}")
-            safe_model_id = shlex.quote(model_id)
-            os.system(f"ollama stop {safe_model_id} >/dev/null 2>&1")
-            time.sleep(2)
+        OllamaGenerator.stop_model_by_name(model_id)
 
         # check if the model is running
         if OllamaGenerator._has_local_models():
@@ -104,5 +113,34 @@ class OllamaGenerator:
         """
         Return whether `ollama ps` currently lists at least one running model.
         """
+        return bool(OllamaGenerator._list_running_models())
+
+    @staticmethod
+    def stop_model_by_name(model_id: str | bool | None) -> None:
+        """Stop a specific Ollama model if a model id was provided."""
+        if not model_id:
+            return
+
+        logger.info(f"Stopping local model {model_id}")
+        safe_model_id = shlex.quote(str(model_id))
+        os.system(f"ollama stop {safe_model_id} >/dev/null 2>&1")
+        time.sleep(OllamaGenerator._shutdown_wait_seconds)
+
+    @staticmethod
+    def _is_model_running(model_id: str) -> bool:
+        """Return whether the given model is currently listed by `ollama ps`."""
+        return model_id in OllamaGenerator._list_running_models()
+
+    @staticmethod
+    def _list_running_models() -> list[str]:
+        """Return all running model names listed by `ollama ps`."""
         running_models = os.popen("ollama ps").read().strip().splitlines()
-        return len(running_models) > 1
+        if len(running_models) <= 1:
+            return []
+
+        models: list[str] = []
+        for line in running_models[1:]:
+            parts = line.split()
+            if parts:
+                models.append(parts[0])
+        return models

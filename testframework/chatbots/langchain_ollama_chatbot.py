@@ -6,21 +6,25 @@
 
 from __future__ import annotations
 
-import os
 from typing import Any
-from langchain_openai import ChatOpenAI
+
+from langchain_ollama import ChatOllama
+
 from testframework.chatbots.langchain_base_chatbot import BaseLangChainChatbot
 from testframework.chatbots.rag.vector_store import VectorStore
 from testframework.enums import ChatbotName
+from testframework.util.ollama_handler import OllamaGenerator
 
 
-class LangChainChatbot(BaseLangChainChatbot):
-    """LangChain chatbot that uses the OpenAI inference API."""
+class LangChainOllamaChatbot(BaseLangChainChatbot):
+    """LangChain chatbot that uses the local Ollama inference API."""
+
+    DEFAULT_MODEL = "gemma3:4b"
 
     def __init__(
             self,
-            name: ChatbotName = ChatbotName.LANGCHAIN,
-            model: str = "gpt-4.1",
+            name: ChatbotName = ChatbotName.LANGCHAIN_OLLAMA_GEMMA3_4B,
+            model: str = DEFAULT_MODEL,
             vector_store: VectorStore | None = None,
             rag_k: int = 4,
             timeout: float | None = None,
@@ -34,18 +38,23 @@ class LangChainChatbot(BaseLangChainChatbot):
             rag_k=rag_k,
             timeout=timeout,
             timeout_retries=timeout_retries,
+            skip_tools=True,
             **kwargs,
         )
 
     def _create_llm(self, model: str, timeout: float, **kwargs) -> Any:
-        """Create the OpenAI LangChain backend."""
+        """Create the Ollama LangChain backend."""
         reasoning = kwargs.get("reasoning")
-        return ChatOpenAI(
+        return ChatOllama(
             model=model,
-            max_retries=2,
-            api_key=os.getenv("OPENAI_API_KEY"),
-            timeout=timeout,
-            use_responses_api=True,
-            store=False,
             reasoning=reasoning,
+            client_kwargs={"timeout": timeout},
         )
+
+    def prepare_for_test_case(self) -> None:
+        """Start the Ollama model before chatbot execution starts."""
+        OllamaGenerator.start_model_by_name_if_not_running(self._model_name)
+
+    def cleanup_after_test_case(self) -> None:
+        """Stop the Ollama model once the test case is done."""
+        OllamaGenerator.stop_model_by_name(self._model_name)

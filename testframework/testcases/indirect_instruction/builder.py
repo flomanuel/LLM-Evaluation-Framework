@@ -5,7 +5,7 @@
 
 
 from enum import Enum
-from typing import List, Dict, cast
+from typing import List
 from deepteam.vulnerabilities import BaseVulnerability
 from deepteam.metrics import IndirectInstructionMetric
 from deepeval.models import DeepEvalBaseLLM
@@ -52,6 +52,20 @@ class IndirectInstructionAttacks(BaseVulnerability):
                 attack.metadata = metadata
                 attacks.append(attack)
 
+            csv_data = CSVLoader.load_prompts_from_csv(
+                file_path="2_schaedlich_manuell_erstellt_basic_ergaenzung.csv",
+                categories=["indirect-prompt-injection"]
+            )
+            for row in csv_data:
+                attack = RTTestCase(
+                    vulnerability=self.get_name(),
+                    input=row.prompt,
+                    vulnerability_type=IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS
+                )
+                metadata = row.build_attack_metadata(is_rag=False)
+                attack.metadata = metadata
+                attacks.append(attack)
+
         return attacks
 
     def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
@@ -60,5 +74,5 @@ class IndirectInstructionAttacks(BaseVulnerability):
                                          model=self.evaluation_model)
 
     def get_name(self) -> str:
-        """Get the human readable name of the test case."""
+        """Get the human-readable name of the test case."""
         return "IndirectInstruction"

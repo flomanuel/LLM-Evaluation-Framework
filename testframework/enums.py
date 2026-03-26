@@ -37,7 +37,7 @@ class ChatbotName(str, Enum):
 
 
 class Severity(str, Enum):
-    """Define whether a test case (i.e. a prompt / attack) is harmful."""
+    """Define whether a test case (i.e., a prompt / attack) is harmful."""
     UNSAFE = "unsafe"
     SAFE = "safe"
 
@@ -55,4 +55,5 @@ class CliArgs(str, Enum):
     RUN = "--run"
     OUTPUT = "--output"
     EXCLUDE_SCANNERS = "--exclude-scanners"
+    # chatbot success: model alignment, evaluated by LLM-as-a-Judge
     CONSIDER_CHATBOT_SUCCESS = "--consider-chatbot-success"
