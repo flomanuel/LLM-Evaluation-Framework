@@ -1,10 +1,8 @@
-![Project Banner](./_extras/doc/banner.jpeg)
-
+# Security Evaluation Tool for LLM Architectures and Guardrails
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![GitHub Release](https://img.shields.io/github/v/release/flomanuel/LLM-Evaluation-Framework?include_prereleases)
 
-
-# Security Evaluation Tool for LLM Architectures and Guardrails
+![Project Banner](./_extras/doc/banner.jpeg)
 
 This repository contains a **test framework for evaluating guardrail applications for LLM-architectures**. It is part of
 my bachelor's thesis.
