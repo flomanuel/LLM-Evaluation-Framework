@@ -80,3 +80,8 @@ whether a protection guardrail was successful or not.
 # Troubleshooting
 
 See the [subpage](./_extras/doc/troubleshooting.md).
+
+# Disclaimers
+Please note that this project may use Third-Party Services such as the DeepTeam open-source framework, which are subject to their own terms and conditions and are not developed or verified by the authors and contributors of this project.
+
+Developers are responsible for implementing appropriate safeguards to prevent storage or misuse of sensitive or prohibited content (including but not limited to personal data, child sexual abuse material, or other illegal content). The authors and contributors of this project disclaim liability for any logging or retention of such content by developers. Developers must ensure their systems comply with all applicable data protection and content safety laws, and should avoid persisting any blocked content generated or intercepted by this project. This project calls paid APIs, and developers are responsible for associated charges.
