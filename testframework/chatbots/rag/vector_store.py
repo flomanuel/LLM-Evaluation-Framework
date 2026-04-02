@@ -82,7 +82,7 @@ class VectorStore:
 
     @property
     def embeddings(self) -> OpenAIEmbeddings:
-        """Get the embeddings model."""
+        """Get the embeddings-model."""
         return self._embeddings
 
     @property

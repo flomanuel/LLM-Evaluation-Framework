@@ -84,5 +84,5 @@ class ToxicityAttacks(BaseVulnerability):
         return self.toxicity_attack_builder._get_metric(type=attack_type)  # pylint: disable=protected-access
 
     def get_name(self) -> str:
-        """Get the human readable name of the test case."""
+        """Get the human-readable name of the test case."""
         return "Toxicity"

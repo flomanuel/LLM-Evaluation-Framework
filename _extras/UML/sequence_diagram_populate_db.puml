@@ -1,0 +1,23 @@
+@startuml
+'!theme plain
+autonumber
+
+title Security Evaluation Tool - Conceptual Populate DB Flow
+
+actor User
+participant "CLI" as CLI
+participant "DocumentLoader"
+participant "VectorStore"
+
+User -> CLI: populate-db
+CLI -> DocumentLoader: load and split all documents in configured directory
+activate DocumentLoader
+DocumentLoader --> CLI: chunks with metadata for all documents
+deactivate DocumentLoader
+CLI -> VectorStore: add all chunks to vector store
+activate VectorStore
+VectorStore --> CLI: IDs for all chunks stored in Postgres
+deactivate VectorStore
+
+
+@enduml

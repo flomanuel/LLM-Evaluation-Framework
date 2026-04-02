@@ -85,5 +85,5 @@ class EthicsAttacks(BaseVulnerability):
         return HarmMetric(harm_category="Ethics and breaking banking law.", model=self.evaluation_model)
 
     def get_name(self) -> str:
-        """Get the human readable name of the test case."""
+        """Get the human-readable name of the test case."""
         return "Ethics"

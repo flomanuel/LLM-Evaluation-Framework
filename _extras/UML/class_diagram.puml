@@ -1,19 +1,33 @@
 @startuml
-!theme plain
 skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 20
+skinparam ranksep 20
+<style>
+    footer {
+        HorizontalAlignment left
+        FontSize 28
+        FontColor darkorange
+        Padding 20
+    }
+    package {
+        LineColor lightgrey
+        fontColor #949494
+    }
+</style>
 
-title LLM Chatbot Protection Framework - Core Class Structure
 
-package "testframework.enums" {
-    enum Category
-    enum ChatbotName
-    enum Severity
-    enum CliArgs
-}
+title Security Evaluation Tool - Core Class Structure
+footer
+    **__Consideration__**
+    For clarity, some classes, methods and attributes were omitted (e.g., private methods and attributes).
+    The main goal of this diagram is to show the overall structure and the main modules.
+    The diagram is not meant to mirror the project's code verbatim.
+    Some associations were omitted for readability, since this diagram is not meant so convey the program flow.
+    Third-party libraries and frameworks (e.g., LangChain, DeepTeam and DeepEval) are not rendered due to the size of the diagram.
+endfooter
 
-package "testframework.models" {
-    enum LLMErrorType
-
+package "testframework.models" as models_pkg {
     class TestErrorInfo <<dataclass>> {
         +error_type: LLMErrorType
         +message: str
@@ -28,12 +42,12 @@ package "testframework.models" {
 
     class ToolInfo <<dataclass>> {
         +tool_called: bool
-        +tool_name: str?
-        +tool_args: dict/str?
+        +tool_name: str | None
+        +tool_args: dict | str | None
     }
 
     class RagContext <<dataclass>> {
-        +embedding_model: str?
+        +embedding_model: str | None
         +nodes: List[str]
     }
 
@@ -49,12 +63,12 @@ package "testframework.models" {
         +tool: ToolInfo
         +prompt_tokens: int
         +response_tokens: int
-        +rag_context: RagContext?
-        +document_content: DocumentContext?
-        +file_path: str?
-        +error: TestErrorInfo?
+        +rag_context: RagContext | None
+        +document_content: DocumentContext | None
+        +file_path: str | None
+        +error: TestErrorInfo | None
         +is_error: bool
-        {static} +from_error(...): ChatbotResponse
+        {static} +from_error(error: TestErrorInfo, system_prompt: str = "", prompt: str = ""): ChatbotResponse
     }
 
     class ChatbotResponseEvaluation <<dataclass>> {
@@ -63,33 +77,33 @@ package "testframework.models" {
         +reason: str
         +success: bool
         +metric: str
-        +error: TestErrorInfo?
+        +error: TestErrorInfo | None
         +is_error: bool
-        {static} +from_error(...): ChatbotResponseEvaluation
+        {static} +from_error(chatbot_response: ChatbotResponse, error: TestErrorInfo | None = None): ChatbotResponseEvaluation
     }
 
     class ScannerDetail <<dataclass>> {
         +name: str
         +score: float
         +reason: str
-        +is_valid: bool?
+        +is_valid: bool | None
         +sanitized_input: str
     }
 
     class DetectionElement <<dataclass>> {
         +success: bool
-        +detected_type: Category/str/None
+        +detected_type: Category | str | None
         +score: float
         +judge_raw_response: str
-        +latency: float?
+        +latency: float | None
         +scanner_details: List[ScannerDetail]
-        +error: TestErrorInfo?
+        +error: TestErrorInfo | None
         +is_error: bool
-        {static} +from_error(...): DetectionElement
+        {static} +from_error(error: TestErrorInfo): DetectionElement
     }
 
     class PromptHardeningDetectionElement <<dataclass>> {
-        +chatbot_response: ChatbotResponse?
+        +chatbot_response: ChatbotResponse | None
     }
 
     class DetectionResult <<dataclass>> {
@@ -102,7 +116,7 @@ package "testframework.models" {
         +baseline_input: str
         +enhanced_input: str
         +techniques: List[str]
-        +error: TestErrorInfo?
+        +error: TestErrorInfo | None
         +is_error: bool
     }
 
@@ -118,29 +132,29 @@ package "testframework.models" {
 
     class Attack <<dataclass>> {
         +category: str
-        +subcategory: Enum?
+        +subcategory: Enum | None
         +techniques: List[str]
         +severity: Severity
         +prompt: PromptVariants
         +llm_responses: Dict[ChatbotName, ChatbotResponseEvaluation]
         +protection: Dict[str, Dict[ChatbotName, DetectionResult]]
-        +error: TestErrorInfo?
+        +error: TestErrorInfo | None
         +is_error: bool
-        {static} +from_generation_error(...): Attack
-        {static} +from_enhancement_error(...): Attack
+        {static} +from_generation_error(category: str, subcategories: List[Enum] | None, severity: Severity, error: TestErrorInfo): Attack
+        {static} +from_enhancement_error(category: str, subcategories: List[Enum] | None, severity: Severity, baseline_input: str, enhanced_input: str, techniques: List[str], error: TestErrorInfo): Attack
     }
 
     class "TestCaseResult.ModelInfo" as TestCaseResultModelInfo <<dataclass>> {
-        +attack_and_vulnerability_generation: str?
+        +attack_and_vulnerability_generation: str | None
     }
 
     class TestCaseResult <<dataclass>> {
         +category: Category
         +subcategories: List[str]
-        +model: TestCaseResultModelInfo
+        +model: TestCaseResult.ModelInfo
         +attacks: Dict[str, Attack]
-        +generation_error: TestErrorInfo?
-        +enhancement_error: TestErrorInfo?
+        +generation_error: TestErrorInfo | None
+        +enhancement_error: TestErrorInfo | None
         +identifier: str
         +has_errors: bool
         +error_count: int
@@ -156,11 +170,11 @@ package "testframework.models" {
         +timestamp: TestRunTimestamp
         +attack_categories: List[TestCaseResult]
         +to_json_dict(): Dict[str, Any]
-        {static} +new_empty(): TestRunResult
+        {class} +new_empty(): TestRunResult
     }
 }
 
-package "testframework.tests" {
+package "testframework.tests" as tests_pkg {
     abstract class Test {
         +name: str
         +results_dir: Path
@@ -168,7 +182,6 @@ package "testframework.tests" {
         {abstract} +setup_chatbots(): None
         {abstract} +get_test_cases(): List[BaseTestCase]
         +run(): TestRunResult
-        -_execute_test_cases(run_folder: Path): None
         +store_test_run(test_run: TestRunResult): str
     }
 
@@ -178,79 +191,229 @@ package "testframework.tests" {
     }
 }
 
-package "testframework.testcases" {
-    abstract class BaseTestCase {
+package "testframework.testcases" as concrete_testcases_pkg {
+    abstract class "BaseTestCase" as BaseTestCaseClass {
         +category: Category
         +subcategories: List[Enum]
         +guardrail_runner: GuardrailRunner
-        +attack_builder: BaseVulnerability?
+        +attack_builder: BaseVulnerability | None
         +severity: Severity
-        +simulator_model: DeepEvalBaseLLM/str?
-        +evaluation_model: DeepEvalBaseLLM/str?
-        +run_folder: Path?
-        {abstract} +simulate_attacks(...): List[RTTestCase]
+        +simulator_model: str | DeepEvalBaseLLM | None
+        +evaluation_model: str | DeepEvalBaseLLM | None
+        +run_folder: Path | None
+        +results: TestCaseResult
+        {abstract} +simulate_attacks(attacks_per_vulnerability_type: int = 1): List[RTTestCase]
         {abstract} +setup_attack_builder(): None
         +execute(): TestCaseResult
-        -_generate_attacks(...): tuple
-        -_start_attacks(...): None
-        -_execute_single_attack(...): Attack
-        -_query_and_evaluate(...): ChatbotResponseEvaluation
-        -_find_metric(...): BaseRedTeamingMetric
-        {abstract} #_get_metric(...): BaseRedTeamingMetric
-        +store_results(): Path?
-        {static} -_build_query_kwargs(...): dict
+        {abstract} #_get_metric(attack: RTTestCase): BaseRedTeamingMetric
+        +store_results(): Path | None
+    }
+
+    package "testframework.testcases.benign" as benign_pkg {
+
+        class BenignAttacks <<builder>> {
+            +simulate_attacks(purpose: str = None): List[RTTestCase]
+            #_get_metric(): BaseRedTeamingMetric
+            +get_name(): str
+        }
+
+        class BenignTestCase {
+            +setup_attack_builder(): None
+            +simulate_attacks(attacks_per_vulnerability_type: int = 1): List[RTTestCase]
+            #_get_metric(attack: RTTestCase): BaseRedTeamingMetric
+        }
+    }
+
+    package "testframework.testcases.bias" as bias_pkg {
+
+        class BiasAttacks <<builder>> {
+            +subcategory_to_illegal_activity_type(category: BiasSubcategory): str | None
+            +simulate_attacks(purpose: str = None, attacks_per_vulnerability_type: int = 1): List[RTTestCase]
+            #_get_metric(attack: RTTestCase): BaseRedTeamingMetric
+            +get_name(): str
+        }
+
+        class BiasTestCase {
+            +setup_attack_builder(): None
+            +simulate_attacks(attacks_per_vulnerability_type: int = 1): List[RTTestCase]
+            #_get_metric(attack: RTTestCase): BaseRedTeamingMetric
+        }
+    }
+
+    package "testframework.testcases.competition" as competition_pkg {
+        class CompetitionTestCase {
+            +setup_attack_builder(): None
+            +simulate_attacks(attacks_per_vulnerability_type: int = 1): List[RTTestCase]
+            #_get_metric(attack: RTTestCase): BaseRedTeamingMetric
+        }
+    }
+
+    package "testframework.testcases.ethics" as ethics_pkg {
+
+        class EthicsAttacks <<builder>> {
+            +subcategory_to_ethics_type(subcategory): str | None
+            +simulate_attacks(purpose: str = None, attacks_per_vulnerability_type: int = 1): List[RTTestCase]
+            #_get_metric(attack: RTTestCase): BaseRedTeamingMetric
+            +get_name(): str
+        }
+
+        class EthicsTestCase {
+            +setup_attack_builder(): None
+            +simulate_attacks(attacks_per_vulnerability_type: int = 1): List[RTTestCase]
+            #_get_metric(attack: RTTestCase): BaseRedTeamingMetric
+        }
+    }
+
+    package "testframework.testcases.excessive_agency" as agency_pkg {
+
+        class ExcessiveAgencyAttacks <<builder>> {
+            +simulate_attacks(purpose: str = None): List[RTTestCase]
+            #_get_metric(): BaseRedTeamingMetric
+            +get_name(): str
+        }
+
+        class ExcessiveAgencyTestCase {
+            +setup_attack_builder(): None
+            +simulate_attacks(attacks_per_vulnerability_type: int = 1): List[RTTestCase]
+            #_get_metric(attack: RTTestCase = None): BaseRedTeamingMetric
+        }
+    }
+
+    package "testframework.testcases.fairness" as fairness_pkg {
+
+        class FairnessAttacks <<builder>> {
+            +simulate_attacks(purpose: str = None): List[RTTestCase]
+            #_get_metric(): BaseRedTeamingMetric
+            +get_name(): str
+        }
+
+        class FairnessTestCase {
+            +setup_attack_builder(): None
+            +simulate_attacks(attacks_per_vulnerability_type: int = 1): List[RTTestCase]
+            #_get_metric(attack: RTTestCase): BaseRedTeamingMetric
+        }
+    }
+
+    package "testframework.testcases.illegal_activity" as illegal_pkg {
+
+        class IllegalActivity <<builder>> {
+            +subcategory_to_illegal_activity_type(category: IllegalActivitySubcategory): str | None
+            +simulate_attacks(purpose: str = None, attacks_per_vulnerability_type: int = 1): List[RTTestCase]
+            #_get_metric(attack: RTTestCase): BaseRedTeamingMetric
+            +get_name(): str
+        }
+
+        class IllegalActivityTestCase {
+            +setup_attack_builder(): None
+            +simulate_attacks(attacks_per_vulnerability_type: int = 1): List[RTTestCase]
+            #_get_metric(attack: RTTestCase): BaseRedTeamingMetric
+        }
+    }
+
+    package "testframework.testcases.indirect_instruction" as indirect_pkg {
+
+        class IndirectInstructionAttacks <<builder>> {
+            +simulate_attacks(purpose: str = None): List[RTTestCase]
+            #_get_metric(attack: RTTestCase): BaseRedTeamingMetric
+            +get_name(): str
+        }
+
+        class IndirectInstructionTestCase {
+            +setup_attack_builder(): None
+            +simulate_attacks(attacks_per_vulnerability_type: int = 1): List[RTTestCase]
+            #_get_metric(attack: RTTestCase = None): BaseRedTeamingMetric
+        }
+    }
+
+    package "testframework.testcases.privacy_violations" as privacy_pkg {
+
+        class PrivacyViolationsAttacks <<builder>> {
+            +simulate_attacks(purpose: str = None): List[RTTestCase]
+            #_get_metric(): BaseRedTeamingMetric
+            +get_name(): str
+        }
+
+        class PrivacyViolationsTestCase {
+            +setup_attack_builder(): None
+            +simulate_attacks(attacks_per_vulnerability_type: int = 1): List[RTTestCase]
+            #_get_metric(attack: RTTestCase = None): BaseRedTeamingMetric
+        }
+    }
+
+    package "testframework.testcases.robustness" as robust_pkg {
+        class RobustnessTestCase {
+            +setup_attack_builder(): None
+            +simulate_attacks(attacks_per_vulnerability_type: int = 1): List[RTTestCase]
+            #_get_metric(attack: RTTestCase): BaseRedTeamingMetric
+        }
+    }
+
+    package "testframework.testcases.system_prompt_leakage" as leakage_pkg {
+
+        class SystemPromptLeakageAttacks <<builder>> {
+            +subcategory_to_prompt_leakage_type(subcategory): str | None
+            +simulate_attacks(purpose: str = None, attacks_per_vulnerability_type: int = 1): List[RTTestCase]
+            #_get_metric(attack: RTTestCase): BaseRedTeamingMetric
+            +get_name(): str
+        }
+
+        class SystemPromptLeakageTestCase {
+            +setup_attack_builder(): None
+            +simulate_attacks(attacks_per_vulnerability_type: int = 1): List[RTTestCase]
+            #_get_metric(attack: RTTestCase): BaseRedTeamingMetric
+        }
+    }
+
+    package "testframework.testcases.toxicity" as toxicity_pkg {
+
+        class ToxicityAttacks <<builder>> {
+            +subcategory_to_illegal_activity_type(category: ToxicitySubcategory): str | None
+            +simulate_attacks(purpose: str = None, attacks_per_vulnerability_type: int = 1): List[RTTestCase]
+            +get_name(): str
+        }
+
+        class ToxicityTestCase {
+            +setup_attack_builder(): None
+            +simulate_attacks(attacks_per_vulnerability_type: int = 1): List[RTTestCase]
+            #_get_metric(attack: RTTestCase): BaseRedTeamingMetric
+        }
     }
 }
 
-note right of BaseTestCase
-Implemented subclasses include:
-- BenignTestCase
-- BiasTestCase
-- EthicsTestCase
-- ExcessiveAgencyTestCase
-- IllegalActivityTestCase
-- IndirectInstructionTestCase
-- PrivacyViolationsTestCase
-- SystemPromptLeakageTestCase
-- ToxicityTestCase
-- CompetitionTestCase
-- RobustnessTestCase
-- FairnessTestCase
-end note
-
-package "testframework.chatbots" {
+package "testframework.chatbots" as chatbots_pkg {
     abstract class BaseChatbot {
         +name: ChatbotName
-        {abstract} +query(user_prompt: str, ...): ChatbotResponse
+        +prepare_for_test_case(): None
+        +cleanup_after_test_case(): None
+        {abstract} +query(user_prompt: str, is_rag: bool = True, file_path: str | None = None, system_prompt: str | None = None): ChatbotResponse
     }
 
-    class LangChainChatbot extends BaseChatbot {
+    abstract class BaseLangChainChatbot extends BaseChatbot {
         +DEFAULT_TIMEOUT: float
         +DEFAULT_TIMEOUT_RETRIES: int
         +ATTACK_DOCUMENTS_FOLDER: Path
         +DEFAULT_SYSTEM_PROMPT: str
-        +query(...): ChatbotResponse
-        -_retrieve_context(...): List[Document]
-        -_build_prompt_with_context(...): str
-        -_load_document(...): str
-        -_build_prompt_with_document(...): str
-        -_execute_query(...): ChatbotResponse
+        +vector_store: VectorStore | None
+        +query(user_prompt: str, is_rag: bool = True, file_path: str | None = None, system_prompt: str | None = None): ChatbotResponse
+        {abstract} #_create_llm(model: str, timeout: float, **kwargs): Any
+    }
+
+    class LangChainChatbot extends BaseLangChainChatbot {
+        #_create_llm(model: str, timeout: float, **kwargs): Any
+    }
+
+    class LangChainOllamaChatbot extends BaseLangChainChatbot {
+        +DEFAULT_MODEL: str
+        #_create_llm(model: str, timeout: float, **kwargs): Any
+        +prepare_for_test_case(): None
+        +cleanup_after_test_case(): None
     }
 
     class ChatbotStore {
-        {static} -_chatbots: Dict[ChatbotName, BaseChatbot]
         {static} +add_chatbot(chatbot: BaseChatbot): None
         {static} +remove_chatbot(name: ChatbotName): None
         {static} +get_chatbots(): Dict[ChatbotName, BaseChatbot]
-        {static} +get_chatbot(name: ChatbotName): BaseChatbot?
-    }
-
-    class DocumentLoader {
-        +DEFAULT_CHUNK_SIZE: int
-        +DEFAULT_CHUNK_OVERLAP: int
-        +load_documents(): List[Document]
-        +load_and_split(): List[Document]
-        +documents_dir: Path
+        {static} +get_chatbot(name: ChatbotName): BaseChatbot | None
     }
 
     class VectorStore {
@@ -263,35 +426,56 @@ package "testframework.chatbots" {
     }
 }
 
-package "testframework.guardrails" {
+package "llamafirewall (external dependency)" as llamafirewall {
+    class LlamaFirewall
+}
+
+package "testframework.guardrails" as guardrails_pkg {
     abstract class BaseGuardrail {
         +name: str
-        {abstract} +eval_attack(...): DetectionElement
-        {abstract} +eval_model_response(...): DetectionElement
+        {abstract} +eval_attack(user_prompt: str, **kwargs): DetectionElement
+        {abstract} +eval_model_response(model_response: str, chatbot: ChatbotName, **kwargs): DetectionElement
     }
 
     class PromptHardeningGuardrail extends BaseGuardrail {
-        +eval_attack(...): PromptHardeningDetectionElement
-        +eval_model_response(...): PromptHardeningDetectionElement
-        -_rebuild_rag_call(...): str
+        +eval_attack(user_prompt: str, **kwargs): PromptHardeningDetectionElement
+        +eval_model_response(prompt: str, chatbot: ChatbotName, **kwargs): PromptHardeningDetectionElement
     }
 
     class LLMGuard extends BaseGuardrail
     class LlamaFirewall extends BaseGuardrail
+    class LlamaFirewallWithMetrics extends llamafirewall.LlamaFirewall {
+        +scan(input_msg: Message, trace: Trace | None = None): Dict[str, List[ScannerDetail] | ScanResult]
+    }
     class LakeraGuard extends BaseGuardrail
     class GuardrailsAI extends BaseGuardrail
     class GcpModelArmor extends BaseGuardrail
 
     class GuardrailRunner {
         +guardrails: List[BaseGuardrail]
-        +run(...): Dict[str, Dict[ChatbotName, DetectionResult]]
-        -_skipped_detection_result(...): DetectionResult
-        -_safe_eval_attack(...): DetectionElement
-        -_safe_eval_response(...): DetectionElement
+        +run(attack: RTTestCase, chatbot_responses_eval: dict[ChatbotName, ChatbotResponseEvaluation], metric: BaseRedTeamingMetric): Dict[str, Dict[ChatbotName, DetectionResult]]
     }
 }
 
-package "testframework.custom_attack_techniques" {
+package "testframework.metrics" as metrics_pkg {
+    abstract class BaseMetric {
+        +harm_category: str
+        #_transfer_results_from_geval(): None
+    }
+
+    class PrivacyViolationsMetric extends BaseMetric {
+        +DEFAULT_CRITERIA: str
+        +is_successful(): bool
+        +measure(test_case: RTTestCase, *args, **kwargs): float
+    }
+
+    class ToolCallCodeInjectionMetric extends BaseMetric {
+        +DEFAULT_CRITERIA: str
+        +is_successful(): bool
+        +measure(test_case: RTTestCase, tool_info: ToolInfo | None = None, *args, **kwargs): float
+    }
+}
+package "testframework.custom_attack_techniques" as attack_techniques_pkg {
     class AttackEnhancement <<dataclass>> {
         +name: str
         +transform: Callable
@@ -299,108 +483,106 @@ package "testframework.custom_attack_techniques" {
     }
 
     class AttackListEnhancer {
-        +simulator_model: DeepEvalBaseLLM/str?
-        +enhance(...): AttackEnhancementResult
-        -_apply_enhancement(...): tuple[str?, TestErrorInfo?]
+        +ERROR_THRESHOLD_ENV_VAR: str
+        +DEFAULT_ERROR_THRESHOLD_PERCENT: float
+        +ERROR_RETRY_COOLDOWN_SECONDS: int
+        +ATTACK_GENERATION_COOLDOWN_SECONDS: int
+        +SUCCESS_COOLDOWN_SECONDS: int
+        +LOCAL_MODEL_ID: str | bool
+        +simulator_model: DeepEvalBaseLLM | str | None
+        +enhance(attacks: List[RTTestCase], enhancements: List[AttackEnhancement] | None = None): AttackEnhancementResult
+    }
+
+    class Techniques <<module>> {
+        {static} +TECHNIQUE_BASELINE: str
+        {static} +ENHANCEMENTS: List[AttackEnhancement]
+    }
+
+    package "cipher_code_expert" as cipher_pkg {
+        class CipherCodeExpert {
+            +name: str
+            +exploitability: Exploitability
+            +description: str
+            +enhance(attack: str, *args, **kwargs): str
+            +get_name(): str
+        }
+
+        class CipherCodeExpertTemplate {
+            +BASE_DESCRIPTION: str
+            {static} +enhance(input: str): str
+        }
     }
 }
 
-package "testframework.util / storage / reporting" {
-    class CSVAttackRow <<dataclass>> {
-        +prompt: str
-        +severity: str
-        +categories: list[str]
-        +tool_check: bool
-        +document_path: str?
-        +technique: str?
-        +build_attack_metadata(...): dict
-        +matches_filters(...): bool
-        {static} +from_csv_row(...): CSVAttackRow
-    }
+concrete_testcases_pkg -[hidden]down-> attack_techniques_pkg
+attack_techniques_pkg -[hidden]right-> cipher_pkg
+guardrails_pkg -[hidden]right-> metrics_pkg
 
-    class CSVLoader {
-        {static} +CSV_DOCUMENTS_FOLDER: Path
-        {static} +load_prompts_from_csv(...): List[CSVAttackRow]
-    }
-
-    class Storage <<module>> {
-        {static} +get_run_folder(...): Path
-        {static} +save_test_run(...): Path
-        {static} +save_test_case_result(...): Path
-    }
-
-    class RunSummary {
-        +build(): dict
-        +write(output_path): dict
-    }
-}
-
-package "External Libraries" <<External>> {
-    class RTTestCase
-    abstract class BaseVulnerability
-    abstract class BaseRedTeamingMetric
-    class DeepEvalBaseLLM
-    class Document
-    class OpenAIEmbeddings
-    class PGVector
-}
-
-Test "1" *-- "n" BaseTestCase
+Test "1" *-- "n" BaseTestCaseClass
 Test "1" *-- "n" TestCaseResult
-DefaultTest ..> ChatbotStore : registers chatbots
-DefaultTest ..> LangChainChatbot : creates
-DefaultTest ..> VectorStore : shares
+DefaultTest ..> ChatbotStore
 
-BaseTestCase o-- GuardrailRunner
-BaseTestCase ..> BaseVulnerability : builds attacks
-BaseTestCase ..> AttackListEnhancer : enhance()
-BaseTestCase ..> ChatbotStore : loads chatbots
-BaseTestCase ..> BaseChatbot : queries
-BaseTestCase ..> BaseRedTeamingMetric : evaluates
-BaseTestCase ..> Storage : persists testcase JSON
+BaseTestCaseClass o-- GuardrailRunner
+BaseTestCaseClass ..> AttackListEnhancer
+BaseTestCaseClass ..> ChatbotStore
+BaseTestCaseClass ..> BaseMetric
 
-BaseChatbot <|-- LangChainChatbot
+BenignTestCase --|> BaseTestCaseClass
+BiasTestCase --|> BaseTestCaseClass
+CompetitionTestCase --|> BaseTestCaseClass
+EthicsTestCase --|> BaseTestCaseClass
+ExcessiveAgencyTestCase --|> BaseTestCaseClass
+FairnessTestCase --|> BaseTestCaseClass
+IllegalActivityTestCase --|> BaseTestCaseClass
+IndirectInstructionTestCase --|> BaseTestCaseClass
+PrivacyViolationsTestCase --|> BaseTestCaseClass
+RobustnessTestCase --|> BaseTestCaseClass
+SystemPromptLeakageTestCase --|> BaseTestCaseClass
+ToxicityTestCase --|> BaseTestCaseClass
+
+BenignTestCase *-up- BenignAttacks
+BiasTestCase *-up- BiasAttacks
+EthicsTestCase *-up- EthicsAttacks
+ExcessiveAgencyTestCase *-up- ExcessiveAgencyAttacks
+FairnessTestCase *-up- FairnessAttacks
+IllegalActivityTestCase *-up- IllegalActivity
+IndirectInstructionTestCase *-up- IndirectInstructionAttacks
+PrivacyViolationsTestCase *-up- PrivacyViolationsAttacks
+SystemPromptLeakageTestCase *-up- SystemPromptLeakageAttacks
+ToxicityTestCase *-up- ToxicityAttacks
+
 ChatbotStore ..> BaseChatbot
-LangChainChatbot ..> VectorStore
-LangChainChatbot ..> Document : RAG context
-DocumentLoader ..> Document
-VectorStore ..> Document
-VectorStore ..> PGVector
-VectorStore ..> OpenAIEmbeddings
+BaseLangChainChatbot ..> VectorStore
 
 GuardrailRunner *-- BaseGuardrail
-BaseGuardrail <|-- PromptHardeningGuardrail
-BaseGuardrail <|-- LLMGuard
-BaseGuardrail <|-- LlamaFirewall
-BaseGuardrail <|-- LakeraGuard
-BaseGuardrail <|-- GuardrailsAI
-BaseGuardrail <|-- GcpModelArmor
-PromptHardeningGuardrail ..> ChatbotStore : guarded re-query
+GuardrailRunner ..> ToolCallCodeInjectionMetric
 
 AttackListEnhancer *-- AttackEnhancement
+AttackListEnhancer ..> Techniques
 AttackListEnhancer ..> AttackEnhancementResult
 AttackEnhancementResult *-- EnhancedAttack
-AttackListEnhancer ..> RTTestCase
+Techniques ..> CipherCodeExpert
+CipherCodeExpert ..> CipherCodeExpertTemplate
 
-CSVLoader *-- CSVAttackRow
-
-TestRunResult *-- TestRunTimestamp
+TestRunResult *-right- TestRunTimestamp
 TestRunResult *-- TestCaseResult
-TestCaseResult *-- TestCaseResultModelInfo
+TestCaseResult *-right- TestCaseResultModelInfo
 TestCaseResult *-- Attack
+TestCaseResult *-- TestErrorInfo
 Attack *-- PromptVariants
 Attack *-- ChatbotResponseEvaluation
-Attack ..> DetectionResult
-Attack ..> TestErrorInfo
+Attack *-- DetectionResult
+Attack *-- TestErrorInfo
 ChatbotResponseEvaluation *-- ChatbotResponse
 ChatbotResponse *-- ToolInfo
 ChatbotResponse *-- RagContext
 ChatbotResponse *-- DocumentContext
 DetectionResult *-- DetectionElement
-PromptHardeningDetectionElement --|> DetectionElement
+PromptHardeningDetectionElement -up-|> DetectionElement
 DetectionElement *-- ScannerDetail
 
-RunSummary ..> TestCaseResult : reads persisted JSON shape
-RunSummary ..> DetectionResult
+guardrails_pkg.LlamaFirewall *-- LlamaFirewallWithMetrics
+
+Test ..> TestRunResult
 
 @enduml

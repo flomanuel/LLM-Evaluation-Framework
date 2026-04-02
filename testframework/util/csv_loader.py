@@ -75,7 +75,7 @@ class CSVAttackRow:
         return metadata
 
 
-class CSVLoader():
+class CSVLoader:
     """
     Helper class to load prompts from CSV files.
     """
@@ -105,7 +105,7 @@ class CSVLoader():
         return prompts
 
     @staticmethod
-    def _build_full_path(file_path: str):
+    def _build_full_path(file_path: str) -> Path:
         """
         Get the full path to the CSV file, protect against path traversal attempts.
         """

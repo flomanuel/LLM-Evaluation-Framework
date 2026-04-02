@@ -1,0 +1,64 @@
+@startuml
+!theme plain
+autonumber
+
+title Security Evaluation Tool - Conceptual Run Flow
+
+actor User
+participant "CLI" as CLI
+participant "Test Run\n(DefaultTest / Test)" as TestRun
+participant "Test Case" as TestCase
+participant "Attack Builder\n+ Attack List Enhancer" as AttackFlow
+participant "Chatbot" as Chatbot
+participant "Evaluation" as Evaluation
+participant "Storage" as Storage
+participant "Guardrail Runner" as GrRunner
+participant "Guardrail" as Guardrail
+
+User -> CLI: run-baseline
+CLI -> TestRun: create Test and start run()
+activate TestRun
+activate CLI
+
+loop for each test case
+    TestRun -> TestCase: execute test cases
+    activate TestCase
+    TestCase -> AttackFlow: load and/or generate prompts
+    activate AttackFlow
+    AttackFlow -> AttackFlow: enhance prompts
+    AttackFlow --> TestCase: attacks / benign prompts
+    deactivate AttackFlow
+
+    loop for each attack in attacks
+        loop for each chatbot in chatbots
+            TestCase -> Chatbot: execute attack
+            activate Chatbot
+            Chatbot --> TestCase: chatbot response
+            deactivate Chatbot
+            TestCase -> Evaluation: score response
+            activate Evaluation
+            Evaluation --> TestCase: baseline result
+            deactivate Evaluation
+            TestCase -> GrRunner: run guardrails on response
+            activate GrRunner
+            loop for each guardrail in guardrails
+                GrRunner -> Guardrail: evaluate attack
+                activate Guardrail
+                Guardrail --> GrRunner: protection result
+                deactivate Guardrail
+            end
+            GrRunner --> TestCase: protection results
+            deactivate GrRunner
+        end
+    end
+    TestCase -> Storage: write testcase JSON
+    deactivate TestCase
+    activate Storage
+end
+
+TestRun -> Storage: write run results JSON
+deactivate Storage
+TestRun --> CLI: persisted run
+deactivate CLI
+deactivate TestRun
+@enduml

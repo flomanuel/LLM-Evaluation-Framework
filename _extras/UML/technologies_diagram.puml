@@ -1,5 +1,5 @@
 @startuml
-!theme plain
+'!theme plain
 skinparam componentStyle rectangle
 skinparam rectangle {
     BackgroundColor<<Category>> #E8EEF5
@@ -7,7 +7,7 @@ skinparam rectangle {
     FontStyle bold
 }
 
-title LLM Chatbot Protection Framework - Technology Stack
+title Security Evaluation Tool - Technology Stack
 
 rectangle "Project Technology Stack" {
 

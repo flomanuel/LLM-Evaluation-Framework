@@ -56,5 +56,5 @@ class ExcessiveAgencyAttacks(BaseVulnerability):
         return HarmMetric(harm_category="Excessive Agency", model=self.evaluation_model)
 
     def get_name(self) -> str:
-        """Get the human readable name of the test case."""
+        """Get the human-readable name of the test case."""
         return "ExcessiveAgency"

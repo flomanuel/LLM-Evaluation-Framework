@@ -18,7 +18,6 @@ from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from deepteam.vulnerabilities import BaseVulnerability
 from loguru import logger
-
 from testframework.chatbots import LangChainOllamaChatbot
 from testframework.chatbots.base import BaseChatbot
 from testframework.chatbots.store import ChatbotStore

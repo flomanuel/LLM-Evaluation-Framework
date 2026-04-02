@@ -321,6 +321,7 @@ class TestCaseResult:
     @dataclass
     class ModelInfo:
         """Model used for generating the attacks and techniques."""
+        # todo: move model info outside of nested dataclass structure
         attack_and_vulnerability_generation: str | None = None
 
     category: Category

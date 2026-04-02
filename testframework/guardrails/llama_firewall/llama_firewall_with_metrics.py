@@ -19,7 +19,7 @@ from testframework.models import ScannerDetail
 
 class LlamaFirewallWithMetrics(LlamaFirewall):
     """
-    Cstom LlamaFirewall with metrics instance.
+    Custom LlamaFirewall with metrics instance.
     Change 1: async scan behavior (since by default the async loop sometimes gets closed before all scanners have finished).
     Change 2: return dict instead of ScanResult to enhance the logging details for the statistical evaluation.
     """

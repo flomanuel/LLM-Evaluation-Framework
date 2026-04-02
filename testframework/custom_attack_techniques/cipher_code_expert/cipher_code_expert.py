@@ -33,5 +33,5 @@ class CipherCodeExpert(BaseSingleTurnAttack):
         return enhanced_prompt
 
     def get_name(self) -> str:
-        """Get the human readable name of the attack."""
+        """Get the human-readable name of the attack."""
         return self.name

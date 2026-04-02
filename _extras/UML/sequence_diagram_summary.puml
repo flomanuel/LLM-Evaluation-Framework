@@ -1,0 +1,20 @@
+@startuml
+'!theme plain
+autonumber
+
+title Security Evaluation Tool - Conceptual Summary Flow
+
+actor User
+participant "CLI" as CLI
+participant "Run Summary" as RSummary
+
+User -> CLI: summarize-run
+CLI -> RSummary: load stored testcase JSON files with write_run_summary()
+activate RSummary
+RSummary -> RSummary: aggregate\nper chatbot,\nper guardrail,\nper category,\nper technique
+RSummary -> RSummary: store JSON and \nCSV files to \ntarget directory
+RSummary --> CLI: summary JSON
+deactivate RSummary
+
+
+@enduml
