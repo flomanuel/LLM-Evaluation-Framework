@@ -1452,6 +1452,7 @@ dependencies = [
     { name = "openai" },
     { name = "opentelemetry-exporter-otlp" },
     { name = "psycopg", extra = ["binary"] },
+    { name = "pylint" },
     { name = "pypdf" },
     { name = "python-dotenv" },
 ]
@@ -1488,6 +1489,7 @@ requires-dist = [
     { name = "openai", specifier = "~=2.24.0" },
     { name = "opentelemetry-exporter-otlp", specifier = "~=1.39.1" },
     { name = "psycopg", extras = ["binary"], specifier = "~=3.3.3" },
+    { name = "pylint", specifier = ">=4.0.5" },
     { name = "pylint", marker = "extra == 'dev'", specifier = "~=4.0.5" },
     { name = "pypdf", specifier = "~=6.7.5" },
     { name = "python-dotenv", specifier = "~=1.2.2" },
