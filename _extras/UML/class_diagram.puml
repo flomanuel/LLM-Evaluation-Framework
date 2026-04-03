@@ -20,11 +20,10 @@ skinparam ranksep 20
 title Security Evaluation Tool - Core Class Structure
 footer
     **__Consideration__**
-    For clarity, some classes, methods and attributes were omitted (e.g., private methods and attributes).
+    For clarity, some classes, methods, attributes and associations were omitted (e.g., private methods).
     The main goal of this diagram is to show the overall structure and the main modules.
-    The diagram is not meant to mirror the project's code verbatim.
-    Some associations were omitted for readability, since this diagram is not meant so convey the program flow.
-    Third-party libraries and frameworks (e.g., LangChain, DeepTeam and DeepEval) are not rendered due to the size of the diagram.
+    The diagram is not meant to mirror the project-code verbatim.
+    Some third-party libraries and frameworks are not rendered due to the size of the diagram.
 endfooter
 
 package "testframework.models" as models_pkg {
