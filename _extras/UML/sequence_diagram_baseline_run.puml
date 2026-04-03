@@ -1,64 +1,74 @@
 @startuml
-!theme plain
 autonumber
-
 title Security Evaluation Tool - Conceptual Run Flow
 
 actor User
 participant "CLI" as CLI
 participant "Test Run\n(DefaultTest / Test)" as TestRun
 participant "Test Case" as TestCase
-participant "Attack Builder\n+ Attack List Enhancer" as AttackFlow
+participant "Attack Builder" as Builder
+participant "Attack List Enhancer" as Enhancer
 participant "Chatbot" as Chatbot
 participant "Evaluation" as Evaluation
 participant "Storage" as Storage
 participant "Guardrail Runner" as GrRunner
 participant "Guardrail" as Guardrail
 
-User -> CLI: run-baseline
-CLI -> TestRun: create Test and start run()
+User -> CLI: run-baseline()
+CLI -> TestRun: start_run()
 activate TestRun
 activate CLI
 
-loop for each test case
-    TestRun -> TestCase: execute test cases
+loop for each test_case in test_cases
+    TestRun -> TestCase: execute_test_case()
     activate TestCase
-    TestCase -> AttackFlow: load and/or generate prompts
-    activate AttackFlow
-    AttackFlow -> AttackFlow: enhance prompts
-    AttackFlow --> TestCase: attacks / benign prompts
-    deactivate AttackFlow
+    TestCase -> Builder: load_or_generate_prompts()
+    activate Builder
+    Builder --> TestCase: load_or_generate_prompts: prompts_list
+    deactivate Builder
+    TestCase -> Enhancer: enhance_prompts(prompts_list)
+    activate Enhancer
+    Enhancer --> TestCase: enhance_prompts: enhance_prompts_list
+    deactivate Enhancer
 
-    loop for each attack in attacks
+    loop for each attack in enhance_prompts_list
         loop for each chatbot in chatbots
-            TestCase -> Chatbot: execute attack
+            TestCase -> Chatbot: execute_attack(attack)
             activate Chatbot
-            Chatbot --> TestCase: chatbot response
+            Chatbot --> TestCase: execute_attack: response
             deactivate Chatbot
-            TestCase -> Evaluation: score response
+            TestCase -> Evaluation: score_response(response)
             activate Evaluation
-            Evaluation --> TestCase: baseline result
+            Evaluation --> TestCase: score_response: response_score
             deactivate Evaluation
-            TestCase -> GrRunner: run guardrails on response
+            TestCase -> GrRunner: run_guardrails_on_response(attack, response)
             activate GrRunner
             loop for each guardrail in guardrails
-                GrRunner -> Guardrail: evaluate attack
+                GrRunner -> Guardrail: evaluate(attack, response)
                 activate Guardrail
-                Guardrail --> GrRunner: protection result
+                Guardrail --> GrRunner: evaluate: protection_result
                 deactivate Guardrail
             end
-            GrRunner --> TestCase: protection results
+            GrRunner --> TestCase: run_guardrails_on_response: protection_results_list
             deactivate GrRunner
         end
     end
-    TestCase -> Storage: write testcase JSON
-    deactivate TestCase
+    TestCase -> Storage: write_testcase(test_case)
     activate Storage
+    Storage --> TestCase: write_testcase: None
+    deactivate Storage
+    TestCase --> TestRun: execute_test_case: None
+    deactivate TestCase
+
 end
 
-TestRun -> Storage: write run results JSON
+TestRun -> Storage: write_run_results(run_results)
+activate Storage
+Storage --> TestRun: write_run_results: None
 deactivate Storage
-TestRun --> CLI: persisted run
-deactivate CLI
+deactivate Storage
+TestRun --> CLI: start_run: persisted_run
 deactivate TestRun
+CLI --> User: run-baseline: None
+deactivate CLI
 @enduml
