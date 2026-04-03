@@ -513,7 +513,56 @@ package "testframework.custom_attack_techniques" as attack_techniques_pkg {
     }
 }
 
-concrete_testcases_pkg -[hidden]down-> attack_techniques_pkg
+' Layout hints for a compact two-column test-case area left of custom attack techniques.
+BaseTestCaseClass -[hidden]down-> BenignTestCase
+BaseTestCaseClass -[hidden]down-> ExcessiveAgencyTestCase
+BenignTestCase -[hidden]right-> ExcessiveAgencyTestCase
+
+BaseTestCaseClass -[hidden]down-> benign_pkg
+BaseTestCaseClass -[hidden]down-> agency_pkg
+benign_pkg -[hidden]right-> agency_pkg
+
+BenignTestCase -[hidden]down-> BiasTestCase
+BiasTestCase -[hidden]down-> CompetitionTestCase
+CompetitionTestCase -[hidden]down-> EthicsTestCase
+EthicsTestCase -[hidden]down-> RobustnessTestCase
+RobustnessTestCase -[hidden]down-> ToxicityTestCase
+
+benign_pkg -[hidden]down-> bias_pkg
+bias_pkg -[hidden]down-> competition_pkg
+competition_pkg -[hidden]down-> ethics_pkg
+ethics_pkg -[hidden]down-> robust_pkg
+robust_pkg -[hidden]down-> toxicity_pkg
+
+ExcessiveAgencyTestCase -[hidden]down-> FairnessTestCase
+FairnessTestCase -[hidden]down-> IllegalActivityTestCase
+IllegalActivityTestCase -[hidden]down-> IndirectInstructionTestCase
+IndirectInstructionTestCase -[hidden]down-> PrivacyViolationsTestCase
+PrivacyViolationsTestCase -[hidden]down-> SystemPromptLeakageTestCase
+
+agency_pkg -[hidden]down-> fairness_pkg
+fairness_pkg -[hidden]down-> illegal_pkg
+illegal_pkg -[hidden]down-> indirect_pkg
+indirect_pkg -[hidden]down-> privacy_pkg
+privacy_pkg -[hidden]down-> leakage_pkg
+
+BiasTestCase -[hidden]right-> FairnessTestCase
+CompetitionTestCase -[hidden]right-> IllegalActivityTestCase
+EthicsTestCase -[hidden]right-> IndirectInstructionTestCase
+RobustnessTestCase -[hidden]right-> PrivacyViolationsTestCase
+ToxicityTestCase -[hidden]right-> SystemPromptLeakageTestCase
+
+bias_pkg -[hidden]right-> fairness_pkg
+competition_pkg -[hidden]right-> illegal_pkg
+ethics_pkg -[hidden]right-> indirect_pkg
+robust_pkg -[hidden]right-> privacy_pkg
+toxicity_pkg -[hidden]right-> leakage_pkg
+
+concrete_testcases_pkg -[hidden]right-> attack_techniques_pkg
+ExcessiveAgencyTestCase -[hidden]right-> AttackListEnhancer
+SystemPromptLeakageTestCase -[hidden]right-> AttackListEnhancer
+agency_pkg -[hidden]right-> attack_techniques_pkg
+leakage_pkg -[hidden]right-> attack_techniques_pkg
 attack_techniques_pkg -[hidden]right-> cipher_pkg
 guardrails_pkg -[hidden]right-> metrics_pkg
 
@@ -526,18 +575,18 @@ BaseTestCaseClass ..> AttackListEnhancer
 BaseTestCaseClass ..> ChatbotStore
 BaseTestCaseClass ..> BaseMetric
 
-BenignTestCase --|> BaseTestCaseClass
-BiasTestCase --|> BaseTestCaseClass
-CompetitionTestCase --|> BaseTestCaseClass
-EthicsTestCase --|> BaseTestCaseClass
-ExcessiveAgencyTestCase --|> BaseTestCaseClass
-FairnessTestCase --|> BaseTestCaseClass
-IllegalActivityTestCase --|> BaseTestCaseClass
-IndirectInstructionTestCase --|> BaseTestCaseClass
-PrivacyViolationsTestCase --|> BaseTestCaseClass
-RobustnessTestCase --|> BaseTestCaseClass
-SystemPromptLeakageTestCase --|> BaseTestCaseClass
-ToxicityTestCase --|> BaseTestCaseClass
+BenignTestCase -up-|> BaseTestCaseClass
+BiasTestCase -up-|> BaseTestCaseClass
+CompetitionTestCase -up-|> BaseTestCaseClass
+EthicsTestCase -up-|> BaseTestCaseClass
+ExcessiveAgencyTestCase -up-|> BaseTestCaseClass
+FairnessTestCase -up-|> BaseTestCaseClass
+IllegalActivityTestCase -up-|> BaseTestCaseClass
+IndirectInstructionTestCase -up-|> BaseTestCaseClass
+PrivacyViolationsTestCase -up-|> BaseTestCaseClass
+RobustnessTestCase -up-|> BaseTestCaseClass
+SystemPromptLeakageTestCase -up-|> BaseTestCaseClass
+ToxicityTestCase -up-|> BaseTestCaseClass
 
 BenignTestCase *-up- BenignAttacks
 BiasTestCase *-up- BiasAttacks
