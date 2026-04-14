@@ -37,6 +37,7 @@ class VectorStore:
             api_key=os.getenv("OPENAI_API_KEY"),
         )
 
+        # https://docs.langchain.com/oss/python/integrations/vectorstores/pgvector
         self._vector_store = PGVector(
             embeddings=self._embeddings,
             collection_name=self._collection_name,

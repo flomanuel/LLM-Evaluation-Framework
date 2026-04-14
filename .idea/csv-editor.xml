@@ -31,42 +31,28 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="/_runs/_outputs/no-pii_no-baseline_no-model-alignment/LANGCHAIN_GPT_41/summary.csv">
+        <entry key="/_runs/_outputs/all_scanners/LANGCHAIN_GPT_41/summary.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
             </Attribute>
           </value>
         </entry>
-        <entry key="/_runs/_outputs/no-pii_no-baseline_no-model-alignment/LANGCHAIN_GPT_5/summary.csv">
+        <entry key="/_runs/_outputs/all_scanners/LANGCHAIN_GPT_5/summary.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
             </Attribute>
           </value>
         </entry>
-        <entry key="/_runs/_outputs/no-pii_no-baseline_no-model-alignment/LANGCHAIN_OLLAMA_GEMMA3_4B/summary.csv">
+        <entry key="/_runs/_outputs/all_scanners/LANGCHAIN_OLLAMA_GEMMA3_4B/summary.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
             </Attribute>
           </value>
         </entry>
-        <entry key="/_runs/_outputs/no-pii_no-baseline_with-model-alignment/LANGCHAIN_GPT_41/summary.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="/_runs/_outputs/no-pii_no-baseline_with-model-alignment/LANGCHAIN_GPT_5/summary.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="/_runs/_outputs/no-pii_no-baseline_with-model-alignment/LANGCHAIN_OLLAMA_GEMMA3_4B/summary.csv">
+        <entry key="/_runs/_outputs/no_pii_scanners/LANGCHAIN_GPT_5/summary.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />

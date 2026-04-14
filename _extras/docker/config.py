@@ -23,6 +23,7 @@ from guardrails.validator_base import (
 
 
 # bsed on: https://github.com/guardrails-ai/sensitive_topics/blob/main/validator/main.py
+# manual re-implementation due to a bug in the original scanner (uses old version of another scanner which changed its API)
 @register_validator(name="guardrails/sensitive_topics", data_type="string")
 class SensitiveTopic(RestrictToTopic):  # type: ignore
     def __init__(

@@ -6,7 +6,6 @@
 
 import json
 import os
-import atexit
 import asyncio
 import unicodedata
 from time import perf_counter

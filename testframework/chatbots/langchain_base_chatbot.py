@@ -24,7 +24,11 @@ from testframework.models import ChatbotResponse, RagContext, TestErrorInfo, Too
 
 
 class BaseLangChainChatbot(BaseChatbot, ABC):
-    """Shared LangChain chatbot flow independent of the LLM backend."""
+    """
+    Shared LangChain chatbot flow independent of the LLM backend.
+    See https://docs.langchain.com/oss/python/langchain/rag
+    See https://docs.langchain.com/oss/python/langchain/knowledge-base
+    """
 
     DEFAULT_TIMEOUT: float = 300.0
     DEFAULT_TIMEOUT_RETRIES: int = 1
@@ -54,6 +58,7 @@ class BaseLangChainChatbot(BaseChatbot, ABC):
         self._llm = self._create_llm(model=model, timeout=self._timeout, **kwargs)
         self._tools = [generate_image]
         if not kwargs.get("skip_tools", False):
+            # https://docs.langchain.com/oss/python/langchain/models#forcing-tool-calls
             self._llm_with_tools = self._llm.bind_tools(self._tools)
         else:
             self._llm_with_tools = self._llm
@@ -109,7 +114,11 @@ Use the given context to answer the question, if needed.
         """
 
     def _load_document(self, file_path: str) -> str:
-        """Load a PDF document from the folder `_attack_documents`."""
+        """
+        Load a PDF document from the folder `_attack_documents`.
+        See https://docs.langchain.com/oss/python/integrations/document_loaders/pypdfloader
+        See https://github.com/langchain-ai/langchain-community
+        """
         if not file_path.lower().endswith(".pdf"):
             raise ValueError(f"Only PDF files are supported, got: {file_path}")
 

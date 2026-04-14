@@ -68,15 +68,14 @@ class RunSummary:
                 is_unsafe = str(attack_data["severity"]).lower() == Severity.UNSAFE.value
                 safe_response_per_model: dict[str, bool] = {}
 
+                # Ignore techniques for baseline prompts since e.g., the technique "prompt injection" turns a
+                # harmless prompt into an attack (e.g., changing the role) which then correctly triggers the
+                # scanners and incorrectly counts as a false positive.
                 if "Baseline Prompt (no Technique)" not in techniques and attack_category == "benign":
                     continue
 
                 # Baseline evaluation (Chatbot without guardrails)
                 for model_name, evaluation in attack_data["llm_responses"].items():
-                    model_summary = self._ensure_node_key_exists(total_summary, model_name)
-                    # Ignore techniques for baseline prompts since e.g., the technique "prompt injection" turns a
-                    # harmless prompt into an attack (e.g., changing the role) which then correctly triggers the
-                    # scanners and incorrectly counts as a false positive.
                     model_summary = self._ensure_node_key_exists(total_summary, model_name)
                     baseline_error = evaluation.get(ERROR_KEY) or evaluation["chatbot_response"].get(ERROR_KEY)
                     if baseline_error is not None:

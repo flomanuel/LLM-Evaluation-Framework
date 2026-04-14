@@ -28,7 +28,6 @@ from testframework.metrics import ToolCallCodeInjectionMetric
 from testframework.models import TestCaseResult, Attack, DetectionResult, PromptVariants, ChatbotResponseEvaluation, \
     TestErrorInfo, EnhancedAttack, ChatbotResponse, AttackEnhancementResult, LLMErrorType
 from testframework.storage import save_test_case_result
-from testframework.testcases import ExcessiveAgencyTestCase
 from testframework.util.ollama_handler import OllamaGenerator
 
 
@@ -367,7 +366,7 @@ class BaseTestCase(ABC):
 
     def _should_skip_ollama_chatbot(self) -> bool:
         """Return whether the Ollama chatbot should be skipped for this test case."""
-        return isinstance(self, ExcessiveAgencyTestCase)
+        return self.category == Category.EXCESSIVE_AGENCY
 
     @staticmethod
     def _build_query_kwargs(attack: RTTestCase) -> dict:

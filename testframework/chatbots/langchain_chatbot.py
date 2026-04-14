@@ -40,6 +40,7 @@ class LangChainChatbot(BaseLangChainChatbot):
     def _create_llm(self, model: str, timeout: float, **kwargs) -> Any:
         """Create the OpenAI LangChain backend."""
         reasoning = kwargs.get("reasoning")
+        # https://docs.langchain.com/oss/python/integrations/chat/openai
         return ChatOpenAI(
             model=model,
             max_retries=2,

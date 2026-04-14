@@ -17,7 +17,11 @@ from loguru import logger
 
 
 class DocumentLoader:
-    """Load and process documents from a directory for RAG ingestion."""
+    """
+    Load and process documents from a directory for RAG ingestion.
+    See https://docs.langchain.com/oss/python/langchain/rag
+    See https://docs.langchain.com/oss/python/langchain/knowledge-base
+    """
     DEFAULT_CHUNK_SIZE = 1000
     DEFAULT_CHUNK_OVERLAP = 200
 
@@ -46,7 +50,11 @@ class DocumentLoader:
         )
 
     def _load_pdf_files(self) -> tuple[List[Document], int]:
-        """Load all PDF files from the documents directory."""
+        """
+        Load all PDF files from the documents directory.
+        See https://docs.langchain.com/oss/python/integrations/document_loaders/pypdfloader
+        See https://github.com/langchain-ai/langchain-community
+        """
         documents: List[Document] = []
         pdf_files = list(self._documents_dir.glob("**/*.pdf"))
         logger.info(

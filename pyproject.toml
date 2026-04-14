@@ -26,7 +26,8 @@ dependencies = [
     "llamafirewall~=1.0.3",
     "google-cloud-modelarmor~=0.4.0",
     "langchain-ollama~=1.0.0",
-    "pylint>=4.0.5",
+    "pylint~=4.0.5",
+    "langchain-core~=1.2.15",
 ]
 
 [project.scripts]

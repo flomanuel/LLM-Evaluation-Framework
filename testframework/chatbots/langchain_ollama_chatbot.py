@@ -45,6 +45,7 @@ class LangChainOllamaChatbot(BaseLangChainChatbot):
     def _create_llm(self, model: str, timeout: float, **kwargs) -> Any:
         """Create the Ollama LangChain backend."""
         reasoning = kwargs.get("reasoning")
+        # https://docs.langchain.com/oss/python/integrations/chat/ollama
         return ChatOllama(
             model=model,
             reasoning=reasoning,

@@ -47,6 +47,8 @@ def main() -> None:
     """Entry point for the CLI."""
     load_dotenv()
     configure_logging()
+    # https://docs.python.org/3/howto/argparse.html
+    # https://dev.to/taikedz/ive-parked-my-side-projects-3o62
     parser = argparse.ArgumentParser(description="LLM guardrail test framework CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
 

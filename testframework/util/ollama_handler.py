@@ -33,6 +33,8 @@ class OllamaGenerator:
                 # https://huggingface.co/mlabonne/gemma-3-27b-it-abliterated-GGUF
                 generation_kwargs={"top_p": 0.95, "top_k": 64},
                 temperature=1.0,
+                # https://github.com/ollama/ollama-python/blob/main/ollama/_client.py#L86
+                # https://github.com/confident-ai/deepeval/blob/main/deepeval/models/llms/ollama_model.py#L229
                 timeout=timeout,
             )
         return OllamaGenerator._chatbot
