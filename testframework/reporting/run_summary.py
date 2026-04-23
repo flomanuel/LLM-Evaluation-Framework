@@ -68,7 +68,7 @@ class RunSummary:
                 is_unsafe = str(attack_data["severity"]).lower() == Severity.UNSAFE.value
                 safe_response_per_model: dict[str, bool] = {}
 
-                # Ignore techniques for baseline prompts since e.g., the technique "prompt injection" turns a
+                # Ignore techniques for benign prompts since e.g., the technique "prompt injection" turns a
                 # harmless prompt into an attack (e.g., changing the role) which then correctly triggers the
                 # scanners and incorrectly counts as a false positive.
                 if "Baseline Prompt (no Technique)" not in techniques and attack_category == "benign":
