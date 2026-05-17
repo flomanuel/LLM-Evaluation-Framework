@@ -55,6 +55,29 @@ uv run llm-test-baseline run-baseline
 uv run llm-test-baseline summarize-run --run absolute_path_to_run_folder --output absolute_path_to_output.json
 ```
 
+# Running the unit tests
+
+The unit test suite lives in the `tests/` directory and uses [pytest](https://docs.pytest.org/).
+All external services (Ollama, OpenAI, GCP, Lakera, LLM Guard, LlamaFirewall) are mocked — no real credentials or running models are required.
+
+Run all tests:
+
+```bash
+uv run pytest tests/ -v
+```
+
+Run a single file:
+
+```bash
+uv run pytest tests/test_models.py -v
+```
+
+Run tests matching a keyword:
+
+```bash
+uv run pytest tests/ -v -k "guardrail"
+```
+
 # Details on development
 
 See the [subpage](./_extras/doc/development.md).
