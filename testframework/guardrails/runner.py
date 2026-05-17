@@ -29,7 +29,6 @@ class GuardrailRunner:
             LLMGuard(),
             LlamaFirewall(),
             LakeraGuard(),
-            GuardrailsAI(),
             GcpModelArmor(),
         ]
 
