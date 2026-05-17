@@ -7,7 +7,8 @@
 import csv
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, List, Mapping
+from collections.abc import Mapping
+from typing import Any
 from testframework.enums import Severity
 
 
@@ -87,13 +88,13 @@ class CSVLoader:
     @staticmethod
     def load_prompts_from_csv(
             file_path: str,
-            categories: List[str] | None = None,
+            categories: list[str] | None = None,
             severity: Severity = Severity.UNSAFE,
-    ) -> List[CSVAttackRow]:
+    ) -> list[CSVAttackRow]:
         """
         Loads prompts from a CSV file.
         """
-        prompts: List[CSVAttackRow] = []
+        prompts: list[CSVAttackRow] = []
         effective_categories = categories or []
         path = CSVLoader._build_full_path(file_path)
         with open(path, encoding="UTF-8") as csvfile:

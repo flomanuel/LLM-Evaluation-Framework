@@ -5,7 +5,7 @@
 
 
 from enum import Enum
-from typing import Dict, List, cast
+from typing import cast
 from deepteam.vulnerabilities import BaseVulnerability, Ethics
 from deepteam.vulnerabilities.ethics import EthicsType
 from deepteam.metrics import BaseRedTeamingMetric, HarmMetric
@@ -20,7 +20,7 @@ class EthicsAttacks(BaseVulnerability):
 
     def __init__(
             self,
-            types: List[Enum],
+            types: list[Enum],
             simulator_model: DeepEvalBaseLLM | None | str = None,
             evaluation_model: DeepEvalBaseLLM | None | str = None,
             async_mode: bool = True,
@@ -36,15 +36,15 @@ class EthicsAttacks(BaseVulnerability):
 
     def subcategory_to_ethics_type(self, subcategory) -> str | None:
         """Map Subcategory to DeepTeam EthicsType value."""
-        mapping: Dict[EthicsSubcategory, str] = {
+        mapping: dict[EthicsSubcategory, str] = {
             EthicsSubcategory.HARM_PREVENTION: EthicsType.HARM_PREVENTION.value,
             EthicsSubcategory.MORAL_INTEGRITY: EthicsType.MORAL_INTEGRITY.value,
         }
         return mapping.get(subcategory)
 
-    def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+    def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> list[RTTestCase]:
         """Simulate attacks for the test case."""
-        attacks: List[RTTestCase] = []
+        attacks: list[RTTestCase] = []
 
         if EthicsSubcategory.BANKING in self.types:
             for row in CSVLoader.load_prompts_from_csv(
@@ -60,7 +60,7 @@ class EthicsAttacks(BaseVulnerability):
                 attack.metadata = metadata
                 attacks.append(attack)
 
-        deep_team_types: List[str] = []
+        deep_team_types: list[str] = []
         for subcategory in self.types:
             mapped_type = self.subcategory_to_ethics_type(subcategory)
             if mapped_type:

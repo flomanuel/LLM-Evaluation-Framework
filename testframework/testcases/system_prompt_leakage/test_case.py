@@ -4,8 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
-from typing import List
 from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from testframework.enums import Category
@@ -18,7 +16,7 @@ from testframework.util.ollama_handler import OllamaGenerator
 class SystemPromptLeakageTestCase(BaseTestCase):
     """Test case for system prompt leakage attacks."""
 
-    def __init__(self, subcategories: List[SystemPromptLeakageSubcategory] = None) -> None:
+    def __init__(self, subcategories: list[SystemPromptLeakageSubcategory] = None) -> None:
         super().__init__(
             Category.SYSTEM_PROMPT_LEAKAGE,
             subcategories
@@ -36,6 +34,6 @@ class SystemPromptLeakageTestCase(BaseTestCase):
         """Get the metric for the test case."""
         return self.attack_builder._get_metric(attack)
 
-    def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+    def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> list[RTTestCase]:
         """Simulate attacks for the test case."""
         return self.attack_builder.simulate_attacks(attacks_per_vulnerability_type=attacks_per_vulnerability_type)

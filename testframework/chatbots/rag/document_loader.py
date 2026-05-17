@@ -5,10 +5,7 @@
 #  This source code is licensed under the MIT license found in the
 #  LICENSE file in the root directory of this source tree.
 
-from __future__ import annotations
-
 from pathlib import Path
-from typing import List
 
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.documents import Document
@@ -49,13 +46,13 @@ class DocumentLoader:
             f"chunk_size={chunk_size}, chunk_overlap={chunk_overlap}"
         )
 
-    def _load_pdf_files(self) -> tuple[List[Document], int]:
+    def _load_pdf_files(self) -> tuple[list[Document], int]:
         """
         Load all PDF files from the documents directory.
         See https://docs.langchain.com/oss/python/integrations/document_loaders/pypdfloader
         See https://github.com/langchain-ai/langchain-community
         """
-        documents: List[Document] = []
+        documents: list[Document] = []
         pdf_files = list(self._documents_dir.glob("**/*.pdf"))
         logger.info(
             f"Discovered {len(pdf_files)} PDF file(s) in '{self._documents_dir}'"
@@ -72,12 +69,12 @@ class DocumentLoader:
 
         return documents, len(pdf_files)
 
-    def load_documents(self) -> List[Document]:
+    def load_documents(self) -> list[Document]:
         """Load all documents from the configured directory."""
         if not self._documents_dir.exists():
             raise FileNotFoundError(f"Documents directory not found: {self._documents_dir}")
 
-        documents: List[Document] = []
+        documents: list[Document] = []
 
         pdf_docs, pdf_file_count = self._load_pdf_files()
         logger.info(
@@ -88,7 +85,7 @@ class DocumentLoader:
         logger.info(f"Total documents loaded: {len(documents)}")
         return documents
 
-    def load_and_split(self) -> List[Document]:
+    def load_and_split(self) -> list[Document]:
         """Load documents and split them into chunks."""
         documents = self.load_documents()
 

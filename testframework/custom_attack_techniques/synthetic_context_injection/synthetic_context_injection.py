@@ -4,7 +4,7 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from typing import Optional, Union
+
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
 from deepteam.utils import create_progress, update_pbar, add_pbar
@@ -31,7 +31,7 @@ class SyntheticContextInjection(BaseSingleTurnAttack):
     def __init__(
             self,
             target_information: str,
-            context_style: Optional[str] = None,
+            context_style: str | None = None,
             weight: int = 1,
             max_retries: int = 3,
     ):
@@ -43,7 +43,7 @@ class SyntheticContextInjection(BaseSingleTurnAttack):
     def enhance(
             self,
             attack: str,
-            simulator_model: Optional[Union[DeepEvalBaseLLM, str]] = None,
+            simulator_model: DeepEvalBaseLLM | str | None = None,
     ) -> str:
         logger.info(f"Enhancing attack with {self.name} technique.")
         self.simulator_model, _ = initialize_model(simulator_model)
@@ -106,7 +106,7 @@ class SyntheticContextInjection(BaseSingleTurnAttack):
     async def a_enhance(
             self,
             attack: str,
-            simulator_model: Optional[Union[DeepEvalBaseLLM, str]] = None,
+            simulator_model: DeepEvalBaseLLM | str | None = None,
     ) -> str:
         self.simulator_model, _ = initialize_model(simulator_model)
         prompt = SyntheticContextInjectionTemplate.enhance(

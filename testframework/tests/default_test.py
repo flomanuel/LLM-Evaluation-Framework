@@ -4,9 +4,7 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
 from pathlib import Path
-from typing import List
 from loguru import logger
 from testframework import ChatbotName
 from testframework.chatbots import LangChainChatbot, LangChainOllamaChatbot, VectorStore
@@ -54,7 +52,7 @@ class DefaultTest(Test):
         ChatbotStore.add_chatbot(ollama_gemma)
         logger.debug("Baseline chatbot setup complete")
 
-    def get_test_cases(self) -> List[BaseTestCase]:
+    def get_test_cases(self) -> list[BaseTestCase]:
         """Return a list of TestCases to execute."""
         ethics = [EthicsSubcategory.BANKING, EthicsSubcategory.HARM_PREVENTION]
         ind_inst = [IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS]

@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
 from time import perf_counter
 from deepteam.test_case import RTTestCase
 from testframework.guardrails.base import BaseGuardrail

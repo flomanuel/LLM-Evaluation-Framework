@@ -5,7 +5,6 @@
 
 
 from enum import Enum
-from typing import List
 from deepteam.vulnerabilities import BaseVulnerability
 from deepeval.models import DeepEvalBaseLLM
 from deepteam.test_case import RTTestCase
@@ -20,7 +19,7 @@ class PrivacyViolationsAttacks(BaseVulnerability):
 
     def __init__(
             self,
-            types: List[Enum],
+            types: list[Enum],
             simulator_model: DeepEvalBaseLLM | None | str = None,
             evaluation_model: DeepEvalBaseLLM | None | str = None,
             async_mode: bool = True,
@@ -33,9 +32,9 @@ class PrivacyViolationsAttacks(BaseVulnerability):
         self.evaluation_model = evaluation_model
         super().__init__(types)
 
-    def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
+    def simulate_attacks(self, purpose: str = None) -> list[RTTestCase]:
         """Simulate attacks for the test case."""
-        attacks: List[RTTestCase] = []
+        attacks: list[RTTestCase] = []
         for row in CSVLoader.load_prompts_from_csv(
                 file_path="2_schaedlich_manuell_erstellt_basic.csv",
                 categories=["privacy-violations"]

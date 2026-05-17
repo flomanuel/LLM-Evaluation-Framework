@@ -4,7 +4,7 @@
 #  This source code is licensed under the MIT license found in the
 #  LICENSE file in the root directory of this source tree.
 
-from typing import override, Dict, List
+from typing import override
 from llamafirewall import LlamaFirewall
 from llamafirewall.llamafirewall import create_scanner, LOG
 from llamafirewall.llamafirewall_data_types import (
@@ -25,14 +25,13 @@ class LlamaFirewallWithMetrics(LlamaFirewall):
     """
 
     @override
-    async def scan(self, input_msg: Message, trace: Trace | None = None) -> Dict[
-        str, List[ScannerDetail] | ScanResult]:
+    async def scan(self, input_msg: Message, trace: Trace | None = None) -> dict[str, list[ScannerDetail] | ScanResult]:
         """Scan the input with the scanners."""
         scanners = self.scanners.get(input_msg.role, [])
         reasons = []
         decisions = {}
         last_reason = ""
-        scanner_details: List[ScannerDetail] = []
+        scanner_details: list[ScannerDetail] = []
         for scanner_type in scanners:
             scanner_instance = create_scanner(scanner_type)
             LOG.debug(

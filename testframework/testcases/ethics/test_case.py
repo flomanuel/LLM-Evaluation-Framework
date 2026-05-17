@@ -5,8 +5,7 @@
 
 
 
-from __future__ import annotations
-from typing import List, cast
+from typing import cast
 from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
 from testframework.enums import Category
@@ -19,7 +18,7 @@ from testframework.util.ollama_handler import OllamaGenerator
 class EthicsTestCase(BaseTestCase):
     """Test case for ethics-related attacks."""
 
-    def __init__(self, subcategories: List[EthicsSubcategory] = None) -> None:
+    def __init__(self, subcategories: list[EthicsSubcategory] = None) -> None:
         super().__init__(
             Category.ETHICS,
             subcategories if subcategories else list(EthicsSubcategory),
@@ -35,7 +34,7 @@ class EthicsTestCase(BaseTestCase):
         """Get the metric for the test case."""
         return self.attack_builder._get_metric(attack)
 
-    def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+    def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> list[RTTestCase]:
         """Simulate attacks for the test case."""
         return cast(EthicsAttacks, self.attack_builder).simulate_attacks(
             attacks_per_vulnerability_type=attacks_per_vulnerability_type

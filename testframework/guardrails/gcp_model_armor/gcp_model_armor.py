@@ -6,7 +6,7 @@
 import json
 import os
 from time import perf_counter, sleep
-from typing import Callable, List, TypeVar
+from collections.abc import Callable
 import proto
 from google.api_core.client_options import ClientOptions
 from google.cloud.modelarmor_v1 import (ModelArmorClient, DataItem, SanitizeUserPromptRequest,
@@ -157,11 +157,11 @@ class GcpModelArmor(BaseGuardrail):
             error=error,
         )
 
-    def _scanner_detail_from_filter(self, filter_name: str, filter_result) -> tuple[ScannerDetail, List, List]:
+    def _scanner_detail_from_filter(self, filter_name: str, filter_result) -> tuple[ScannerDetail, list, list]:
         """Build the scanner detail from the filter result. Hanlde protobuf results."""
-        warnings: List = []
+        warnings: list = []
         match_was_found = False
-        subtypes_of_found_match: List = []
+        subtypes_of_found_match: list = []
         execution_state = None
         sanitized_input = ""
         matched_labels = []

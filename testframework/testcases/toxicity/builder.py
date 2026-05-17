@@ -5,7 +5,7 @@
 
 
 from enum import Enum
-from typing import List, cast, Dict
+from typing import cast
 from deepteam.vulnerabilities import BaseVulnerability, Toxicity, PersonalSafety
 from deepteam.vulnerabilities.personal_safety import PersonalSafetyType
 from deepteam.metrics import BaseRedTeamingMetric
@@ -20,7 +20,7 @@ class ToxicityAttacks(BaseVulnerability):
     """Class that builds toxicity attack prompts from DeepTeam."""
 
     def subcategory_to_illegal_activity_type(self, category: ToxicitySubcategory) -> str | None:
-        map: Dict[ToxicitySubcategory, str] = {
+        map: dict[ToxicitySubcategory, str] = {
             ToxicitySubcategory.BULLYING: PersonalSafetyType.BULLYING.value,
             ToxicitySubcategory.INSULTS: ToxicityType.INSULTS.value,
             ToxicitySubcategory.PROFANITY: ToxicityType.PROFANITY.value,
@@ -31,7 +31,7 @@ class ToxicityAttacks(BaseVulnerability):
 
     def __init__(
             self,
-            types: List[Enum],
+            types: list[Enum],
             simulator_model: DeepEvalBaseLLM | None | str = None,
             evaluation_model: DeepEvalBaseLLM | None | str = None,
             async_mode: bool = True,
@@ -46,11 +46,11 @@ class ToxicityAttacks(BaseVulnerability):
         self.personal_safety_attack_builder: PersonalSafety | None = None
         super().__init__(types)
 
-    def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+    def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> list[RTTestCase]:
         """Simulate attacks for the test case."""
-        attacks: List[RTTestCase] = []
+        attacks: list[RTTestCase] = []
 
-        toxicity_types: List[str | None] = [self.subcategory_to_illegal_activity_type(category) for category in
+        toxicity_types: list[str | None] = [self.subcategory_to_illegal_activity_type(category) for category in
                                             self.types if category is not ToxicitySubcategory.BULLYING]
         if toxicity_types:
             self.toxicity_attack_builder = Toxicity(
@@ -62,7 +62,7 @@ class ToxicityAttacks(BaseVulnerability):
                 self.toxicity_attack_builder.simulate_attacks(
                     attacks_per_vulnerability_type=(attacks_per_vulnerability_type)))
 
-        personal_safety_types: List[str | None] = [
+        personal_safety_types: list[str | None] = [
             self.subcategory_to_illegal_activity_type(category)
             for category in self.types if category == ToxicitySubcategory.BULLYING
         ]

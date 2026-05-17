@@ -4,7 +4,7 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from typing import Optional, Union, Literal
+from typing import Literal
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
@@ -48,7 +48,7 @@ class EmotionalManipulation(BaseSingleTurnAttack):
     def enhance(
             self,
             attack: str,
-            simulator_model: Optional[Union[DeepEvalBaseLLM, str]] = None,
+            simulator_model: DeepEvalBaseLLM | str | None = None,
     ) -> str:
         logger.info(f"Enhancing attack with {self.name} technique.")
         self.simulator_model, _ = initialize_model(simulator_model)
@@ -106,7 +106,7 @@ class EmotionalManipulation(BaseSingleTurnAttack):
     async def a_enhance(
             self,
             attack: str,
-            simulator_model: Optional[Union[DeepEvalBaseLLM, str]] = None,
+            simulator_model: DeepEvalBaseLLM | str | None = None,
     ) -> str:
         self.simulator_model, _ = initialize_model(simulator_model)
         prompt = EmotionalManipulationTemplate.enhance(attack, self.emotion)

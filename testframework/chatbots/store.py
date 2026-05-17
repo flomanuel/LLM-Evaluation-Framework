@@ -4,9 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
-
-from typing import Dict
 
 from loguru import logger
 from testframework.chatbots.base import BaseChatbot
@@ -16,7 +13,7 @@ from testframework import ChatbotName
 class ChatbotStore:
     """Static registry for chatbot instances."""
 
-    _chatbots: Dict[ChatbotName, BaseChatbot] = {}
+    _chatbots: dict[ChatbotName, BaseChatbot] = {}
 
     @staticmethod
     def add_chatbot(chatbot: BaseChatbot) -> None:
@@ -31,7 +28,7 @@ class ChatbotStore:
         logger.info(f"Removed chatbot '{name.value}'")
 
     @staticmethod
-    def get_chatbots() -> Dict[ChatbotName, BaseChatbot]:
+    def get_chatbots() -> dict[ChatbotName, BaseChatbot]:
         """Get all registered chatbots."""
         return ChatbotStore._chatbots
 

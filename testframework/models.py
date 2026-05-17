@@ -4,12 +4,10 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any
 from uuid import uuid4
 
 import httpx
@@ -65,7 +63,7 @@ class TimestampRange:
 class RagContext:
     """Context for RAG retrieval."""
     embedding_model: str | None
-    nodes: List[str]
+    nodes: list[str]
 
 
 @dataclass
@@ -178,7 +176,7 @@ class DetectionElement:
     score: float
     judge_raw_response: str
     latency: float | None
-    scanner_details: List[ScannerDetail]
+    scanner_details: list[ScannerDetail]
     error: TestErrorInfo | None = None
 
     @property
@@ -219,7 +217,7 @@ class EnhancedAttack:
     attack_case: RTTestCase
     baseline_input: str
     enhanced_input: str
-    techniques: List[str] = field(default_factory=list)
+    techniques: list[str] = field(default_factory=list)
     error: TestErrorInfo | None = None
 
     @property
@@ -231,7 +229,7 @@ class EnhancedAttack:
 @dataclass
 class AttackEnhancementResult:
     """Summary of all enhanced attacks."""
-    enhanced_attacks: List[EnhancedAttack]
+    enhanced_attacks: list[EnhancedAttack]
     planned_attack_count: int
     failed_attack_count: int
     error_threshold_percent: float
@@ -258,11 +256,11 @@ class Attack:
     """One LLM-specific attack"""
     category: str
     subcategory: Enum | None
-    techniques: List[str]
+    techniques: list[str]
     severity: Severity
     prompt: PromptVariants
-    llm_responses: Dict[ChatbotName, ChatbotResponseEvaluation]
-    protection: Dict[str, Dict[ChatbotName, DetectionResult]]
+    llm_responses: dict[ChatbotName, ChatbotResponseEvaluation]
+    protection: dict[str, dict[ChatbotName, DetectionResult]]
     error: TestErrorInfo | None = None
 
     @property
@@ -276,7 +274,7 @@ class Attack:
     def from_generation_error(
             cls,
             category: str,
-            subcategories: List[Enum] | None,
+            subcategories: list[Enum] | None,
             severity: Severity,
             error: TestErrorInfo,
     ) -> "Attack":
@@ -296,11 +294,11 @@ class Attack:
     def from_enhancement_error(
             cls,
             category: str,
-            subcategories: List[Enum] | None,
+            subcategories: list[Enum] | None,
             severity: Severity,
             baseline_input: str,
             enhanced_input: str,
-            techniques: List[str],
+            techniques: list[str],
             error: TestErrorInfo,
     ) -> "Attack":
         """Create an Attack representing a failed prompt enhancement."""
@@ -325,9 +323,9 @@ class TestCaseResult:
         attack_and_vulnerability_generation: str | None = None
 
     category: Category
-    subcategories: List[str]
+    subcategories: list[str]
     model: ModelInfo = field(default_factory=ModelInfo)
-    attacks: Dict[str, Attack] = field(default_factory=dict)
+    attacks: dict[str, Attack] = field(default_factory=dict)
     generation_error: TestErrorInfo | None = None
     enhancement_error: TestErrorInfo | None = None
 
@@ -368,9 +366,9 @@ class TestRunResult:
     """Result of a test run."""
     run_id: str
     timestamp: TestRunTimestamp
-    attack_categories: List[TestCaseResult]
+    attack_categories: list[TestCaseResult]
 
-    def to_json_dict(self) -> Dict[str, Any]:
+    def to_json_dict(self) -> dict[str, Any]:
         return asdict(self)
 
     @classmethod

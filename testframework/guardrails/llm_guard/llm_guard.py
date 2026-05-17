@@ -5,7 +5,6 @@
 
 
 from time import perf_counter
-from typing import List
 from llm_guard.input_scanners import Anonymize as InputAnonymize, BanCode as InputBanCode, BanTopics as InputBanTopics, \
     PromptInjection as InputPromptInjection
 from llm_guard.input_scanners.anonymize_helpers import BERT_BASE_NER_CONF
@@ -49,9 +48,9 @@ class LLMGuard(BaseGuardrail):
         toxicity = InputToxicity(threshold=0.5, match_type=ToxicityMatchType.FULL, model=TOXICITY_INPUT_DEFAULT_MODEL)
 
         input_scanners = [anonymize, ban_code, ban_topics, prompt_injection, toxicity]
-        scanner_details: List[ScannerDetail] = []
+        scanner_details: list[ScannerDetail] = []
         current_prompt = user_prompt
-        alerting_scanners: List[str] = []
+        alerting_scanners: list[str] = []
         max_score = 0.0
         overall_valid = True
 
@@ -109,14 +108,14 @@ class LLMGuard(BaseGuardrail):
         toxicity = OutputToxicity(threshold=0.7, match_type=ToxicityMatchType.FULL, model=TOXICITY_INPUT_DEFAULT_MODEL)
 
         output_scanners = [ban_topics, bias, ban_code, factual_consistency, sensitive, toxicity]
-        scanner_details: List[ScannerDetail] = []
+        scanner_details: list[ScannerDetail] = []
         t_info: ToolInfo = kwargs.get("tool_info", None)
         if t_info:
             tool_call = f"Tool Name: {t_info.tool_name if t_info.tool_name else 'N/A'} \n Tool Was Called: {t_info.tool_called if t_info.tool_called else 'N/A'} \n Tool Call Args: {t_info.tool_args if t_info.tool_args else 'N/A'}"
             current_output = f"=== Tool Call ===\n{tool_call}"
         else:
             current_output = model_response
-        alerting_scanners: List[str] = []
+        alerting_scanners: list[str] = []
         max_score = 0.0
         overall_valid = True
 

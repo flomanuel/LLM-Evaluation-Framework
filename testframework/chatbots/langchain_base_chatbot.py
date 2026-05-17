@@ -4,12 +4,10 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from pathlib import Path
 from time import perf_counter
-from typing import Any, List
+from typing import Any
 
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.documents import Document
@@ -84,7 +82,7 @@ class BaseLangChainChatbot(BaseChatbot, ABC):
         """Set the vector store instance."""
         self._vector_store = store
 
-    def _retrieve_context(self, query: str) -> List[Document]:
+    def _retrieve_context(self, query: str) -> list[Document]:
         """Retrieve relevant documents from the vector store."""
         if self._vector_store is None:
             logger.warning("No vector store configured, skipping RAG retrieval")
@@ -93,7 +91,7 @@ class BaseLangChainChatbot(BaseChatbot, ABC):
         return self._vector_store.similarity_search(query, k=self._rag_k)
 
     def _build_prompt_with_context(
-            self, user_prompt: str, context_docs: List[Document]
+            self, user_prompt: str, context_docs: list[Document]
     ) -> str:
         """Build the enhanced prompt with RAG context."""
         if not context_docs:
@@ -246,7 +244,7 @@ Use the given context to answer the question, if needed.
             effective_system_prompt: str,
     ) -> ChatbotResponse:
         """Send the actual query / prompt to the LLM."""
-        context_docs: List[Document] = []
+        context_docs: list[Document] = []
         document_content: str | None = None
         enhanced_prompt: str = user_prompt
         if file_path:

@@ -6,7 +6,7 @@
 
 import time
 from dataclasses import dataclass
-from typing import List, Callable
+from collections.abc import Callable
 from deepeval.models import DeepEvalBaseLLM
 from deepteam.attacks.single_turn import AdversarialPoetry, MathProblem, PromptInjection, Base64, Roleplay
 from testframework.custom_attack_techniques.cipher_code_expert.cipher_code_expert import CipherCodeExpert
@@ -22,7 +22,7 @@ class AttackEnhancement:
     cooldown: Callable[[int], None]
 
 
-ENHANCEMENTS: List[AttackEnhancement] = [
+ENHANCEMENTS: list[AttackEnhancement] = [
     AttackEnhancement(
         name=TECHNIQUE_BASELINE,
         transform=lambda prompt, model: prompt,

@@ -4,15 +4,13 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
-
 import os
 import uuid
 from abc import ABC, abstractmethod
 from enum import Enum
 from pathlib import Path
 from time import perf_counter
-from typing import Dict, List, Any
+from typing import Any
 from deepeval.models import DeepEvalBaseLLM
 from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
@@ -42,7 +40,7 @@ class BaseTestCase(ABC):
 
     def __init__(self,
                  category: Category,
-                 subcategories: List[Enum],
+                 subcategories: list[Enum],
                  severity: Severity = Severity.UNSAFE,
                  ) -> None:
         self.category = category
@@ -52,7 +50,7 @@ class BaseTestCase(ABC):
         self.severity = severity
 
     @abstractmethod
-    def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+    def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> list[RTTestCase]:
         """Simulate attacks for the test case."""
         raise NotImplementedError
 
@@ -74,7 +72,7 @@ class BaseTestCase(ABC):
         latest_attempted_generation_model: str | None = None
 
         attacks_per_vulnerability_type = int(os.environ.get("ATTACKS_PER_VULNERABILITY_TYPE", 1))
-        enhanced_attacks: List[EnhancedAttack] = []
+        enhanced_attacks: list[EnhancedAttack] = []
         enhancement_result: AttackEnhancementResult | None = None
 
         max_attempts = self.MAX_RETRIES + 1
@@ -204,12 +202,12 @@ class BaseTestCase(ABC):
             )
 
     def _generate_attacks(self, attack_list_enhancer: AttackListEnhancer, attacks_per_vulnerability_type: int,
-                          test_case_id: str) -> List[
-        List[EnhancedAttack], AttackEnhancementResult | None, bool]:
+                          test_case_id: str) -> list[
+        list[EnhancedAttack], AttackEnhancementResult | None, bool]:
         """Generate attacks for the test case."""
         logger.info(f"Generating attacks for test case '{test_case_id}'")
         generation_started = perf_counter()
-        attacks: List[RTTestCase] = self.simulate_attacks(attacks_per_vulnerability_type=attacks_per_vulnerability_type)
+        attacks: list[RTTestCase] = self.simulate_attacks(attacks_per_vulnerability_type=attacks_per_vulnerability_type)
         logger.info(
             f"Generated {len(attacks)} attack(s) for '{test_case_id}' "
             f"(duration={perf_counter() - generation_started:.2f}s)"
@@ -228,7 +226,7 @@ class BaseTestCase(ABC):
     def _execute_single_attack(
             self,
             attack: EnhancedAttack,
-            chatbots: Dict[ChatbotName, BaseChatbot]
+            chatbots: dict[ChatbotName, BaseChatbot]
     ) -> Attack:
         """Execute a single attack against all chatbots."""
         base_attack = attack.baseline_input
@@ -249,7 +247,7 @@ class BaseTestCase(ABC):
             f"(chatbots={len(bot_responses_eval)})"
         )
         guardrails_started = perf_counter()
-        protection: Dict[str, Dict[ChatbotName, DetectionResult]] = self.guardrail_runner.run(
+        protection: dict[str, dict[ChatbotName, DetectionResult]] = self.guardrail_runner.run(
             attack_case,
             bot_responses_eval,
             self._find_metric(attack_case),
@@ -349,12 +347,12 @@ class BaseTestCase(ABC):
 
     def _select_chatbots(
             self,
-            chatbots: Dict[ChatbotName, BaseChatbot],
-    ) -> Dict[ChatbotName, BaseChatbot]:
+            chatbots: dict[ChatbotName, BaseChatbot],
+    ) -> dict[ChatbotName, BaseChatbot]:
         """Filter chatbots for the current test case."""
         if not self._should_skip_ollama_chatbot():
             return chatbots
-        filtered_chatbots: Dict[ChatbotName, BaseChatbot] = {}
+        filtered_chatbots: dict[ChatbotName, BaseChatbot] = {}
         for name, chatbot in chatbots.items():
             if isinstance(chatbot, LangChainOllamaChatbot):
                 logger.info(

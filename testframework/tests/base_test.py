@@ -5,13 +5,10 @@
 
 
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
-from typing import List
 from uuid import uuid4
 from loguru import logger
 from testframework.models import TestRunResult, TestRunTimestamp, TestCaseResult
@@ -25,7 +22,7 @@ class Test(ABC):
     def __init__(self, name: str, results_dir: Path | None = None) -> None:
         self.name = name
         self.results_dir = results_dir or Path("_runs")
-        self.test_case_results: List[TestCaseResult] = []
+        self.test_case_results: list[TestCaseResult] = []
 
     @abstractmethod
     def setup_chatbots(self) -> None:
@@ -33,7 +30,7 @@ class Test(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_test_cases(self) -> List[BaseTestCase]:
+    def get_test_cases(self) -> list[BaseTestCase]:
         """Return a list of BaseTestCase instances to execute."""
         raise NotImplementedError
 

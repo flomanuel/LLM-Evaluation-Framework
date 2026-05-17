@@ -4,9 +4,7 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
 from time import perf_counter
-from typing import Dict
 
 from deepteam.metrics import BaseRedTeamingMetric
 from deepteam.test_case import RTTestCase
@@ -40,9 +38,9 @@ class GuardrailRunner:
             attack: RTTestCase,
             chatbot_responses_eval: dict[ChatbotName, ChatbotResponseEvaluation],
             metric: BaseRedTeamingMetric,
-    ) -> Dict[str, Dict[ChatbotName, DetectionResult]]:
+    ) -> dict[str, dict[ChatbotName, DetectionResult]]:
         """Analyzes a given attack string against the chatbot's responses by iterating over the guardrails."""
-        result: Dict[str, Dict[ChatbotName, DetectionResult]] = {}
+        result: dict[str, dict[ChatbotName, DetectionResult]] = {}
         logger.info(
             f"Running {len(self.guardrails)} guardrail(s) "
             f"for {len(chatbot_responses_eval)} chatbot response(s)"

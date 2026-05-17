@@ -4,12 +4,10 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
-
 import os
 import time
+from collections.abc import Callable
 from copy import deepcopy
-from typing import List, Callable
 from deepeval.models import DeepEvalBaseLLM, OllamaModel
 from dotenv import load_dotenv
 from deepteam.test_case import RTTestCase
@@ -35,8 +33,8 @@ class AttackListEnhancer:
 
     def enhance(
             self,
-            attacks: List[RTTestCase],
-            enhancements: List[AttackEnhancement] | None = None,
+            attacks: list[RTTestCase],
+            enhancements: list[AttackEnhancement] | None = None,
     ) -> AttackEnhancementResult:
         """Enhance a list of attacks with the given techniques."""
         logger.info(
@@ -64,7 +62,7 @@ class AttackListEnhancer:
                 error_threshold_percent=error_threshold_percent,
             )
 
-        enhanced_attacks: List[EnhancedAttack] = []
+        enhanced_attacks: list[EnhancedAttack] = []
         enhanceable_attacks = sum(
             1 for attack in attacks if attack.vulnerability_type != "document-embedded-instructions")
         planned_attack_count = enhanceable_attacks * len(active_enhancements) + (len(attacks) - enhanceable_attacks)
@@ -92,7 +90,7 @@ class AttackListEnhancer:
                 # section and indent the former-else-flow one to the left.
                 # if is_doc_embedding_attack:
                 #     simulate indirect document injection by adding the injection defined in the prompt
-                #     raw_prompts: List[str] = str(attack.input).split("#")
+                #     raw_prompts: list[str] = str(attack.input).split("#")
                 #     user_prompt = raw_prompts[0] if len(raw_prompts) > 0 else ""
                 #     baseline_input = raw_prompts[1] if len(raw_prompts) > 1 else ""
                 # else:

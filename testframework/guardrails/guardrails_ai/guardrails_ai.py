@@ -4,10 +4,7 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
-
 from time import perf_counter
-from typing import Dict
 from testframework import ChatbotName
 from testframework.guardrails.base import BaseGuardrail
 from testframework.guardrails.guardrails_ai.constants import GUARD_NAMES
@@ -23,7 +20,7 @@ class GuardrailsAI(BaseGuardrail):
     SHIELDGEMMA2_IDENTIFIER = "thesis_guard_shieldgemma_2b_"
     SHIELDGEMMA2_AGGREGATED_GUARD_NAME = "thesis_guard_shieldgemma_2b"
     BASE_URL = "http://localhost:8000"
-    _cached_guards: Dict[str, Guard] = {}
+    _cached_guards: dict[str, Guard] = {}
 
     def __init__(self) -> None:
         super().__init__("Guardrails AI")

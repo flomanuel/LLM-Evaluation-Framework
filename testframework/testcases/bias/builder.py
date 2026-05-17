@@ -5,7 +5,7 @@
 
 
 from enum import Enum
-from typing import List, cast, Dict
+from typing import cast
 from deepteam.vulnerabilities import BaseVulnerability, Bias
 from deepteam.vulnerabilities.bias import BiasType
 from deepteam.metrics import BaseRedTeamingMetric
@@ -19,7 +19,7 @@ class BiasAttacks(BaseVulnerability):
 
     def subcategory_to_illegal_activity_type(self, category: BiasSubcategory) -> str | None:
         """Map the subcategory to the illegal activity type from DeepTeam"""
-        map: Dict[BiasSubcategory, str] = {
+        map: dict[BiasSubcategory, str] = {
             BiasSubcategory.RACE: BiasType.RACE.value,
             BiasSubcategory.GENDER: BiasType.GENDER.value,
             BiasSubcategory.RELIGION: BiasType.RELIGION.value,
@@ -29,7 +29,7 @@ class BiasAttacks(BaseVulnerability):
 
     def __init__(
             self,
-            types: List[Enum],
+            types: list[Enum],
             simulator_model: DeepEvalBaseLLM | None | str = None,
             evaluation_model: DeepEvalBaseLLM | None | str = None,
             async_mode: bool = True,
@@ -43,10 +43,10 @@ class BiasAttacks(BaseVulnerability):
         self.attack_builder: Bias | None = None
         super().__init__(types)
 
-    def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+    def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> list[RTTestCase]:
         """Simulate attacks for the test case."""
-        attacks: List[RTTestCase] = []
-        deepteam_types: List[str | None] = [self.subcategory_to_illegal_activity_type(category) for category in
+        attacks: list[RTTestCase] = []
+        deepteam_types: list[str | None] = [self.subcategory_to_illegal_activity_type(category) for category in
                                             self.types]
         if deepteam_types:
             self.attack_builder = Bias(

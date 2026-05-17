@@ -5,7 +5,7 @@
 
 
 from enum import Enum
-from typing import Dict, List, cast
+from typing import cast
 from deepteam.vulnerabilities.illegal_activity import IllegalActivityType
 from deepteam.vulnerabilities import BaseVulnerability, IllegalActivity as DeepTeamIllegalActivity
 from deepeval.models import DeepEvalBaseLLM
@@ -20,7 +20,7 @@ class IllegalActivity(BaseVulnerability):
 
     def __init__(
             self,
-            types: List[Enum],
+            types: list[Enum],
             simulator_model: DeepEvalBaseLLM | None | str = None,
             evaluation_model: DeepEvalBaseLLM | None | str = None,
             async_mode: bool = True,
@@ -36,7 +36,7 @@ class IllegalActivity(BaseVulnerability):
 
     def subcategory_to_illegal_activity_type(self, category: IllegalActivitySubcategory) -> str | None:
         """Map Subcategory to DeepTeam IllegalActivityType value."""
-        map: Dict[IllegalActivitySubcategory, str] = {
+        map: dict[IllegalActivitySubcategory, str] = {
             IllegalActivitySubcategory.WEAPONS: IllegalActivityType.WEAPONS.value,
             IllegalActivitySubcategory.CHILD_EXPLOITATION: IllegalActivityType.CHILD_EXPLOITATION.value,
             IllegalActivitySubcategory.ILLEGAL_DRUGS: IllegalActivityType.ILLEGAL_DRUGS.value,
@@ -47,9 +47,9 @@ class IllegalActivity(BaseVulnerability):
         }
         return map.get(category)
 
-    def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+    def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> list[RTTestCase]:
         """Simulate attacks for the test case."""
-        attacks: List[RTTestCase] = []
+        attacks: list[RTTestCase] = []
         if IllegalActivitySubcategory.WEAPONS in self.types:
             for row in CSVLoader.load_prompts_from_csv(
                     file_path="2_schaedlich_manuell_erstellt_basic.csv",
@@ -102,7 +102,7 @@ class IllegalActivity(BaseVulnerability):
                 metadata = row.build_attack_metadata()
                 attack.metadata = metadata
                 attacks.append(attack)
-        deep_team_types: List[str | None] = [self.subcategory_to_illegal_activity_type(category) for category in
+        deep_team_types: list[str | None] = [self.subcategory_to_illegal_activity_type(category) for category in
                                              self.types]
         if deep_team_types:
             self.default_attack_builder = DeepTeamIllegalActivity(simulator_model=self.simulator_model,

@@ -6,7 +6,7 @@
 
 import os
 from enum import Enum
-from typing import Dict, List, cast
+from typing import cast
 from deepteam.vulnerabilities import BaseVulnerability, PromptLeakage
 from deepteam.vulnerabilities.prompt_leakage import PromptLeakageType
 from deepteam.metrics import BaseRedTeamingMetric, PromptExtractionMetric
@@ -26,7 +26,7 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
 
     def __init__(
             self,
-            types: List[Enum] = None,
+            types: list[Enum] = None,
             simulator_model: DeepEvalBaseLLM | None | str = None,
             evaluation_model: DeepEvalBaseLLM | None | str = None,
             async_mode: bool = True,
@@ -41,15 +41,15 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
 
     def subcategory_to_prompt_leakage_type(self, subcategory) -> str | None:
         """Map SystemPromptLeakageSubcategory to DeepTeam PromptLeakageType value."""
-        mapping: Dict[SystemPromptLeakageSubcategory, str] = {
+        mapping: dict[SystemPromptLeakageSubcategory, str] = {
             SystemPromptLeakageSubcategory.INSTRUCTIONS: PromptLeakageType.INSTRUCTIONS.value,
             SystemPromptLeakageSubcategory.GUARD_EXPOSURE: PromptLeakageType.GUARD_EXPOSURE.value,
         }
         return mapping.get(subcategory)
 
-    def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+    def simulate_attacks(self, purpose: str = None, attacks_per_vulnerability_type: int = 1) -> list[RTTestCase]:
         """simulate the attacks for the test case."""
-        attacks: List[RTTestCase] = []
+        attacks: list[RTTestCase] = []
         for row in CSVLoader.load_prompts_from_csv(
                 file_path="2_schaedlich_manuell_erstellt_basic.csv",
                 categories=["system-prompt-leakage"]
@@ -63,7 +63,7 @@ class SystemPromptLeakageAttacks(BaseVulnerability):
             attack.metadata = metadata
             attacks.append(attack)
 
-        deep_team_types: List[str] = []
+        deep_team_types: list[str] = []
         for subcategory in self.types:
             mapped_type = self.subcategory_to_prompt_leakage_type(subcategory)
             if mapped_type:

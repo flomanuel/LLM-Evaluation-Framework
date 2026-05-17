@@ -4,8 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
-
 import json
 from dataclasses import asdict
 from datetime import datetime

@@ -6,10 +6,7 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
-
 import os
-from typing import List
 from urllib.parse import urlsplit
 from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
@@ -64,7 +61,7 @@ class VectorStore:
         u = os.getenv("POSTGRES_USER", "postgres")
         return f"postgresql+psycopg://{u}:{pw}@{h}:{p}/{db}"
 
-    def add_documents(self, documents: List[Document]) -> List[str]:
+    def add_documents(self, documents: list[Document]) -> list[str]:
         """Add documents to the vector store."""
         logger.info(
             f"Adding {len(documents)} document chunk(s) to collection '{self._collection_name}'"
@@ -75,7 +72,7 @@ class VectorStore:
         )
         return ids
 
-    def similarity_search(self, query: str, k: int = 4) -> List[Document]:
+    def similarity_search(self, query: str, k: int = 4) -> list[Document]:
         """Search for similar documents."""
         results = self._vector_store.similarity_search(query, k=k)
         logger.debug(f"Found {len(results)} similar documents for query")
