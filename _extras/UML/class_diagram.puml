@@ -415,13 +415,29 @@ package "testframework.chatbots" as chatbots_pkg {
         {static} +get_chatbot(name: ChatbotName): BaseChatbot | None
     }
 
-    class VectorStore {
-        +EMBEDDING_MODEL: str
-        +COLLECTION_NAME: str
-        +add_documents(documents: List[Document]): List[str]
-        +similarity_search(query: str, k: int): List[Document]
-        +embeddings: OpenAIEmbeddings
-        +embedding_model_name: str
+    package "testframework.chatbots.rag" as chatbot_rag_pkg {
+        class DocumentLoader {
+            +DEFAULT_CHUNK_SIZE: int
+            +DEFAULT_CHUNK_OVERLAP: int
+            +load_documents(): List[Document]
+            +load_and_split(): List[Document]
+            +documents_dir: Path
+        }
+
+        class VectorStore {
+            +EMBEDDING_MODEL: str
+            +COLLECTION_NAME: str
+            +add_documents(documents: List[Document]): List[str]
+            +similarity_search(query: str, k: int): List[Document]
+            +embeddings: OpenAIEmbeddings
+            +embedding_model_name: str
+        }
+    }
+
+    package "testframework.chatbots.tools" as chatbot_tools_pkg {
+        class image_tool <<module>> {
+            {static} +generate_image(image_description: str): str
+        }
     }
 }
 
@@ -601,6 +617,7 @@ ToxicityTestCase *-up- ToxicityAttacks
 
 ChatbotStore ..> BaseChatbot
 BaseLangChainChatbot ..> VectorStore
+BaseLangChainChatbot ..> image_tool
 
 GuardrailRunner *-- BaseGuardrail
 GuardrailRunner ..> ToolCallCodeInjectionMetric
