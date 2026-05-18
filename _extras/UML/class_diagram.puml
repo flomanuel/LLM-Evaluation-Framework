@@ -595,11 +595,11 @@ leakage_pkg -[hidden]right-> attack_techniques_pkg
 attack_techniques_pkg -[hidden]right-> cipher_pkg
 guardrails_pkg -[hidden]right-> metrics_pkg
 
-Test "1" *-- "n" BaseTestCaseClass
-Test "1" *-- "n" TestCaseResult
+Test "1" *-- "1..*" BaseTestCaseClass
+Test ..> TestCaseResult
 DefaultTest ..> ChatbotStore
 
-BaseTestCaseClass o-- GuardrailRunner
+BaseTestCaseClass *-- GuardrailRunner
 BaseTestCaseClass ..> AttackListEnhancer
 BaseTestCaseClass ..> ChatbotStore
 BaseTestCaseClass ..> BaseMetric
@@ -629,13 +629,13 @@ SystemPromptLeakageTestCase *-up- SystemPromptLeakageAttacks
 ToxicityTestCase *-up- ToxicityAttacks
 
 ChatbotStore ..> BaseChatbot
-BaseLangChainChatbot ..> VectorStore
+BaseLangChainChatbot o-- VectorStore
 BaseLangChainChatbot ..> image_tool
 
 GuardrailRunner *-- BaseGuardrail
 GuardrailRunner ..> ToolCallCodeInjectionMetric
 
-AttackListEnhancer *-- AttackEnhancement
+AttackListEnhancer ..> AttackEnhancement
 AttackListEnhancer ..> Techniques
 AttackListEnhancer ..> AttackEnhancementResult
 AttackEnhancementResult *-- EnhancedAttack
