@@ -173,6 +173,19 @@ package "testframework.models" as models_pkg {
     }
 }
 
+package "testframework.cli" as cli_pkg {
+    class cli <<module>> {
+        {static} +main(): None
+        {static} +configure_logging(): None
+    }
+}
+
+package "testframework.reporting" as reporting_pkg {
+    class run_summary <<module>> {
+        {static} +write_run_summary(run_folder: str | Path, output_path: str | Path, exclude_scanners: bool, consider_chatbot_success: bool): Dict[str, Any]
+    }
+}
+
 package "testframework.tests" as tests_pkg {
     abstract class Test {
         +name: str
@@ -649,5 +662,10 @@ DetectionElement *-- ScannerDetail
 guardrails_pkg.LlamaFirewall *-- LlamaFirewallWithMetrics
 
 Test ..> TestRunResult
+
+cli ..> DefaultTest
+cli ..> DocumentLoader
+cli ..> VectorStore
+cli ..> run_summary
 
 @enduml
