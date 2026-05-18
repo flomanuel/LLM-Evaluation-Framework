@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module external.system.id="pyproject.toml" type="PYTHON_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/.deepeval" />
+      <excludeFolder url="file://$MODULE_DIR$/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgadmin_data/azurecredentialcache" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgadmin_data/sessions" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgadmin_data/storage" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata/base" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata/global" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata/pg_commit_ts" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata/pg_dynshmem" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata/pg_logical" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata/pg_multixact" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata/pg_notify" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata/pg_replslot" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata/pg_serial" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata/pg_snapshots" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata/pg_stat" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata/pg_stat_tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata/pg_subtrans" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata/pg_tblspc" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata/pg_twophase" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata/pg_wal" />
+      <excludeFolder url="file://$MODULE_DIR$/_pgdata/pg_xact" />
+      <excludeFolder url="file://$MODULE_DIR$/_runs" />
+      <excludeFolder url="file://$MODULE_DIR$/llm_evaluation_framework.egg-info" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="PyDocumentationSettings">
+    <option name="format" value="PLAIN" />
+    <option name="myDocStringFormat" value="Plain" />
+  </component>
+</module>

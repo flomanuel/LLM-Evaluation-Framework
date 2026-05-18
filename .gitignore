@@ -227,3 +227,5 @@ copilot.data.migration.ask2agent.xml
 /.guardrails/
 /.guardrails_model_cache/
 !/.guardrails_model_cache/.gitkeep
+/_runs/*
+/_attack_documents/*
