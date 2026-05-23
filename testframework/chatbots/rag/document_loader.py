@@ -42,8 +42,10 @@ class DocumentLoader:
         )
 
         logger.debug(
-            f"DocumentLoader initialized with dir='{self._documents_dir}', "
-            f"chunk_size={chunk_size}, chunk_overlap={chunk_overlap}"
+            "DocumentLoader initialized with dir='{}', chunk_size={}, chunk_overlap={}",
+            self._documents_dir,
+            chunk_size,
+            chunk_overlap,
         )
 
     def _load_pdf_files(self) -> tuple[list[Document], int]:
@@ -55,7 +57,9 @@ class DocumentLoader:
         documents: list[Document] = []
         pdf_files = list(self._documents_dir.glob("**/*.pdf"))
         logger.info(
-            f"Discovered {len(pdf_files)} PDF file(s) in '{self._documents_dir}'"
+            "Discovered {} PDF file(s) in '{}'",
+            len(pdf_files),
+            self._documents_dir,
         )
 
         for pdf_path in pdf_files:
@@ -63,9 +67,9 @@ class DocumentLoader:
                 loader = PyPDFLoader(str(pdf_path))
                 docs = loader.load()
                 documents.extend(docs)
-                logger.debug(f"Loaded {len(docs)} pages from '{pdf_path.name}'")
+                logger.debug("Loaded {} pages from '{}'", len(docs), pdf_path.name)
             except Exception as e:
-                logger.error(f"Failed to load PDF '{pdf_path}': {e}")
+                logger.error("Failed to load PDF '{}': {}", pdf_path, e)
 
         return documents, len(pdf_files)
 
@@ -78,11 +82,13 @@ class DocumentLoader:
 
         pdf_docs, pdf_file_count = self._load_pdf_files()
         logger.info(
-            f"Loaded {len(pdf_docs)} page document(s) from {pdf_file_count} PDF file(s)"
+            "Loaded {} page document(s) from {} PDF file(s)",
+            len(pdf_docs),
+            pdf_file_count,
         )
         documents.extend(pdf_docs)
 
-        logger.info(f"Total documents loaded: {len(documents)}")
+        logger.info("Total documents loaded: {}", len(documents))
         return documents
 
     def load_and_split(self) -> list[Document]:
@@ -93,11 +99,14 @@ class DocumentLoader:
             logger.warning("No documents found to split")
             return []
 
-        logger.info(f"Splitting {len(documents)} document(s) into chunks")
+        logger.info("Splitting {} document(s) into chunks", len(documents))
         chunks = self._text_splitter.split_documents(documents)
         logger.info(
-            f"Split {len(documents)} documents into {len(chunks)} chunks "
-            f"(chunk_size={self._chunk_size}, overlap={self._chunk_overlap})"
+            "Split {} documents into {} chunks (chunk_size={}, overlap={})",
+            len(documents),
+            len(chunks),
+            self._chunk_size,
+            self._chunk_overlap,
         )
         return chunks
 

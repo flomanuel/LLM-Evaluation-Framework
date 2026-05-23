@@ -7,19 +7,15 @@
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
-from deepteam.utils import create_progress, update_pbar, add_pbar
-from deepteam.attacks.single_turn import BaseSingleTurnAttack
-from deepteam.attacks.base_attack import Exploitability
-from deepteam.attacks.attack_simulator.utils import (
-    generate,
-    a_generate,
-)
 from loguru import logger
 
 from testframework.custom_attack_techniques.synthetic_context_injection.schema import EnhancedContext, ComplianceData, \
     IsContextValid
 from testframework.custom_attack_techniques.synthetic_context_injection.template import \
     SyntheticContextInjectionTemplate
+from testframework.redteam.generation.model_generator import generate, a_generate
+from testframework.redteam.generation.progress import create_progress, update_pbar, add_pbar
+from testframework.redteam.techniques.base import BaseSingleTurnAttack, Exploitability
 
 
 class SyntheticContextInjection(BaseSingleTurnAttack):
@@ -45,7 +41,7 @@ class SyntheticContextInjection(BaseSingleTurnAttack):
             attack: str,
             simulator_model: DeepEvalBaseLLM | str | None = None,
     ) -> str:
-        logger.info(f"Enhancing attack with {self.name} technique.")
+        logger.info("Enhancing attack with {} technique.", self.name)
         self.simulator_model, _ = initialize_model(simulator_model)
 
         prompt = SyntheticContextInjectionTemplate.enhance(

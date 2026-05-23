@@ -56,7 +56,8 @@ class GcpModelArmor(BaseGuardrail):
                 if not is_timeout or attempt >= self.MAX_ATTEMPTS:
                     raise
                 logger.warning(
-                    f"GCP Model Armor request timed out, retrying after {self.TIMEOUT_RETRY_COOLDOWN_SECONDS}s "
+                    "GCP Model Armor request timed out, retrying after {}s ",
+                    self.TIMEOUT_RETRY_COOLDOWN_SECONDS,
                 )
                 sleep(self.TIMEOUT_RETRY_COOLDOWN_SECONDS)
         raise RuntimeError("Unknown GCP Model Armor request failure.")
@@ -98,7 +99,8 @@ class GcpModelArmor(BaseGuardrail):
                 if not is_timeout or attempt >= self.MAX_ATTEMPTS:
                     raise
                 logger.warning(
-                    f"GCP Model Armor request timed out, retrying after {self.TIMEOUT_RETRY_COOLDOWN_SECONDS}s "
+                    "GCP Model Armor request timed out, retrying after {}s ",
+                    self.TIMEOUT_RETRY_COOLDOWN_SECONDS,
                 )
                 sleep(self.TIMEOUT_RETRY_COOLDOWN_SECONDS)
         raise RuntimeError("Unknown GCP Model Armor request failure.")

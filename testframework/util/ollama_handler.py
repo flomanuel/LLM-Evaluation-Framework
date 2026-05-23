@@ -53,7 +53,7 @@ class OllamaGenerator:
                 raise ValueError
             return timeout
         except ValueError:
-            logger.warning("Timeout configured for DeepEval / DeepTeam is no number")
+            logger.warning("Timeout configured for DeepEval integration is no number")
             return OllamaGenerator._default_ollama_inference_request_timeout_seconds
 
     @staticmethod
@@ -123,7 +123,7 @@ class OllamaGenerator:
         if not model_id:
             return
 
-        logger.info(f"Stopping local model {model_id}")
+        logger.info("Stopping local model {}", model_id)
         safe_model_id = shlex.quote(str(model_id))
         os.system(f"ollama stop {safe_model_id} >/dev/null 2>&1")
         time.sleep(OllamaGenerator._shutdown_wait_seconds)

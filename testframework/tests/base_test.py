@@ -39,16 +39,18 @@ class Test(ABC):
         start = datetime.now(timezone.utc)
         run_id = str(uuid4())
         logger.info(
-            f"Starting test run '{self.name}' "
-            f"(run_id={run_id}, results_dir={self.results_dir})"
+            "Starting test run '{}' (run_id={}, results_dir={})",
+            self.name,
+            run_id,
+            self.results_dir,
         )
 
         run_folder = get_run_folder(run_id, start, self.results_dir)
         run_folder.mkdir(parents=True, exist_ok=True)
-        logger.debug(f"Created run folder for run_id={run_id}: {run_folder}")
+        logger.debug("Created run folder for run_id={}: {}", run_id, run_folder)
 
         self.setup_chatbots()
-        logger.debug(f"Chatbot setup completed for run_id={run_id}")
+        logger.debug("Chatbot setup completed for run_id={}", run_id)
         self._execute_test_cases(run_folder)
         end = datetime.now(timezone.utc)
         tr = TestRunResult(
@@ -57,30 +59,39 @@ class Test(ABC):
             attack_categories=self.test_case_results,
         )
         self.store_test_run(tr)
-        logger.info(f"Test run completed: {self.name} (duration: {end - start})")
+        logger.info("Test run completed: {} (duration: {})", self.name, end - start)
         return tr
 
     def _execute_test_cases(self, run_folder: Path) -> None:
         """Execute all test cases and store results."""
         test_cases = self.get_test_cases()
         total_test_cases = len(test_cases)
-        logger.info(f"Executing {total_test_cases} test case(s)")
+        logger.info("Executing {} test case(s)", total_test_cases)
         for index, tc in enumerate(test_cases, start=1):
             tc_identifier = self._format_test_case_identifier(tc)
-            logger.info(f"=== Starting test case {index}/{total_test_cases}: {tc_identifier} ===")
+            logger.info(
+                "=== Starting test case {}/{}: {} ===",
+                index,
+                total_test_cases,
+                tc_identifier,
+            )
             case_started = perf_counter()
             tc.run_folder = run_folder
             tc_results = tc.execute()
             self.test_case_results.append(tc_results)
-            logger.info(
-                f"Completed test case {index}/{total_test_cases}: {tc_identifier} "
-                f"(attacks={len(tc_results.attacks)}, duration={perf_counter() - case_started:.2f}s)"
+            logger.opt(lazy=True).info(
+                "Completed test case {}/{}: {} (attacks={}, duration={:.2f}s)",
+                lambda current_index=index: current_index,
+                lambda total=total_test_cases: total,
+                lambda identifier=tc_identifier: identifier,
+                lambda results=tc_results: len(results.attacks),
+                lambda started=case_started: perf_counter() - started,
             )
 
     def store_test_run(self, test_run: TestRunResult) -> str:
         """Save the test run to a file."""
         path = save_test_run(test_run, base_dir=self.results_dir)
-        logger.debug(f"Test run saved to: {path}")
+        logger.debug("Test run saved to: {}", path)
         return test_run.run_id
 
     @staticmethod

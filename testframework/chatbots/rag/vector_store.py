@@ -42,13 +42,15 @@ class VectorStore:
             use_jsonb=True,
         )
 
-        logger.info(
-            f"Initialized vector store (collection={self._collection_name}, "
-            f"target={self._connection_target()})"
+        logger.opt(lazy=True).info(
+            "Initialized vector store (collection={}, target={})",
+            lambda collection_name=self._collection_name: collection_name,
+            lambda: self._connection_target(),
         )
         logger.debug(
-            f"VectorStore initialized with collection '{self._collection_name}' "
-            f"using embedding model '{self.EMBEDDING_MODEL}'"
+            "VectorStore initialized with collection '{}' using embedding model '{}'",
+            self._collection_name,
+            self.EMBEDDING_MODEL,
         )
 
     @staticmethod
@@ -64,18 +66,22 @@ class VectorStore:
     def add_documents(self, documents: list[Document]) -> list[str]:
         """Add documents to the vector store."""
         logger.info(
-            f"Adding {len(documents)} document chunk(s) to collection '{self._collection_name}'"
+            "Adding {} document chunk(s) to collection '{}'",
+            len(documents),
+            self._collection_name,
         )
         ids = self._vector_store.add_documents(documents)
         logger.info(
-            f"Added {len(documents)} document chunk(s) to collection '{self._collection_name}'"
+            "Added {} document chunk(s) to collection '{}'",
+            len(documents),
+            self._collection_name,
         )
         return ids
 
     def similarity_search(self, query: str, k: int = 4) -> list[Document]:
         """Search for similar documents."""
         results = self._vector_store.similarity_search(query, k=k)
-        logger.debug(f"Found {len(results)} similar documents for query")
+        logger.debug("Found {} similar documents for query", len(results))
         return results
 
     @property

@@ -9,18 +9,14 @@ from typing import Literal
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
 
-from deepteam.utils import create_progress, update_pbar, add_pbar
-from deepteam.attacks.single_turn import BaseSingleTurnAttack
-from deepteam.attacks.base_attack import Exploitability
-from deepteam.attacks.attack_simulator.utils import (
-    generate,
-    a_generate,
-)
 from loguru import logger
 
 from testframework.custom_attack_techniques.emotional_manipulation.schema import EmotionallyEnhancedAttack, \
     ComplianceData, IsEmotionalAttackValid
 from testframework.custom_attack_techniques.emotional_manipulation.template import EmotionalManipulationTemplate
+from testframework.redteam.generation.model_generator import generate, a_generate
+from testframework.redteam.generation.progress import create_progress, update_pbar, add_pbar
+from testframework.redteam.techniques.base import BaseSingleTurnAttack, Exploitability
 
 EmotionLiteral = Literal["ANGER", "PITY", "CONFUSION", "AUTHORITY", "URGENCY"]
 
@@ -28,7 +24,7 @@ EmotionLiteral = Literal["ANGER", "PITY", "CONFUSION", "AUTHORITY", "URGENCY"]
 class EmotionalManipulation(BaseSingleTurnAttack):
     """
     Emotional manipulation technique.
-    Copied from "https://github.com/confident-ai/deepteam/tree/main/deepteam/attacks/single_turn/emotional_manipulation" since it is not available in the package version 1.05.
+    Adapted from the original DeepTeam technique semantics.
 
     """
     name = "Emotional Manipulation"
@@ -50,7 +46,7 @@ class EmotionalManipulation(BaseSingleTurnAttack):
             attack: str,
             simulator_model: DeepEvalBaseLLM | str | None = None,
     ) -> str:
-        logger.info(f"Enhancing attack with {self.name} technique.")
+        logger.info("Enhancing attack with {} technique.", self.name)
         self.simulator_model, _ = initialize_model(simulator_model)
 
         prompt = EmotionalManipulationTemplate.enhance(attack, self.emotion)

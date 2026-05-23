@@ -19,13 +19,13 @@ class ChatbotStore:
     def add_chatbot(chatbot: BaseChatbot) -> None:
         """Add a chatbot to the store."""
         ChatbotStore._chatbots[chatbot.name] = chatbot
-        logger.info(f"Registered chatbot '{chatbot.name.value}'")
+        logger.info("Registered chatbot '{}'", chatbot.name.value)
 
     @staticmethod
     def remove_chatbot(name: ChatbotName) -> None:
         """Remove a chatbot from the store."""
         ChatbotStore._chatbots.pop(name, None)
-        logger.info(f"Removed chatbot '{name.value}'")
+        logger.info("Removed chatbot '{}'", name.value)
 
     @staticmethod
     def get_chatbots() -> dict[ChatbotName, BaseChatbot]:

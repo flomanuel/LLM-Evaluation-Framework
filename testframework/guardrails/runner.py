@@ -6,8 +6,6 @@
 
 from time import perf_counter
 
-from deepteam.metrics import BaseRedTeamingMetric
-from deepteam.test_case import RTTestCase
 from loguru import logger
 from testframework import ChatbotName
 from testframework.guardrails.gcp_model_armor.gcp_model_armor import GcpModelArmor
@@ -18,6 +16,8 @@ from testframework.metrics import ToolCallCodeInjectionMetric
 from testframework.guardrails.llm_guard import LLMGuard
 from testframework.guardrails.lakera_guard import LakeraGuard
 from testframework.guardrails.prompt_hardening import PromptHardeningGuardrail
+from testframework.redteam.metric_protocol import RedTeamingMetric
+from testframework.redteam.test_case import RTTestCase
 
 
 class GuardrailRunner:
@@ -36,27 +36,29 @@ class GuardrailRunner:
             self,
             attack: RTTestCase,
             chatbot_responses_eval: dict[ChatbotName, ChatbotResponseEvaluation],
-            metric: BaseRedTeamingMetric,
+            metric: RedTeamingMetric,
     ) -> dict[str, dict[ChatbotName, DetectionResult]]:
         """Analyzes a given attack string against the chatbot's responses by iterating over the guardrails."""
         result: dict[str, dict[ChatbotName, DetectionResult]] = {}
         logger.info(
-            f"Running {len(self.guardrails)} guardrail(s) "
-            f"for {len(chatbot_responses_eval)} chatbot response(s)"
+            "Running {} guardrail(s) for {} chatbot response(s)",
+            len(self.guardrails),
+            len(chatbot_responses_eval),
         )
         for guardrail in self.guardrails:
             key: str = guardrail.name
             result[key] = {}
             guardrail_started = perf_counter()
-            logger.info(f"Starting guardrail '{guardrail.name}'")
+            logger.info("Starting guardrail '{}'", guardrail.name)
 
             use_tool_trace = isinstance(metric, ToolCallCodeInjectionMetric)
 
             for bot_name, bot_response_eval in chatbot_responses_eval.items():
                 if bot_response_eval.chatbot_response.is_error:
                     logger.info(
-                        f"Skipping guardrail '{guardrail.name}' for chatbot '{bot_name.value}' "
-                        f"because the chatbot query failed"
+                        "Skipping guardrail '{}' for chatbot '{}' because the chatbot query failed",
+                        guardrail.name,
+                        bot_name.value,
                     )
                     result[key][bot_name] = self._skipped_detection_result(bot_response_eval)
                     continue
@@ -91,9 +93,10 @@ class GuardrailRunner:
                 result[key][bot_name] = DetectionResult(
                     enhanced_attack_evaluation, response_evaluation
                 )
-            logger.info(
-                f"Completed guardrail '{guardrail.name}' "
-                f"(duration={perf_counter() - guardrail_started:.2f}s)"
+            logger.opt(lazy=True).info(
+                "Completed guardrail '{}' (duration={:.2f}s)",
+                lambda guardrail_name=guardrail.name: guardrail_name,
+                lambda started=guardrail_started: perf_counter() - started,
             )
         logger.info("Guardrail evaluation completed")
         return result
@@ -126,8 +129,10 @@ class GuardrailRunner:
         except Exception as e:
             error = TestErrorInfo.from_exception(e)
             logger.error(
-                f"Guardrail '{guardrail.name}' attack evaluation failed "
-                f"({error.error_type.value}): {error.message}"
+                "Guardrail '{}' attack evaluation failed ({}): {}",
+                guardrail.name,
+                error.error_type.value,
+                error.message,
             )
             return DetectionElement.from_error(error)
 
@@ -138,7 +143,9 @@ class GuardrailRunner:
         except Exception as e:
             error = TestErrorInfo.from_exception(e)
             logger.error(
-                f"Guardrail '{guardrail.name}' response evaluation failed "
-                f"({error.error_type.value}): {error.message}"
+                "Guardrail '{}' response evaluation failed ({}): {}",
+                guardrail.name,
+                error.error_type.value,
+                error.message,
             )
             return DetectionElement.from_error(error)

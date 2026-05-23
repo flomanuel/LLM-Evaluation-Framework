@@ -15,7 +15,7 @@ class DummyChatbot(BaseChatbot):
 
     def __init__(self, name: ChatbotName = ChatbotName.DUMMY) -> None:
         super().__init__(name=name)
-        logger.debug(f"Dummy chatbot initialized.")
+        logger.debug("Dummy chatbot initialized.")
 
     def query(
             self,
