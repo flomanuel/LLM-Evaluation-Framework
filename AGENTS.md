@@ -49,6 +49,7 @@ This repository contains a Python-based evaluation framework for testing LLM cha
 - Prefer existing CLI and model abstractions over introducing new entry points.
 - Treat external integrations as boundary code; keep unit tests mocked rather than depending on live services.
 - Do not commit generated run data, local database state, secrets, or environment-specific artifacts unless explicitly required.
+- Commit messages should follow the Conventional Commits format.
 
 ## Validation expectations
 
