@@ -246,7 +246,7 @@ class IllegalActivity(BaseAttackBuilder):
             file_path="2_schaedlich_manuell_erstellt_basic.csv",
             categories=[self.CRIME_DEFAULT_CATEGORY],
         )
-        for row in baseline_crime_rows[:limit]:
+        for row in baseline_crime_rows:
             attack = RTTestCase(
                 vulnerability=self.get_name(),
                 vulnerability_type=IllegalActivitySubcategory.VIOLENT_CRIME,
@@ -261,8 +261,7 @@ class IllegalActivity(BaseAttackBuilder):
                 file_path="2_schaedlich_manuell_erstellt_basic.csv",
                 categories=categories,
             )
-            used_rows = rows[:limit] if rows else []
-            for row in used_rows:
+            for row in rows:
                 attack = RTTestCase(
                     vulnerability=self.get_name(),
                     vulnerability_type=selected_type,
@@ -270,9 +269,6 @@ class IllegalActivity(BaseAttackBuilder):
                 )
                 attack.metadata = row.build_attack_metadata()
                 attacks.append(attack)
-
-            if used_rows:
-                continue
 
             type_key = str(selected_type.value)
             for prompt in self.template_builder._resolve_prompts(type_key, limit):
