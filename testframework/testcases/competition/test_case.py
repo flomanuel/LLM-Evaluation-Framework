@@ -3,12 +3,9 @@
 #  This source code is licensed under the MIT license found in the
 #  LICENSE file in the root directory of this source tree.
 
-
-from typing import cast
-from deepteam.metrics import BaseRedTeamingMetric
-from deepteam.test_case import RTTestCase
-from deepteam.vulnerabilities import Competition
-from deepteam.vulnerabilities.competition import CompetitionType
+from testframework.redteam.metric_protocol import RedTeamingMetric
+from testframework.redteam.registry import create_builder, create_metric
+from testframework.redteam.test_case import RTTestCase
 
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
@@ -28,15 +25,19 @@ class CompetitionTestCase(BaseTestCase):
         """Set up the attack builder."""
         self.simulator_model = OllamaGenerator.get_chatbot()
         OllamaGenerator.start_model_if_not_running()
-        self.attack_builder = Competition(simulator_model=self.simulator_model, evaluation_model=self.evaluation_model)
+        self.attack_builder = create_builder(
+            "competition",
+            self.subcategories,
+            self.simulator_model,
+            self.evaluation_model,
+        )
 
-    def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
+    def _get_metric(self, attack: RTTestCase) -> RedTeamingMetric:
         """Get the metric for the test case."""
-        attack_type = cast(CompetitionType, attack.vulnerability_type)
-        return cast(Competition, self.attack_builder)._get_metric(type=attack_type)  # pylint: disable=protected-access
+        return create_metric("competition", self.evaluation_model, attack)
 
     def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> list[RTTestCase]:
         """Simulate attacks for the test case."""
-        return cast(Competition, self.attack_builder).simulate_attacks(
+        return self.attack_builder.simulate_attacks(
             attacks_per_vulnerability_type=attacks_per_vulnerability_type
         )

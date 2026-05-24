@@ -5,8 +5,8 @@
 
 
 from typing import cast
-from deepteam.metrics import BaseRedTeamingMetric
-from deepteam.test_case import RTTestCase
+from testframework.redteam.metric_protocol import RedTeamingMetric
+from testframework.redteam.test_case import RTTestCase
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
 from testframework.testcases.excessive_agency.builder import ExcessiveAgencyAttacks
@@ -28,7 +28,7 @@ class ExcessiveAgencyTestCase(BaseTestCase):
         OllamaGenerator.start_model_if_not_running()
         self.attack_builder = ExcessiveAgencyAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
 
-    def _get_metric(self, attack: RTTestCase = None) -> BaseRedTeamingMetric:
+    def _get_metric(self, attack: RTTestCase = None) -> RedTeamingMetric:
         """Get the metric for the test case."""
         return self.attack_builder._get_metric()
 

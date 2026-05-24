@@ -7,9 +7,6 @@ from types import SimpleNamespace
 
 from testframework.custom_attack_techniques.attack_list_enhancer import AttackListEnhancer
 from testframework.custom_attack_techniques.techniques import AttackEnhancement, TECHNIQUE_BASELINE
-from testframework.models import LLMErrorType, TestErrorInfo
-
-
 def _fake_attack(text="attack text", vulnerability_type="generic", metadata=None):
     return SimpleNamespace(
         input=text,
@@ -63,6 +60,34 @@ def test_load_error_threshold_clamps_to_hundred_when_above(monkeypatch):
 def test_load_error_threshold_falls_back_on_invalid_string(monkeypatch):
     monkeypatch.setenv(AttackListEnhancer.ERROR_THRESHOLD_ENV_VAR, "not_a_number")
     assert AttackListEnhancer._load_error_threshold_percent() == 100.0
+
+
+# ---------------------------------------------------------------------------
+# _load_retry_attempts
+# ---------------------------------------------------------------------------
+
+def test_load_retry_attempts_uses_default_when_env_not_set(monkeypatch):
+    monkeypatch.setattr(
+        "testframework.custom_attack_techniques.attack_list_enhancer.load_dotenv",
+        lambda **kwargs: None,
+    )
+    monkeypatch.delenv(AttackListEnhancer.RETRY_ATTEMPTS_ENV_VAR, raising=False)
+    assert AttackListEnhancer._load_retry_attempts() == 0
+
+
+def test_load_retry_attempts_reads_from_env(monkeypatch):
+    monkeypatch.setenv(AttackListEnhancer.RETRY_ATTEMPTS_ENV_VAR, "3")
+    assert AttackListEnhancer._load_retry_attempts() == 3
+
+
+def test_load_retry_attempts_falls_back_on_invalid_string(monkeypatch):
+    monkeypatch.setenv(AttackListEnhancer.RETRY_ATTEMPTS_ENV_VAR, "not_a_number")
+    assert AttackListEnhancer._load_retry_attempts() == 0
+
+
+def test_load_retry_attempts_clamps_negative_to_zero(monkeypatch):
+    monkeypatch.setenv(AttackListEnhancer.RETRY_ATTEMPTS_ENV_VAR, "-2")
+    assert AttackListEnhancer._load_retry_attempts() == 0
 
 
 # ---------------------------------------------------------------------------
@@ -123,7 +148,6 @@ def test_enhance_skips_re_enhancement_for_doc_embedded_attacks():
 # ---------------------------------------------------------------------------
 
 def test_enhance_applies_transformation(monkeypatch):
-    monkeypatch.setattr("builtins.input", lambda prompt: "break")
     enhancer = AttackListEnhancer(simulator_model=None)
     result = enhancer.enhance([_fake_attack("hello")], enhancements=[_passthrough_enhancement()])
     assert len(result.enhanced_attacks) == 1
@@ -132,7 +156,7 @@ def test_enhance_applies_transformation(monkeypatch):
 
 
 def test_enhance_records_failed_attack_when_transform_raises(monkeypatch):
-    monkeypatch.setattr("builtins.input", lambda prompt: "break")
+    monkeypatch.setenv(AttackListEnhancer.RETRY_ATTEMPTS_ENV_VAR, "0")
     enhancer = AttackListEnhancer(simulator_model=None)
     result = enhancer.enhance([_fake_attack("hello")], enhancements=[_failing_enhancement()])
     assert result.failed_attack_count == 1
@@ -140,8 +164,8 @@ def test_enhance_records_failed_attack_when_transform_raises(monkeypatch):
 
 
 def test_enhance_stops_early_when_threshold_exceeded(monkeypatch):
-    monkeypatch.setattr("builtins.input", lambda prompt: "break")
     monkeypatch.setenv(AttackListEnhancer.ERROR_THRESHOLD_ENV_VAR, "0")
+    monkeypatch.setenv(AttackListEnhancer.RETRY_ATTEMPTS_ENV_VAR, "0")
 
     enhancer = AttackListEnhancer(simulator_model=None)
     enhancer._cooldown_with_model_shutdown = lambda cooldown, seconds: None
@@ -152,25 +176,42 @@ def test_enhance_stops_early_when_threshold_exceeded(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# _prompt_retry_decision
+# _apply_enhancement retry behavior
 # ---------------------------------------------------------------------------
 
-def _make_error():
-    return TestErrorInfo(error_type=LLMErrorType.UNKNOWN, message="fail")
+def test_apply_enhancement_retries_and_succeeds(monkeypatch):
+    monkeypatch.setenv(AttackListEnhancer.RETRY_ATTEMPTS_ENV_VAR, "1")
+    enhancer = AttackListEnhancer(simulator_model=None)
+    enhancer._cooldown_with_model_shutdown = lambda cooldown, seconds: None
+    calls = {"count": 0}
+
+    def _maybe_fail(prompt, model):
+        calls["count"] += 1
+        if calls["count"] == 1:
+            raise ValueError("first attempt fails")
+        return prompt + "_ok"
+
+    enhancement = AttackEnhancement(name="retryable", transform=_maybe_fail, cooldown=lambda s: None)
+    output, err = enhancer._apply_enhancement(enhancement, "abc")
+
+    assert err is None
+    assert output == "abc_ok"
+    assert calls["count"] == 2
 
 
-def test_prompt_retry_decision_break_returns_false(monkeypatch):
-    monkeypatch.setattr("builtins.input", lambda prompt: "break")
-    assert AttackListEnhancer._prompt_retry_decision("fake", 1, _make_error()) is False
+def test_apply_enhancement_returns_error_after_retries_exhausted(monkeypatch):
+    monkeypatch.setenv(AttackListEnhancer.RETRY_ATTEMPTS_ENV_VAR, "1")
+    enhancer = AttackListEnhancer(simulator_model=None)
+    enhancer._cooldown_with_model_shutdown = lambda cooldown, seconds: None
+    calls = {"count": 0}
 
+    def _always_fail(prompt, model):
+        calls["count"] += 1
+        raise ValueError("always fails")
 
-def test_prompt_retry_decision_retry_returns_true(monkeypatch):
-    monkeypatch.setattr("builtins.input", lambda prompt: "retry")
-    assert AttackListEnhancer._prompt_retry_decision("fake", 1, _make_error()) is True
+    enhancement = AttackEnhancement(name="failing", transform=_always_fail, cooldown=lambda s: None)
+    output, err = enhancer._apply_enhancement(enhancement, "abc")
 
-
-def test_prompt_retry_decision_eoferror_returns_false(monkeypatch):
-    def _raise(prompt):
-        raise EOFError
-    monkeypatch.setattr("builtins.input", _raise)
-    assert AttackListEnhancer._prompt_retry_decision("fake", 1, _make_error()) is False
+    assert output is None
+    assert err is not None
+    assert calls["count"] == 2

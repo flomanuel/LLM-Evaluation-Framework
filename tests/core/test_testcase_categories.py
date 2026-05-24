@@ -108,7 +108,10 @@ def test_competitiontestcase_should_skip_ollama():
 
 def test_competitiontestcase_setup_attack_builder_creates_builder(monkeypatch):
     _patch_ollama(monkeypatch)
-    monkeypatch.setattr("testframework.testcases.competition.test_case.Competition", _FakeBuilder)
+    monkeypatch.setattr(
+        "testframework.testcases.competition.test_case.create_builder",
+        lambda *args, **kwargs: _FakeBuilder(),
+    )
     tc = CompetitionTestCase()
     tc.setup_attack_builder()
     assert tc.attack_builder is not None
@@ -287,7 +290,10 @@ def test_robustnesstestcase_should_skip_ollama():
 
 def test_robustnesstestcase_setup_attack_builder_creates_builder(monkeypatch):
     _patch_ollama(monkeypatch)
-    monkeypatch.setattr("testframework.testcases.robustness.test_case.Robustness", _FakeBuilder)
+    monkeypatch.setattr(
+        "testframework.testcases.robustness.test_case.create_builder",
+        lambda *args, **kwargs: _FakeBuilder(),
+    )
     tc = RobustnessTestCase()
     tc.setup_attack_builder()
     assert tc.attack_builder is not None

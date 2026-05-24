@@ -45,9 +45,10 @@ uv run llm-test-baseline populate-db
 
 ## One note on the architecture
 
-This framework relies on the libraries DeepTeam and especially DeepEval.
+This framework relies on DeepEval together with project-owned red-team modules.
 
-Both are developed and maintained by [Confident AI](https://www.confident-ai.com/docs).
+DeepEval is developed by [Confident AI](https://www.confident-ai.com/docs).
+The project-owned red-team modules are maintained in this repository.
 
 ## Test Runs
 
@@ -97,6 +98,6 @@ To create a new test case, add a class that inherits from the [BaseTestCase](../
 
 ## How to add a new technique and metric
 
-One can use techniques from DeepTeam, or implement custom techniques. Each technique that should be enabled must be added to the list [ENHANCEMENTS](../../testframework/custom_attack_techniques/techniques.py), which defines all techniques that the [AttackListEnhancer](../../testframework/custom_attack_techniques/attack_list_enhancer.py) will apply to the baseline test data.
+One can use project-owned techniques or implement additional custom techniques. Each technique that should be enabled must be added to the list [ENHANCEMENTS](../../testframework/custom_attack_techniques/techniques.py), which defines all techniques that the [AttackListEnhancer](../../testframework/custom_attack_techniques/attack_list_enhancer.py) will apply to the baseline test data.
 
-Each custom technique must be an instance of `deepteam.attacks.single_turn.BaseSingleTurnAttack`.
+Each custom technique must be an instance of [BaseSingleTurnAttack](../../testframework/redteam/techniques/base.py).

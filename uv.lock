@@ -578,25 +578,6 @@ wheels = [
 ]
 
 [[package]]
-name = "deepteam"
-version = "1.0.6"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "aiohttp" },
-    { name = "deepeval" },
-    { name = "grpcio" },
-    { name = "openai" },
-    { name = "pyyaml" },
-    { name = "requests" },
-    { name = "tabulate" },
-    { name = "tqdm" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/31/4a/908f66e0e2ddfb0c3703b947dca8aa9be0c3af1c7abc4c88285ea009cf7b/deepteam-1.0.6.tar.gz", hash = "sha256:0b215c0a4df438783e6b18fdc7c98be08eefbc4eb65c75bff3a79f715ba2bc1e", size = 376677, upload-time = "2026-03-03T05:55:25.731Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/8f/5c/b2a206b1e90f59af5a3b9c0eb31351597f216c31691fa50d603c40eec409/deepteam-1.0.6-py3-none-any.whl", hash = "sha256:87412c27e1cc64952ab9930e29f3f80dcd998b9b05d8d332a84040d7411a5549", size = 681559, upload-time = "2026-03-03T05:55:23.979Z" },
-]
-
-[[package]]
 name = "defusedxml"
 version = "0.7.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1457,7 +1438,6 @@ version = "1.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "deepeval" },
-    { name = "deepteam" },
     { name = "google-cloud-modelarmor" },
     { name = "langchain" },
     { name = "langchain-community" },
@@ -1491,7 +1471,6 @@ dev = [
 requires-dist = [
     { name = "bandit", marker = "extra == 'dev'", specifier = ">=1.9.4,<2.0.0" },
     { name = "deepeval", specifier = ">=3.8.8,<4.0.0" },
-    { name = "deepteam", specifier = ">=1.0.6,<2.0.0" },
     { name = "flake8", marker = "extra == 'dev'", specifier = ">=7.3.0,<8.0.0" },
     { name = "flake8-docstrings", marker = "extra == 'dev'", specifier = ">=1.7.0,<2.0.0" },
     { name = "flake8-pyproject", marker = "extra == 'dev'", specifier = ">=1.2.0,<2.0.0" },

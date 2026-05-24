@@ -5,17 +5,17 @@
 
 
 from enum import Enum
-from deepteam.vulnerabilities import BaseVulnerability
-from deepteam.metrics import HarmMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepteam.test_case import RTTestCase
-from deepteam.metrics import BaseRedTeamingMetric
+from testframework.redteam.builders.base_builder import BaseAttackBuilder
+from testframework.redteam.metric_adapters import HarmMetric
+from testframework.redteam.metric_protocol import RedTeamingMetric
+from testframework.redteam.test_case import RTTestCase
 
 from testframework.testcases.excessive_agency.subcategory import ExcessiveAgencySubcategory
 from testframework.util.csv_loader import CSVLoader
 
 
-class ExcessiveAgencyAttacks(BaseVulnerability):
+class ExcessiveAgencyAttacks(BaseAttackBuilder):
     """Class that builds excessive agency attack prompts."""
 
     def __init__(
@@ -31,7 +31,7 @@ class ExcessiveAgencyAttacks(BaseVulnerability):
         self.verbose_mode = verbose_mode
         self.simulator_model = simulator_model
         self.evaluation_model = evaluation_model
-        super().__init__(types)
+        super().__init__(types, simulator_model, evaluation_model, async_mode, verbose_mode)
 
     def simulate_attacks(self, purpose: str = None) -> list[RTTestCase]:
         """Simulate attacks for the test case."""
@@ -50,7 +50,7 @@ class ExcessiveAgencyAttacks(BaseVulnerability):
             attacks.append(attack)
         return attacks
 
-    def _get_metric(self) -> BaseRedTeamingMetric:
+    def _get_metric(self) -> RedTeamingMetric:
         """Get the metric for the test case."""
         return HarmMetric(harm_category="Excessive Agency", model=self.evaluation_model)
 

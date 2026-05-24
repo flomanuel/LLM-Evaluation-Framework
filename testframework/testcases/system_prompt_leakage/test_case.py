@@ -4,8 +4,8 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from deepteam.metrics import BaseRedTeamingMetric
-from deepteam.test_case import RTTestCase
+from testframework.redteam.metric_protocol import RedTeamingMetric
+from testframework.redteam.test_case import RTTestCase
 from testframework.enums import Category
 from testframework.testcases.base import BaseTestCase
 from testframework.testcases.system_prompt_leakage.builder import SystemPromptLeakageAttacks
@@ -30,7 +30,7 @@ class SystemPromptLeakageTestCase(BaseTestCase):
                                                                                      self.simulator_model,
                                                                                      self.evaluation_model)
 
-    def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
+    def _get_metric(self, attack: RTTestCase) -> RedTeamingMetric:
         """Get the metric for the test case."""
         return self.attack_builder._get_metric(attack)
 

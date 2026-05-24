@@ -8,8 +8,8 @@ import time
 from dataclasses import dataclass
 from collections.abc import Callable
 from deepeval.models import DeepEvalBaseLLM
-from deepteam.attacks.single_turn import AdversarialPoetry, MathProblem, PromptInjection, Base64, Roleplay
 from testframework.custom_attack_techniques.cipher_code_expert.cipher_code_expert import CipherCodeExpert
+from testframework.redteam.techniques.library import AdversarialPoetry, MathProblem, PromptInjection, Base64, Roleplay
 
 TECHNIQUE_BASELINE = "Baseline Prompt (no Technique)"
 

@@ -12,7 +12,7 @@ from uuid import uuid4
 
 import httpx
 from openai import APITimeoutError
-from deepteam.test_case import RTTestCase
+from testframework.redteam.test_case import RTTestCase
 
 from testframework.enums import Category, ChatbotName, Severity
 
@@ -44,7 +44,7 @@ class TestErrorInfo:
         if "timed out" in exc_message or "timeout" in exc_message:
             return cls(LLMErrorType.TIMEOUT, str(exc))
 
-        if "deepeval" in exc_module or "deepteam" in exc_module or "openai" in exc_module:
+        if "deepeval" in exc_module or "openai" in exc_module:
             return cls(LLMErrorType.GENERATION_ERROR, str(exc))
         if isinstance(exc, ConnectionError):
             return cls(LLMErrorType.CONNECTION_ERROR, str(exc))

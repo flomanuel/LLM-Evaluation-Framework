@@ -1,14 +1,13 @@
 [project]
 name = "llm-evaluation-framework"
 version = "1.0.0"
-description = "Test framework for evaluating LLM chatbot guardrails using DeepTeam and OpenAI."
+description = "Test framework for evaluating LLM chatbot guardrails with a custom red-team layer."
 authors = [{ name = "Florian Sauer" }]
 requires-python = ">=3.13.0"
 
 #lock version due to reproducibility
 dependencies = [
     "openai>=2.24.0,<3.0.0",
-    "deepteam>=1.0.6,<2.0.0",
     "deepeval>=3.8.8,<4.0.0",
     "loguru>=0.7.0,<1.0.0",
     "python-dotenv>=1.2.2,<2.0.0",
@@ -85,4 +84,3 @@ targets = ["testframework"]
 
 [tool.uv]
 package = true
-
