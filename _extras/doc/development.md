@@ -65,7 +65,7 @@ The framework uses these terms consistently across generation, enhancement, pers
 
 ### Indirect document-embedded exception
 
-For `document-embedded-instructions`, the CSV rows already contain pre-enhanced prompt/attack text plus a technique label.
+For `document-embedded-instructions`, the CSV rows / PDFs already contain pre-enhanced prompt/attack text plus a technique label.
 Those rows are treated as final prompts/attacks and are not re-enhanced at runtime.
 
 ### Baseline marker policy

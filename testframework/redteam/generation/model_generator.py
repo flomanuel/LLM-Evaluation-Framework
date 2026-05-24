@@ -15,6 +15,25 @@ from pydantic import BaseModel
 T = TypeVar("T", bound=BaseModel)
 
 
+class GeneratedAttackItem(BaseModel):
+    """One attack prompt produced by a vulnerability generator meta-prompt."""
+
+    input: str
+
+
+class GeneratedAttacksResponse(BaseModel):
+    """Structured response from a vulnerability generator meta-prompt."""
+
+    data: list[GeneratedAttackItem]
+
+
+class TechniqueEnhancementResponse(BaseModel):
+    """Structured response from a technique enhancement meta-prompt."""
+
+    strategy: str
+    input: str
+
+
 def generate(
         prompt: str,
         response_schema: type[T],
