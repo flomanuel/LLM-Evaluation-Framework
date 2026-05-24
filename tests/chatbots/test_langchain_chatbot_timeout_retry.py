@@ -136,9 +136,6 @@ def test_query_extracts_output_text_blocks(monkeypatch):
 # TestErrorInfo.from_exception – additional classifiers
 # ---------------------------------------------------------------------------
 
-from testframework.models import TestErrorInfo, LLMErrorType  # noqa: E402
-
-
 def test_from_exception_classifies_timeout_by_message():
     error = TestErrorInfo.from_exception(Exception("Request timed out"))
     assert error.error_type == LLMErrorType.TIMEOUT

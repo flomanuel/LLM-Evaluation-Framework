@@ -7,6 +7,8 @@ from types import SimpleNamespace
 
 from testframework.custom_attack_techniques.attack_list_enhancer import AttackListEnhancer
 from testframework.custom_attack_techniques.techniques import AttackEnhancement, TECHNIQUE_BASELINE
+
+
 def _fake_attack(text="attack text", vulnerability_type="generic", metadata=None):
     return SimpleNamespace(
         input=text,

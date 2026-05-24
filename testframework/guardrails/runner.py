@@ -9,7 +9,6 @@ from time import perf_counter
 from loguru import logger
 from testframework import ChatbotName
 from testframework.guardrails.gcp_model_armor.gcp_model_armor import GcpModelArmor
-from testframework.guardrails.guardrails_ai import GuardrailsAI
 from testframework.guardrails.llama_firewall.llama_firewall import LlamaFirewall
 from testframework.models import DetectionResult, DetectionElement, TestErrorInfo, ChatbotResponseEvaluation, RagContext
 from testframework.metrics import ToolCallCodeInjectionMetric

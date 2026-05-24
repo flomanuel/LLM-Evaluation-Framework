@@ -4,8 +4,7 @@
 #  LICENSE file in the root directory of this source tree.
 
 import dataclasses
-from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -17,7 +16,6 @@ from testframework.custom_attack_techniques.synthetic_context_injection.syntheti
 from testframework.custom_attack_techniques.techniques import (
     ENHANCEMENTS,
     TECHNIQUE_BASELINE,
-    AttackEnhancement,
 )
 
 _EM_MODULE = "testframework.custom_attack_techniques.emotional_manipulation.emotional_manipulation"

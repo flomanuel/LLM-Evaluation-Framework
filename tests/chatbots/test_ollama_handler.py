@@ -3,9 +3,11 @@
 #  This source code is licensed under the MIT license found in the
 #  LICENSE file in the root directory of this source tree.
 
-import io
+import types
 
 from testframework.util.ollama_handler import OllamaGenerator
+
+_MODULE = "testframework.util.ollama_handler"
 
 
 # ---------------------------------------------------------------------------
@@ -36,14 +38,18 @@ def test_get_timeout_returns_default_on_non_positive_value(monkeypatch):
 # _list_running_models
 # ---------------------------------------------------------------------------
 
+def _fake_run_result(stdout: str):
+    return types.SimpleNamespace(stdout=stdout, returncode=0)
+
+
 def test_list_running_models_returns_empty_on_header_only(monkeypatch):
-    monkeypatch.setattr("os.popen", lambda cmd: io.StringIO("NAME"))
+    monkeypatch.setattr(f"{_MODULE}.subprocess.run", lambda *a, **kw: _fake_run_result("NAME"))
     assert OllamaGenerator._list_running_models() == []
 
 
 def test_list_running_models_parses_model_names(monkeypatch):
     output = "NAME\ngemma3:latest some info\nllama3:8b other info"
-    monkeypatch.setattr("os.popen", lambda cmd: io.StringIO(output))
+    monkeypatch.setattr(f"{_MODULE}.subprocess.run", lambda *a, **kw: _fake_run_result(output))
     result = OllamaGenerator._list_running_models()
     assert result == ["gemma3:latest", "llama3:8b"]
 
@@ -53,16 +59,16 @@ def test_list_running_models_parses_model_names(monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_start_model_does_nothing_when_no_model_id(monkeypatch):
-    calls: list[str] = []
-    monkeypatch.setattr("os.system", lambda cmd: calls.append(cmd))
+    calls: list = []
+    monkeypatch.setattr(f"{_MODULE}.subprocess.Popen", lambda args, **kw: calls.append(args))
     monkeypatch.setattr("time.sleep", lambda s: None)
     OllamaGenerator.start_model_by_name_if_not_running(False)
     assert calls == []
 
 
 def test_start_model_does_nothing_when_already_running(monkeypatch):
-    calls: list[str] = []
-    monkeypatch.setattr("os.system", lambda cmd: calls.append(cmd))
+    calls: list = []
+    monkeypatch.setattr(f"{_MODULE}.subprocess.Popen", lambda args, **kw: calls.append(args))
     monkeypatch.setattr("time.sleep", lambda s: None)
     monkeypatch.setattr(OllamaGenerator, "_is_model_running", staticmethod(lambda model_id: True))
     OllamaGenerator.start_model_by_name_if_not_running("gemma3:4b")
@@ -70,12 +76,12 @@ def test_start_model_does_nothing_when_already_running(monkeypatch):
 
 
 def test_start_model_calls_ollama_run_when_not_running(monkeypatch):
-    calls: list[str] = []
-    monkeypatch.setattr("os.system", lambda cmd: calls.append(cmd))
+    calls: list = []
+    monkeypatch.setattr(f"{_MODULE}.subprocess.Popen", lambda args, **kw: calls.append(args))
     monkeypatch.setattr("time.sleep", lambda s: None)
     monkeypatch.setattr(OllamaGenerator, "_is_model_running", staticmethod(lambda model_id: False))
     OllamaGenerator.start_model_by_name_if_not_running("gemma3:4b")
-    assert any("ollama run" in cmd for cmd in calls)
+    assert any("ollama" in args and "run" in args for args in calls)
 
 
 # ---------------------------------------------------------------------------
@@ -83,16 +89,16 @@ def test_start_model_calls_ollama_run_when_not_running(monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_stop_model_does_nothing_when_no_model_id(monkeypatch):
-    calls: list[str] = []
-    monkeypatch.setattr("os.system", lambda cmd: calls.append(cmd))
+    calls: list = []
+    monkeypatch.setattr(f"{_MODULE}.subprocess.run", lambda args, **kw: calls.append(args))
     monkeypatch.setattr("time.sleep", lambda s: None)
     OllamaGenerator.stop_model_by_name(None)
     assert calls == []
 
 
 def test_stop_model_calls_ollama_stop(monkeypatch):
-    calls: list[str] = []
-    monkeypatch.setattr("os.system", lambda cmd: calls.append(cmd))
+    calls: list = []
+    monkeypatch.setattr(f"{_MODULE}.subprocess.run", lambda args, **kw: calls.append(args))
     monkeypatch.setattr("time.sleep", lambda s: None)
     OllamaGenerator.stop_model_by_name("my_model")
-    assert any("ollama stop" in cmd for cmd in calls)
+    assert any("ollama" in args and "stop" in args for args in calls)

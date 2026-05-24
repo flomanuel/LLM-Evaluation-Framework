@@ -14,7 +14,6 @@ from testframework.models import (
     DetectionElement,
     EnhancedAttack,
     LLMErrorType,
-    PromptVariants,
     TestCaseResult,
     TestErrorInfo,
     TestRunResult,

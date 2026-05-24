@@ -77,7 +77,7 @@ def test_scanner_summary_outputs_per_scanner_counts(tmp_path, capsys):
     ScannerSummary(run_dir).build_rows()
 
     captured = capsys.readouterr()
-    lines = [l for l in captured.out.strip().split("\n") if l]
+    lines = [line for line in captured.out.strip().split("\n") if line]
     # header + 2 scanner rows
     assert len(lines) == 3
     assert lines[0] == "chatbot,guardrail,stage,scanner_detail,count,TP,FP,TN,FN,errors"
@@ -182,7 +182,7 @@ def test_build_rows_skips_prompt_hardening_guardrail(tmp_path, capsys):
     }
     (testcase_dir / "result.json").write_text(json.dumps(testcase), encoding="utf-8")
     ScannerSummary(run_dir).build_rows()
-    lines = [l for l in capsys.readouterr().out.strip().split("\n") if l]
+    lines = [line for line in capsys.readouterr().out.strip().split("\n") if line]
     # Only header — prompt_hardening is skipped entirely
     assert len(lines) == 1
 
@@ -211,7 +211,7 @@ def test_build_rows_skips_detections_with_errors(tmp_path, capsys):
     }
     (testcase_dir / "result.json").write_text(json.dumps(testcase), encoding="utf-8")
     ScannerSummary(run_dir).build_rows()
-    lines = [l for l in capsys.readouterr().out.strip().split("\n") if l]
+    lines = [line for line in capsys.readouterr().out.strip().split("\n") if line]
     # Only header — errored detection is skipped
     assert len(lines) == 1
 
@@ -242,9 +242,9 @@ def test_build_rows_multiple_models_produce_separate_rows(tmp_path, capsys):
     }
     (testcase_dir / "result.json").write_text(json.dumps(testcase), encoding="utf-8")
     ScannerSummary(run_dir).build_rows()
-    lines = [l for l in capsys.readouterr().out.strip().split("\n") if l]
+    lines = [line for line in capsys.readouterr().out.strip().split("\n") if line]
     # header + MODEL_A row + MODEL_B row
     assert len(lines) == 3
-    models = {l.split(",")[0] for l in lines[1:]}
+    models = {line.split(",")[0] for line in lines[1:]}
     assert "MODEL_A" in models
     assert "MODEL_B" in models

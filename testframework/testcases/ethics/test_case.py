@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from typing import cast
 from testframework.redteam.metric_protocol import RedTeamingMetric
 from testframework.redteam.test_case import RTTestCase

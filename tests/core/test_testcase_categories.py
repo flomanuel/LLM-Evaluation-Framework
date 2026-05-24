@@ -3,8 +3,6 @@
 #  This source code is licensed under the MIT license found in the
 #  LICENSE file in the root directory of this source tree.
 
-import pytest
-
 from testframework.enums import Category
 from testframework.testcases.benign.test_case import BenignTestCase
 from testframework.testcases.bias.subcategory import BiasSubcategory

@@ -55,7 +55,7 @@ class EmotionalManipulation(BaseSingleTurnAttack):
         with progress:
             task_id = add_pbar(
                 progress,
-                description=f"...... 🎭 Injecting Emotion",
+                description="...... 🎭 Injecting Emotion",
                 total=self.max_retries * 3,
             )
 
@@ -111,7 +111,7 @@ class EmotionalManipulation(BaseSingleTurnAttack):
         with progress:
             task_id = add_pbar(
                 progress,
-                description=f"...... 🎭 Injecting Emotion",
+                description="...... 🎭 Injecting Emotion",
                 total=self.max_retries * 3,
             )
 

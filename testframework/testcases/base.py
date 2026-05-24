@@ -222,7 +222,7 @@ class BaseTestCase(ABC):
 
     def _generate_attacks(self, attack_list_enhancer: AttackListEnhancer, attacks_per_vulnerability_type: int,
                           test_case_id: str) -> list[
-        list[EnhancedAttack], AttackEnhancementResult | None, bool]:
+            list[EnhancedAttack], AttackEnhancementResult | None, bool]:
         """Generate attacks for the test case."""
         logger.info("Generating base prompts for test case '{}'", test_case_id)
         generation_started = perf_counter()

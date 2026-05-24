@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
 from loguru import logger
@@ -53,7 +52,7 @@ class SyntheticContextInjection(BaseSingleTurnAttack):
         with progress:
             task_id = add_pbar(
                 progress,
-                description=f"...... 📜 Generating Prior Context",
+                description="...... 📜 Generating Prior Context",
                 total=self.max_retries * 3,
             )
 
@@ -114,7 +113,7 @@ class SyntheticContextInjection(BaseSingleTurnAttack):
         with progress:
             task_id = add_pbar(
                 progress,
-                description=f"...... 📜 Generating Prior Context",
+                description="...... 📜 Generating Prior Context",
                 total=self.max_retries * 3,
             )
 

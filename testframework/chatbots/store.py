@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from loguru import logger
 from testframework.chatbots.base import BaseChatbot
 from testframework import ChatbotName

@@ -6,7 +6,6 @@
 import json
 import os
 from time import perf_counter, sleep
-from collections.abc import Callable
 import proto
 from google.api_core.client_options import ClientOptions
 from google.cloud.modelarmor_v1 import (ModelArmorClient, DataItem, SanitizeUserPromptRequest,

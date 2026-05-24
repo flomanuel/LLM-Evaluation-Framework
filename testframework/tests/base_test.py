@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from pathlib import Path

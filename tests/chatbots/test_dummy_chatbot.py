@@ -3,6 +3,9 @@
 #  This source code is licensed under the MIT license found in the
 #  LICENSE file in the root directory of this source tree.
 
+import os
+import tempfile
+
 from testframework import ChatbotName
 from testframework.chatbots.dummy_chatbot import DummyChatbot
 from testframework.models import ChatbotResponse
@@ -25,8 +28,9 @@ def test_dummy_chatbot_query_response_is_not_empty():
 
 
 def test_dummy_chatbot_query_sets_file_path():
-    response = DummyChatbot().query("hello", file_path="/tmp/f.pdf")
-    assert response.file_path == "/tmp/f.pdf"
+    file_path = os.path.join(tempfile.gettempdir(), "f.pdf")
+    response = DummyChatbot().query("hello", file_path=file_path)
+    assert response.file_path == file_path
 
 
 def test_dummy_chatbot_query_tool_not_called():
