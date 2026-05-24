@@ -74,7 +74,7 @@ class DocumentContext:
 
 @dataclass
 class PromptVariants:
-    """prmopt variants before and after enhancement."""
+    """Base prompt and final prompt/attack variant used at runtime."""
     baseline: str
     enhanced: str
 
@@ -213,7 +213,7 @@ class DetectionResult:
 
 @dataclass
 class EnhancedAttack:
-    """Container for a base attack and its enhanced representation."""
+    """Container for a base prompt and one enhanced prompt/attack variant."""
     attack_case: RTTestCase
     baseline_input: str
     enhanced_input: str
@@ -253,7 +253,7 @@ class AttackEnhancementResult:
 
 @dataclass
 class Attack:
-    """One LLM-specific attack"""
+    """One executed prompt/attack variant with responses and guardrail results."""
     category: str
     subcategory: Enum | None
     techniques: list[str]

@@ -6,6 +6,7 @@
 import csv
 import json
 
+from testframework.custom_attack_techniques.techniques import TECHNIQUE_BASELINE
 from testframework.reporting.run_summary import RunSummary
 
 
@@ -253,9 +254,34 @@ def test_build_skips_benign_attack_with_non_baseline_technique(tmp_path):
 def test_build_includes_benign_attack_with_baseline_technique(tmp_path):
     attack = _simple_attack(
         severity="safe",
-        techniques=["Baseline Prompt (no Technique)"],
+        techniques=[TECHNIQUE_BASELINE],
         category="benign",
     )
+    run_dir = _build_testcase_file(tmp_path, {"category": "benign", "attacks": {"a": attack}})
+    summary = RunSummary(run_dir).build()
+    assert "MODEL_A" in summary
+    assert summary["MODEL_A"]["baseline"]["count"] == 1
+
+
+def test_build_includes_benign_attack_when_legacy_no_technique_label_is_used(tmp_path):
+    attack = _simple_attack(
+        severity="safe",
+        techniques=["N/A"],
+        category="benign",
+    )
+    run_dir = _build_testcase_file(tmp_path, {"category": "benign", "attacks": {"a": attack}})
+    summary = RunSummary(run_dir).build()
+    assert "MODEL_A" in summary
+    assert summary["MODEL_A"]["baseline"]["count"] == 1
+
+
+def test_build_includes_benign_attack_when_techniques_key_is_missing(tmp_path):
+    attack = _simple_attack(
+        severity="safe",
+        techniques=[TECHNIQUE_BASELINE],
+        category="benign",
+    )
+    attack.pop("techniques")
     run_dir = _build_testcase_file(tmp_path, {"category": "benign", "attacks": {"a": attack}})
     summary = RunSummary(run_dir).build()
     assert "MODEL_A" in summary

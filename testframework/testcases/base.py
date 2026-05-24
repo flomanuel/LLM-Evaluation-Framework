@@ -224,23 +224,25 @@ class BaseTestCase(ABC):
                           test_case_id: str) -> list[
         list[EnhancedAttack], AttackEnhancementResult | None, bool]:
         """Generate attacks for the test case."""
-        logger.info("Generating attacks for test case '{}'", test_case_id)
+        logger.info("Generating base prompts for test case '{}'", test_case_id)
         generation_started = perf_counter()
-        attacks: list[RTTestCase] = self.simulate_attacks(attacks_per_vulnerability_type=attacks_per_vulnerability_type)
+        base_attacks: list[RTTestCase] = self.simulate_attacks(
+            attacks_per_vulnerability_type=attacks_per_vulnerability_type
+        )
         logger.opt(lazy=True).info(
-            "Generated {} attack(s) for '{}' (duration={:.2f}s)",
-            lambda generated_attacks=attacks: len(generated_attacks),
+            "Generated {} base prompt(s) for '{}' (duration={:.2f}s)",
+            lambda generated_attacks=base_attacks: len(generated_attacks),
             lambda case_id=test_case_id: case_id,
             lambda started=generation_started: perf_counter() - started,
         )
-        logger.info("Enhancing attacks for test case '{}'", test_case_id)
+        logger.info("Enhancing base prompts for test case '{}'", test_case_id)
         enhancement_started = perf_counter()
-        enhancement_result = attack_list_enhancer.enhance(attacks)
+        enhancement_result = attack_list_enhancer.enhance(base_attacks)
         enhanced_attacks = enhancement_result.enhanced_attacks
         logger.opt(lazy=True).info(
-            "Prepared {} enhanced attack(s) from {} base attack(s) for '{}' (duration={:.2f}s)",
+            "Prepared {} enhanced prompt/attack variant(s) from {} base prompt(s) for '{}' (duration={:.2f}s)",
             lambda prepared_attacks=enhanced_attacks: len(prepared_attacks),
-            lambda generated_attacks=attacks: len(generated_attacks),
+            lambda generated_attacks=base_attacks: len(generated_attacks),
             lambda case_id=test_case_id: case_id,
             lambda started=enhancement_started: perf_counter() - started,
         )
@@ -252,7 +254,7 @@ class BaseTestCase(ABC):
             chatbots: dict[ChatbotName, BaseChatbot]
     ) -> Attack:
         """Execute a single attack against all chatbots."""
-        base_attack = attack.baseline_input
+        base_prompt = attack.baseline_input
         techniques = attack.techniques
         attack_case = attack.attack_case
         attack_case.input = attack.enhanced_input
@@ -287,7 +289,7 @@ class BaseTestCase(ABC):
             subcategory=attack.attack_case.vulnerability_type,
             techniques=techniques,
             severity=self.severity,
-            prompt=PromptVariants(base_attack, attack_case.input),
+            prompt=PromptVariants(base_prompt, attack_case.input),
             llm_responses=bot_responses_eval,
             protection=protection,
         )

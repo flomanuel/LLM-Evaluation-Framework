@@ -39,6 +39,10 @@ def test_enhancements_list_contains_baseline():
     assert TECHNIQUE_BASELINE in names
 
 
+def test_baseline_marker_has_no_technique_wording():
+    assert "no Technique" in TECHNIQUE_BASELINE
+
+
 def test_enhancements_list_has_no_duplicated_names():
     names = [e.name for e in ENHANCEMENTS]
     assert len(names) == len(set(names))

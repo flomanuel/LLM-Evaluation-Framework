@@ -50,6 +50,34 @@ This framework relies on DeepEval together with project-owned red-team modules.
 DeepEval is developed by [Confident AI](https://www.confident-ai.com/docs).
 The project-owned red-team modules are maintained in this repository.
 
+## Terminology contract
+
+The framework uses these terms consistently across generation, enhancement, persistence, and reporting:
+
+1. Technique:
+   A transformation strategy that can enhance a base prompt.
+
+2. Base prompt:
+   The prompt before technique enhancement, created from template generation or CSV rows.
+
+3. Prompt/attack:
+   The final prompt variant after enhancement, which is executed against the chatbot stack.
+
+### Indirect document-embedded exception
+
+For `document-embedded-instructions`, the CSV rows already contain pre-enhanced prompt/attack text plus a technique label.
+Those rows are treated as final prompts/attacks and are not re-enhanced at runtime.
+
+### Baseline marker policy
+
+`Baseline Prompt (no Technique)` is a reporting marker that means "no enhancement technique applied".
+It is stored in technique buckets for consistency, even though it is not a transformation.
+
+### Versioning note
+
+Historical run artifacts may contain older wording around baseline/no-technique handling.
+When comparing old and new summaries, treat this terminology contract as the canonical interpretation.
+
 ## Test Runs
 
 ### What is a test run

@@ -122,6 +122,7 @@ def test_enhance_with_empty_enhancements_returns_passthrough():
     assert len(result.enhanced_attacks) == 2
     for ea in result.enhanced_attacks:
         assert ea.enhanced_input == ea.baseline_input
+        assert ea.techniques == [TECHNIQUE_BASELINE]
 
 
 # ---------------------------------------------------------------------------
@@ -130,17 +131,27 @@ def test_enhance_with_empty_enhancements_returns_passthrough():
 
 def test_enhance_skips_re_enhancement_for_doc_embedded_attacks():
     enhancer = AttackListEnhancer(simulator_model=None)
+    calls = {"count": 0}
+
+    def _should_not_run(prompt, model):
+        calls["count"] += 1
+        return f"{prompt}_enhanced"
+
     attack = _fake_attack(
         text="doc attack",
         vulnerability_type="document-embedded-instructions",
         metadata={"technique": "doc_technique"},
     )
-    result = enhancer.enhance([attack], enhancements=[_passthrough_enhancement()])
+    result = enhancer.enhance(
+        [attack],
+        enhancements=[AttackEnhancement(name=TECHNIQUE_BASELINE, transform=_should_not_run, cooldown=lambda s: None)],
+    )
     assert len(result.enhanced_attacks) == 1
     ea = result.enhanced_attacks[0]
     assert ea.baseline_input == "doc attack"
     assert ea.enhanced_input == "doc attack"
     assert ea.techniques == ["doc_technique"]
+    assert calls["count"] == 0
 
 
 # ---------------------------------------------------------------------------

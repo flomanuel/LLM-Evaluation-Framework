@@ -123,6 +123,20 @@ def test_build_attack_metadata_with_tool_check():
     assert metadata["tool_check_mode"] == "prompt_injected_code"
 
 
+def test_build_attack_metadata_keeps_csv_technique_for_pre_enhanced_doc_rows():
+    row = CSVAttackRow(
+        prompt="doc-embedded attack",
+        severity="unsafe",
+        categories=["indirect-prompt-injection"],
+        tool_check=False,
+        document_path="/attack.pdf",
+        technique="Roleplay",
+    )
+    metadata = row.build_attack_metadata(is_rag=False)
+    assert metadata["is_rag"] is False
+    assert metadata["technique"] == "Roleplay"
+
+
 # ---------------------------------------------------------------------------
 # CSVLoader._build_full_path
 # ---------------------------------------------------------------------------

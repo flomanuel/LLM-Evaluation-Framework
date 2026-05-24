@@ -15,7 +15,7 @@ from testframework.util.csv_loader import CSVLoader
 
 
 class IndirectInstructionAttacks(BaseAttackBuilder):
-    """Class that builds indirect prompt injection attack prompts."""
+    """Class that builds indirect prompt injection attacks from CSV-backed prompt rows."""
 
     def __init__(
             self,
@@ -36,6 +36,8 @@ class IndirectInstructionAttacks(BaseAttackBuilder):
         """Simulate attacks for the test case."""
         attacks: list[RTTestCase] = []
         if IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS in self.types:
+            # These CSV rows are already pre-enhanced attacks for document-embedded instructions.
+            # Runtime technique enhancement must skip them and preserve row.metadata["technique"].
             csv_data = CSVLoader.load_prompts_from_csv(
                 file_path="2_schaedlich_manuell_erstellt_basic.csv",
                 categories=["indirect-prompt-injection"]

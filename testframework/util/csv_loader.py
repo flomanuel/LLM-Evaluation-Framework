@@ -67,6 +67,11 @@ class CSVAttackRow:
     def build_attack_metadata(self, is_rag: bool = True) -> dict[str, Any]:
         """
         Build attack metadata used for edge cases like tool calls and local document uploads.
+
+        Nomenclature contract:
+        - For standard flows, "prompt" is a base prompt and runtime techniques create enhanced prompts.
+        - For indirect document-embedded rows, CSV already stores the final attack prompt and technique.
+          In that flow the prompt is treated as pre-enhanced and must not be re-enhanced at runtime.
         """
         metadata: dict[str, Any] = {"file_path": self.document_path, "is_rag": is_rag, "technique": self.technique}
         if not self.tool_check:

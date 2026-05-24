@@ -11,12 +11,14 @@ from deepeval.models import DeepEvalBaseLLM
 from testframework.custom_attack_techniques.cipher_code_expert.cipher_code_expert import CipherCodeExpert
 from testframework.redteam.techniques.library import AdversarialPoetry, MathProblem, PromptInjection, Base64, Roleplay
 
+# Marker used to persist "no enhancement strategy was applied" in technique buckets.
+# It is intentionally treated as a pseudo-technique label for reporting consistency.
 TECHNIQUE_BASELINE = "Baseline Prompt (no Technique)"
 
 
 @dataclass(frozen=True)
 class AttackEnhancement:
-    """Single enhancement strategy applied to an attack input."""
+    """Single enhancement strategy applied to a base prompt."""
     name: str
     transform: Callable[[str, DeepEvalBaseLLM | None | str], str]
     cooldown: Callable[[int], None]

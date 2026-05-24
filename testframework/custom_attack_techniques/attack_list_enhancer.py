@@ -19,7 +19,7 @@ from testframework.util.ollama_handler import OllamaGenerator
 
 
 class AttackListEnhancer:
-    """Enhance a list of attacks."""
+    """Transform base prompts into enhanced prompt/attack variants."""
 
     ERROR_THRESHOLD_ENV_VAR = "ENHANCED_ATTACK_ERROR_THRESHOLD_PERCENT"
     DEFAULT_ERROR_THRESHOLD_PERCENT = 100.0
@@ -38,9 +38,9 @@ class AttackListEnhancer:
             attacks: list[RTTestCase],
             enhancements: list[AttackEnhancement] | None = None,
     ) -> AttackEnhancementResult:
-        """Enhance a list of attacks with the given techniques."""
+        """Enhance base prompts with the given techniques."""
         logger.info(
-            "Enhancing {} attacks with {} techniques.",
+            "Enhancing {} base prompt(s) with {} technique(s).",
             len(attacks),
             len(enhancements) if enhancements else len(ENHANCEMENTS),
         )
@@ -56,6 +56,7 @@ class AttackListEnhancer:
                         attack_case=deepcopy(attack),
                         baseline_input=str(attack.input),
                         enhanced_input=str(attack.input),
+                        techniques=[TECHNIQUE_BASELINE],
                     )
                     for attack in attacks
                 ],
@@ -71,10 +72,10 @@ class AttackListEnhancer:
         failed_attack_count = 0
         enhanced_attack_count = 0
         for attack in attacks:
-            logger.info("=== Enhancing attack {}/{} === ", enhanced_attack_count + 1, len(attacks))
+            logger.info("=== Preparing attack input {}/{} === ", enhanced_attack_count + 1, len(attacks))
             is_doc_embedding_attack = attack.vulnerability_type == "document-embedded-instructions"
-            # document embedding instructions have the attack + technique directly "baked" into the document.
-            # So we mustn't enhance the already enhanced attack.
+            # Document-embedded instructions carry the final attack wording and selected technique in CSV metadata.
+            # Treat them as pre-enhanced attack prompts and skip runtime enhancement.
             if is_doc_embedding_attack:
                 cloned_attack = deepcopy(attack)
                 enhanced_input = cloned_attack.input
@@ -100,7 +101,7 @@ class AttackListEnhancer:
                 #     baseline_input = str(attack.input)
                 baseline_input = str(attack.input)
                 for enhancement in active_enhancements:
-                    logger.info("Applying enhancement '{}'", enhancement.name)
+                    logger.info("Applying technique '{}' to base prompt", enhancement.name)
                     cloned_attack = deepcopy(attack)
                     enhanced_input, enhancement_error = self._apply_enhancement(
                         enhancement=enhancement,
@@ -129,7 +130,7 @@ class AttackListEnhancer:
                         if self._is_error_threshold_exceeded(failed_attack_count, planned_attack_count,
                                                              error_threshold_percent):
                             logger.warning(
-                                "Stopping attack enhancement early because the failed enhancement "
+                                "Stopping prompt enhancement early because the failed enhancement "
                                 "rate exceeded the configured threshold: ({}/{}) > {}",
                                 failed_attack_count,
                                 planned_attack_count,
@@ -142,7 +143,7 @@ class AttackListEnhancer:
                                                            error_threshold_percent=error_threshold_percent,
                                                            stopped_early=True)
                 enhanced_attack_count += 1
-        logger.info("Enhanced {} attacks.", len(enhanced_attacks))
+        logger.info("Prepared {} enhanced attack prompt(s).", len(enhanced_attacks))
         return AttackEnhancementResult(enhanced_attacks=enhanced_attacks, planned_attack_count=planned_attack_count,
                                        failed_attack_count=failed_attack_count,
                                        error_threshold_percent=error_threshold_percent)
