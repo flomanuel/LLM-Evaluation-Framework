@@ -1,7 +1,7 @@
 # Source: https://github.com/guardrails-ai/guardrails-lite-server/blob/main/Dockerfile
 
 # Start our builder image in the multi-stage build
-FROM public.ecr.aws/docker/library/python:3.13-slim AS builder
+FROM python:3.13.13-slim AS builder
 
 # Accept a build arg for the Guardrails token
 # We'll add this to the config using the configure command below
@@ -55,7 +55,7 @@ RUN validators=" \
       fi; \
     done
 # Start our final image that we'll use
-FROM public.ecr.aws/docker/library/python:3.13-slim
+FROM python:3.13.13-slim
 
 ARG GUARDRAILS_TOKEN
 

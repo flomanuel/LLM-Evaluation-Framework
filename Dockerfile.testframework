@@ -28,8 +28,10 @@ ENV PATH="/app/.venv/bin:$PATH"
 WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /usr/local/bin/uv /usr/local/bin/uv
 COPY --from=builder /app/testframework /app/testframework
 COPY --from=builder /app/pyproject.toml /app/pyproject.toml
+COPY --from=ollama/ollama:latest /bin/ollama /usr/local/bin/ollama
 
 # Bind-mounted at runtime (see docker-compose.yml):
 #   _runs, _prompt_files, _attack_documents, _rag_documents, _logs

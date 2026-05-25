@@ -31,19 +31,19 @@ class DefaultTest(Test):
         """Register chatbots in the ChatbotStore."""
         logger.debug("Setting up baseline chatbots")
         vector_store = VectorStore()
-        # reasoning = {"effort": "low", "summary": "auto"}
-        # gpt_5 = LangChainChatbot(
-        #     name=ChatbotName.LANGCHAIN_GPT_5,
-        #     model="gpt-5",
-        #     vector_store=vector_store,
-        #     reasoning=reasoning,
-        # )
-        # ChatbotStore.add_chatbot(gpt_5)
-        # gpt_41 = LangChainChatbot(
-        #     name=ChatbotName.LANGCHAIN_GPT_41,
-        #     model="gpt-4.1",
-        #     vector_store=vector_store)
-        # ChatbotStore.add_chatbot(gpt_41)
+        reasoning = {"effort": "low", "summary": "auto"}
+        gpt_5 = LangChainChatbot(
+            name=ChatbotName.LANGCHAIN_GPT_5,
+            model="gpt-5",
+            vector_store=vector_store,
+            reasoning=reasoning,
+        )
+        ChatbotStore.add_chatbot(gpt_5)
+        gpt_41 = LangChainChatbot(
+            name=ChatbotName.LANGCHAIN_GPT_41,
+            model="gpt-4.1",
+            vector_store=vector_store)
+        ChatbotStore.add_chatbot(gpt_41)
         ollama_gemma = LangChainOllamaChatbot(
             name=ChatbotName.LANGCHAIN_OLLAMA_GEMMA3_4B,
             vector_store=vector_store,
@@ -57,18 +57,18 @@ class DefaultTest(Test):
         ind_inst = [IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS]
         return [
             BenignTestCase(),
-            # EthicsTestCase(ethics),
-            # SystemPromptLeakageTestCase(),
-            # ExcessiveAgencyTestCase(),
-            # IndirectInstructionTestCase(ind_inst),
-            # PrivacyViolationsTestCase(),
-            # BiasTestCase([BiasSubcategory.RACE]),
-            # IllegalActivityTestCase([IllegalActivitySubcategory.WEAPONS]),
-            # IllegalActivityTestCase([IllegalActivitySubcategory.ILLEGAL_DRUGS]),
-            # IllegalActivityTestCase([IllegalActivitySubcategory.VIOLENT_CRIME]),
-            # IllegalActivityTestCase([IllegalActivitySubcategory.SEX_CRIME]),
-            # IllegalActivityTestCase([IllegalActivitySubcategory.CYBERCRIME]),
-            # IllegalActivityTestCase([IllegalActivitySubcategory.CHILD_EXPLOITATION]),
-            # ToxicityTestCase([ToxicitySubcategory.INSULTS]),
-            # ToxicityTestCase([ToxicitySubcategory.THREATS]),
+            EthicsTestCase(ethics),
+            SystemPromptLeakageTestCase(),
+            ExcessiveAgencyTestCase(),
+            IndirectInstructionTestCase(ind_inst),
+            PrivacyViolationsTestCase(),
+            BiasTestCase([BiasSubcategory.RACE]),
+            IllegalActivityTestCase([IllegalActivitySubcategory.WEAPONS]),
+            IllegalActivityTestCase([IllegalActivitySubcategory.ILLEGAL_DRUGS]),
+            IllegalActivityTestCase([IllegalActivitySubcategory.VIOLENT_CRIME]),
+            IllegalActivityTestCase([IllegalActivitySubcategory.SEX_CRIME]),
+            IllegalActivityTestCase([IllegalActivitySubcategory.CYBERCRIME]),
+            IllegalActivityTestCase([IllegalActivitySubcategory.CHILD_EXPLOITATION]),
+            ToxicityTestCase([ToxicitySubcategory.INSULTS]),
+            ToxicityTestCase([ToxicitySubcategory.THREATS]),
         ]

@@ -19,7 +19,7 @@ my bachelor's thesis.
 - **CLI-first workflow**: Run evaluations and post-processing through dedicated CLI commands.
 - **Extensible framework**
     - Integrate additional attack data sources \(APIs, CSV, or custom providers\).
-    - Evaluate any target system \(single LLMs, multi-model pipelines, or agentic architectures on local or cloud
+    - Evaluate any target system \(single LLMs, multimodel pipelines, or agentic architectures on local or cloud
       infrastructure\).
     - Add custom attack techniques, scoring logic, and evaluation criteria.
 
@@ -65,9 +65,9 @@ uv run llm-test-baseline run-baseline
 uv run llm-test-baseline summarize-run --run <path_to_run_folder> --output <path_to_output.json>
 ```
 
-### Docker (fully containerised)
+### Docker (fully containerized)
 
-All services including the test runner are managed by docker-compose.
+All services, including the test runner, are managed by docker-compose.
 Run data is written to host directories via bind mounts — nothing is lost when containers stop.
 
 ```bash
@@ -148,6 +148,6 @@ project.
 Developers are responsible for implementing appropriate safeguards to prevent storage or misuse of sensitive or
 prohibited content (including but not limited to personal data, child sexual abuse material, or other illegal content).
 The authors and contributors of this project disclaim liability for any logging or retention of such content by
-developers. Developers must ensure their systems comply with all applicable data protection and content safety laws, and
-should avoid persisting any blocked content generated or intercepted by this project. This project calls paid APIs, and
-developers are responsible for associated charges.
+developers. Developers must ensure their systems comply with all applicable data protection and content safety laws and
+should avoid persisting with any blocked content generated or intercepted by this project. This project calls paid APIs,
+and developers are responsible for associated charges.

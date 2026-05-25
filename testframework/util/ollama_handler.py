@@ -30,6 +30,7 @@ class OllamaGenerator:
             timeout = OllamaGenerator._get_timeout()
             OllamaGenerator._chatbot = OllamaModel(
                 model=model_id,
+                base_url=os.environ.get("OLLAMA_HOST", "http://localhost:11434"),
                 # https://huggingface.co/mlabonne/gemma-3-27b-it-abliterated-GGUF
                 generation_kwargs={"top_p": 0.95, "top_k": 64},
                 temperature=1.0,

@@ -33,16 +33,17 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  guardrails_ai:
-    build:
-      context: .
-      dockerfile: Dockerfile.guardrails
-      args:
-        - GUARDRAILS_TOKEN=${GURADRAILS_AI_TOKEN}
-    container_name: thesis_guardrails_ai
-    ports:
-      - "8000:8000"
-    restart: unless-stopped
+  # uncomment since the PyPi dependency is currently in quarantine
+  #  guardrails_ai:
+  #    build:
+  #      context: .
+  #      dockerfile: Dockerfile.guardrails
+  #      args:
+  #        - GUARDRAILS_TOKEN=${GURADRAILS_AI_TOKEN}
+  #    container_name: thesis_guardrails_ai
+  #    ports:
+  #      - "8000:8000"
+  #    restart: unless-stopped
 
   testframework:
     build:
@@ -74,8 +75,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      guardrails_ai:
-        condition: service_started
+    #      guardrails_ai:
+    #        condition: service_started
     # profiles: [run] keeps this service out of `docker compose up` (infrastructure only).
     # Use: docker compose run --rm testframework <command> [args...]
     profiles:
