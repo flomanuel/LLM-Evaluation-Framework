@@ -1,4 +1,5 @@
 # Security Evaluation Tool for LLM Architectures and Guardrails
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![GitHub Release](https://img.shields.io/github/v/release/flomanuel/LLM-Evaluation-Framework?include_prereleases)
 
@@ -31,7 +32,9 @@ The project-owned red-team modules are maintained in this repository.
 
 ## Quickstart
 
-1. Install dependencies (using `uv`):
+### Local (uv)
+
+1. Install dependencies:
 
 ```bash
 uv sync
@@ -44,22 +47,53 @@ cp .env.template .env
 # Edit .env and fill in your values.
 ```
 
-3. Run the baseline test suite:
+3. Start the infrastructure (PostgreSQL + pgAdmin + Guardrails AI):
+
+```bash
+docker compose up -d
+```
+
+4. Run the baseline test suite:
 
 ```bash
 uv run llm-test-baseline run-baseline
 ```
 
-4. Run the summary script
+5. Run the summary script:
 
 ```bash
-uv run llm-test-baseline summarize-run --run absolute_path_to_run_folder --output absolute_path_to_output.json
+uv run llm-test-baseline summarize-run --run <path_to_run_folder> --output <path_to_output.json>
+```
+
+### Docker (fully containerised)
+
+All services including the test runner are managed by docker-compose.
+Run data is written to host directories via bind mounts — nothing is lost when containers stop.
+
+```bash
+# Start infrastructure
+docker compose up -d
+
+# Build the testframework image
+docker compose build testframework
+
+# Populate the vector store
+docker compose run --rm testframework populate-db --documents-dir _rag_documents
+
+# Run the baseline test suite
+docker compose run --rm testframework run-baseline --results-dir _runs
+
+# Summarise a completed run
+docker compose run --rm testframework summarize-run \
+  --run _runs/<name_run_folder> \
+  --output _runs/_outputs/summary.json
 ```
 
 # Running the unit tests
 
 The unit test suite lives in the `tests/` directory and uses [pytest](https://docs.pytest.org/).
-All external services (Ollama, OpenAI, GCP, Lakera, LLM Guard, LlamaFirewall) are mocked — no real credentials or running models are required.
+All external services (Ollama, OpenAI, GCP, Lakera, LLM Guard, LlamaFirewall) are mocked — no real credentials or
+running models are required.
 
 Run all tests:
 
@@ -106,6 +140,14 @@ whether a protection guardrail was successful or not.
 See the [subpage](./_extras/doc/troubleshooting.md).
 
 # Disclaimers
-Please note that this project may use Third-Party Services (including model providers and evaluation tools), which are subject to their own terms and conditions and are not developed or verified by the authors and contributors of this project.
 
-Developers are responsible for implementing appropriate safeguards to prevent storage or misuse of sensitive or prohibited content (including but not limited to personal data, child sexual abuse material, or other illegal content). The authors and contributors of this project disclaim liability for any logging or retention of such content by developers. Developers must ensure their systems comply with all applicable data protection and content safety laws, and should avoid persisting any blocked content generated or intercepted by this project. This project calls paid APIs, and developers are responsible for associated charges.
+Please note that this project may use Third-Party Services (including model providers and evaluation tools), which are
+subject to their own terms and conditions and are not developed or verified by the authors and contributors of this
+project.
+
+Developers are responsible for implementing appropriate safeguards to prevent storage or misuse of sensitive or
+prohibited content (including but not limited to personal data, child sexual abuse material, or other illegal content).
+The authors and contributors of this project disclaim liability for any logging or retention of such content by
+developers. Developers must ensure their systems comply with all applicable data protection and content safety laws, and
+should avoid persisting any blocked content generated or intercepted by this project. This project calls paid APIs, and
+developers are responsible for associated charges.

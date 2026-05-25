@@ -8,7 +8,7 @@ This repository contains a Python-based evaluation framework for testing LLM cha
 
 - Python version: `>=3.13`
 - Dependency manager: `uv`
-- Main CLI entry point: `uv run llm-test-baseline`
+- Main CLI entry point: `uv run llm-test-baseline` (local) or `docker compose run --rm testframework` (Docker)
 - Test runner: `uv run pytest tests/ -v`
 
 ## Repository structure
@@ -21,6 +21,9 @@ This repository contains a Python-based evaluation framework for testing LLM cha
 - `_runs/`: generated run artifacts
 - `_logs/`: log output
 - `_extras/`: supporting documentation
+- `Dockerfile.guardrails`: Docker image for the Guardrails AI API server
+- `Dockerfile.testframework`: Docker image for the `llm-test-baseline` CLI
+- `docker-compose.yml`: orchestrates postgres, pgadmin, guardrails_ai, and testframework services
 
 ## Setup
 
@@ -29,13 +32,19 @@ This repository contains a Python-based evaluation framework for testing LLM cha
 2. Create environment file:
    - `cp .env.template .env`
 3. Fill in any required credentials in `.env` before running CLI flows that depend on external providers.
+4. Start the infrastructure containers:
+   - `docker compose up -d`
 
 ## Common commands
 
-- Run the baseline suite:
+- Run the baseline suite (local):
   - `uv run llm-test-baseline run-baseline`
+- Run the baseline suite (Docker):
+  - `docker compose run --rm testframework run-baseline --results-dir _runs`
 - Summarize a run:
   - `uv run llm-test-baseline summarize-run --run <absolute_run_dir> --output <absolute_output_json>`
+- Populate the vector store:
+  - `uv run llm-test-baseline populate-db --documents-dir _rag_documents`
 - Run all tests:
   - `uv run pytest tests/ -v`
 - Run one test file:

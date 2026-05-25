@@ -1,0 +1,39 @@
+FROM python:3.13.13-slim AS builder
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Copy dependency manifests first for layer caching
+COPY pyproject.toml uv.lock ./
+
+# Install project dependencies into .venv (no dev extras, no editable install of src yet)
+RUN uv sync --frozen --no-dev --no-install-project
+
+# Copy source and install the project itself
+COPY testframework/ ./testframework/
+RUN uv sync --frozen --no-dev
+
+
+FROM python:3.13.13-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PATH="/app/.venv/bin:$PATH"
+
+WORKDIR /app
+
+COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /app/testframework /app/testframework
+COPY --from=builder /app/pyproject.toml /app/pyproject.toml
+
+# Bind-mounted at runtime (see docker-compose.yml):
+#   _runs, _prompt_files, _attack_documents, _rag_documents, _logs
+# Create the directories so the image is self-contained for `docker run` usage.
+RUN mkdir -p _runs _prompt_files _attack_documents _rag_documents _logs
+
+ENTRYPOINT ["llm-test-baseline"]

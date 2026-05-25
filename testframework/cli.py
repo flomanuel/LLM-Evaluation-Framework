@@ -106,7 +106,7 @@ def main() -> None:
             logger.info("Run summary written to {}", output_path)
 
 
-def add_arguments(subparsers: _SubParsersAction[ArgumentParser]):
+def add_arguments(subparsers: _SubParsersAction):
     """Add command line arguments."""
 
     run_baseline_parser = subparsers.add_parser(

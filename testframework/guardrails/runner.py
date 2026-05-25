@@ -26,9 +26,9 @@ class GuardrailRunner:
         self.guardrails = [
             PromptHardeningGuardrail(),
             LLMGuard(),
-            LlamaFirewall(),
-            LakeraGuard(),
-            GcpModelArmor(),
+            # LlamaFirewall(),
+            # LakeraGuard(),
+            # GcpModelArmor(),
         ]
 
     def run(

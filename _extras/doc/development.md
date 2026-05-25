@@ -27,20 +27,51 @@ uv run pylint testframework
 uv run bandit -r testframework
 ```
 
-3. Start Containers via Docker Compose
+3. Start infrastructure containers via Docker Compose
 
 ```bash
-docker compose up
+# Start postgres, pgadmin, and guardrails_ai (background)
+docker compose up -d
 ```
+
+The `testframework` service is excluded from `docker compose up` intentionally (it uses
+`profiles: [run]`). Invoke it explicitly — see [Docker workflow](#docker-workflow) below.
 
 ## Populate the database
 
-Populate the database with documents from the folder `_documents`.
-
+Populate the database with PDF documents from `_rag_documents`.
 The resulting chunks can be inspected via the pgAdmin container.
 
+Local:
 ```bash
-uv run llm-test-baseline populate-db
+uv run llm-test-baseline populate-db --documents-dir _rag_documents
+```
+
+Docker:
+```bash
+docker compose run --rm testframework populate-db --documents-dir _rag_documents
+```
+
+## Docker workflow
+
+Two Dockerfiles are provided:
+
+| File | Purpose |
+|---|---|
+| `Dockerfile.guardrails` | Guardrails AI API server (used by the `guardrails_ai` compose service) |
+| `Dockerfile.testframework` | `llm-test-baseline` CLI (used by the `testframework` compose service) |
+
+Build the testframework image:
+```bash
+docker compose build testframework
+```
+
+Run any CLI command inside the container (results are written to host-mounted directories):
+```bash
+docker compose run --rm testframework run-baseline --results-dir _runs
+docker compose run --rm testframework summarize-run \
+  --run _runs/<timestamp>_baseline \
+  --output _runs/_outputs/summary.json
 ```
 
 ## One note on the architecture
