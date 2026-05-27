@@ -27,27 +27,87 @@ uv run pylint testframework
 uv run bandit -r testframework
 ```
 
-3. Start Containers via Docker Compose
+3. Start infrastructure containers via Docker Compose
 
 ```bash
-docker compose up
+# Start postgres, pgadmin, and guardrails_ai (background)
+docker compose up -d
 ```
+
+The `testframework` service is excluded from `docker compose up` intentionally (it uses
+`profiles: [run]`). Invoke it explicitly — see [Docker workflow](#docker-workflow) below.
 
 ## Populate the database
 
-Populate the database with documents from the folder `_documents`.
-
+Populate the database with PDF documents from `_rag_documents`.
 The resulting chunks can be inspected via the pgAdmin container.
 
+Local:
 ```bash
-uv run llm-test-baseline populate-db
+uv run llm-test-baseline populate-db --documents-dir _rag_documents
+```
+
+Docker:
+```bash
+docker compose run --rm testframework populate-db --documents-dir _rag_documents
+```
+
+## Docker workflow
+
+Two Dockerfiles are provided:
+
+| File | Purpose |
+|---|---|
+| `Dockerfile.guardrails` | Guardrails AI API server (used by the `guardrails_ai` compose service) |
+| `Dockerfile.testframework` | `llm-test-baseline` CLI (used by the `testframework` compose service) |
+
+Build the testframework image:
+```bash
+docker compose build testframework
+```
+
+Run any CLI command inside the container (results are written to host-mounted directories):
+```bash
+docker compose run --rm testframework run-baseline --results-dir _runs
+docker compose run --rm testframework summarize-run \
+  --run _runs/<timestamp>_baseline \
+  --output _runs/_outputs/summary.json
 ```
 
 ## One note on the architecture
 
-This framework relies on the libraries DeepTeam and especially DeepEval.
+This framework relies on DeepEval together with project-owned red-team modules.
 
-Both are developed and maintained by [Confident AI](https://www.confident-ai.com/docs).
+DeepEval is developed by [Confident AI](https://www.confident-ai.com/docs).
+The project-owned red-team modules are maintained in this repository.
+
+## Terminology contract
+
+The framework uses these terms consistently across generation, enhancement, persistence, and reporting:
+
+1. Technique:
+   A transformation strategy that can enhance a base prompt.
+
+2. Base prompt:
+   The prompt before technique enhancement, created from template generation or CSV rows.
+
+3. Prompt/attack:
+   The final prompt variant after enhancement, which is executed against the chatbot stack.
+
+### Indirect document-embedded exception
+
+For `document-embedded-instructions`, the CSV rows / PDFs already contain pre-enhanced prompt/attack text plus a technique label.
+Those rows are treated as final prompts/attacks and are not re-enhanced at runtime.
+
+### Baseline marker policy
+
+`Baseline Prompt (no Technique)` is a reporting marker that means "no enhancement technique applied".
+It is stored in technique buckets for consistency, even though it is not a transformation.
+
+### Versioning note
+
+Historical run artifacts may contain older wording around baseline/no-technique handling.
+When comparing old and new summaries, treat this terminology contract as the canonical interpretation.
 
 ## Test Runs
 
@@ -97,6 +157,6 @@ To create a new test case, add a class that inherits from the [BaseTestCase](../
 
 ## How to add a new technique and metric
 
-One can use techniques from DeepTeam, or implement custom techniques. Each technique that should be enabled must be added to the list [ENHANCEMENTS](../../testframework/custom_attack_techniques/techniques.py), which defines all techniques that the [AttackListEnhancer](../../testframework/custom_attack_techniques/attack_list_enhancer.py) will apply to the baseline test data.
+One can use project-owned techniques or implement additional custom techniques. Each technique that should be enabled must be added to the list [ENHANCEMENTS](../../testframework/custom_attack_techniques/techniques.py), which defines all techniques that the [AttackListEnhancer](../../testframework/custom_attack_techniques/attack_list_enhancer.py) will apply to the baseline test data.
 
-Each custom technique must be an instance of `deepteam.attacks.single_turn.BaseSingleTurnAttack`.
+Each custom technique must be an instance of [BaseSingleTurnAttack](../../testframework/redteam/techniques/base.py).

@@ -5,23 +5,21 @@
 
 
 from enum import Enum
-from typing import List
-from deepteam.vulnerabilities import BaseVulnerability
-from deepteam.metrics import IndirectInstructionMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepteam.test_case import RTTestCase
-from deepteam.metrics import BaseRedTeamingMetric
-from deepteam.vulnerabilities.indirect_instruction import IndirectInstructionType
+from testframework.redteam.builders.base_builder import BaseAttackBuilder
+from testframework.redteam.metric_adapters import IndirectInstructionMetric
+from testframework.redteam.metric_protocol import RedTeamingMetric
+from testframework.redteam.test_case import RTTestCase
 from testframework.testcases.indirect_instruction.subcategory import IndirectInstructionSubcategory
 from testframework.util.csv_loader import CSVLoader
 
 
-class IndirectInstructionAttacks(BaseVulnerability):
-    """Class that builds indirect prompt injection attack prompts."""
+class IndirectInstructionAttacks(BaseAttackBuilder):
+    """Class that builds indirect prompt injection attacks from CSV-backed prompt rows."""
 
     def __init__(
             self,
-            types: List[Enum],
+            types: list[Enum],
             simulator_model: DeepEvalBaseLLM | None | str = None,
             evaluation_model: DeepEvalBaseLLM | None | str = None,
             async_mode: bool = True,
@@ -32,12 +30,14 @@ class IndirectInstructionAttacks(BaseVulnerability):
         self.verbose_mode = verbose_mode
         self.simulator_model = simulator_model
         self.evaluation_model = evaluation_model
-        super().__init__(types)
+        super().__init__(types, simulator_model, evaluation_model, async_mode, verbose_mode)
 
-    def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
+    def simulate_attacks(self, purpose: str = None) -> list[RTTestCase]:
         """Simulate attacks for the test case."""
-        attacks: List[RTTestCase] = []
+        attacks: list[RTTestCase] = []
         if IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS in self.types:
+            # These CSV rows are already pre-enhanced attacks for document-embedded instructions.
+            # Runtime technique enhancement must skip them and preserve row.metadata["technique"].
             csv_data = CSVLoader.load_prompts_from_csv(
                 file_path="2_schaedlich_manuell_erstellt_basic.csv",
                 categories=["indirect-prompt-injection"]
@@ -68,10 +68,13 @@ class IndirectInstructionAttacks(BaseVulnerability):
 
         return attacks
 
-    def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
+    def _get_metric(self, attack: RTTestCase) -> RedTeamingMetric:
         """Get the metric for the test case."""
-        return IndirectInstructionMetric(IndirectInstructionType.DOCUMENT_EMBEDDED_INSTRUCTIONS.value,
-                                         model=self.evaluation_model)
+        del attack
+        return IndirectInstructionMetric(
+            IndirectInstructionSubcategory.DOCUMENT_EMBEDDED_INSTRUCTIONS.value,
+            model=self.evaluation_model,
+        )
 
     def get_name(self) -> str:
         """Get the human-readable name of the test case."""

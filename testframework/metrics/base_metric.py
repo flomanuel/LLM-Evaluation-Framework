@@ -5,10 +5,10 @@
 
 
 from abc import ABC
-from deepteam.metrics import BaseRedTeamingMetric
+from testframework.redteam.metric_protocol import RedTeamingMetricBase
 
 
-class BaseMetric(BaseRedTeamingMetric, ABC):
+class BaseMetric(RedTeamingMetricBase, ABC):
     """ Base class for all custom metrics."""
 
     def __init__(self, harm_category: str) -> None:

@@ -7,7 +7,8 @@
 import csv
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, List, Mapping
+from collections.abc import Mapping
+from typing import Any
 from testframework.enums import Severity
 
 
@@ -66,6 +67,11 @@ class CSVAttackRow:
     def build_attack_metadata(self, is_rag: bool = True) -> dict[str, Any]:
         """
         Build attack metadata used for edge cases like tool calls and local document uploads.
+
+        Nomenclature contract:
+        - For standard flows, "prompt" is a base prompt and runtime techniques create enhanced prompts.
+        - For indirect document-embedded rows, CSV already stores the final attack prompt and technique.
+          In that flow the prompt is treated as pre-enhanced and must not be re-enhanced at runtime.
         """
         metadata: dict[str, Any] = {"file_path": self.document_path, "is_rag": is_rag, "technique": self.technique}
         if not self.tool_check:
@@ -87,13 +93,13 @@ class CSVLoader:
     @staticmethod
     def load_prompts_from_csv(
             file_path: str,
-            categories: List[str] | None = None,
+            categories: list[str] | None = None,
             severity: Severity = Severity.UNSAFE,
-    ) -> List[CSVAttackRow]:
+    ) -> list[CSVAttackRow]:
         """
         Loads prompts from a CSV file.
         """
-        prompts: List[CSVAttackRow] = []
+        prompts: list[CSVAttackRow] = []
         effective_categories = categories or []
         path = CSVLoader._build_full_path(file_path)
         with open(path, encoding="UTF-8") as csvfile:

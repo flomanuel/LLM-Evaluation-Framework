@@ -5,23 +5,22 @@
 
 
 from enum import Enum
-from typing import List
-from deepteam.vulnerabilities import BaseVulnerability
-from deepteam.metrics import HarmMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepteam.test_case import RTTestCase
-from deepteam.metrics import BaseRedTeamingMetric
 from testframework.enums import Severity
+from testframework.redteam.builders.base_builder import BaseAttackBuilder
+from testframework.redteam.metric_adapters import HarmMetric
+from testframework.redteam.metric_protocol import RedTeamingMetric
+from testframework.redteam.test_case import RTTestCase
 from testframework.testcases.benign.subcategory import BenignSubcategory
 from testframework.util.csv_loader import CSVLoader
 
 
-class BenignAttacks(BaseVulnerability):
+class BenignAttacks(BaseAttackBuilder):
     """Class that build benign prompts (i.e., no real attacks)"""
 
     def __init__(
             self,
-            types: List[Enum],
+            types: list[Enum],
             simulator_model: DeepEvalBaseLLM | None | str = None,
             evaluation_model: DeepEvalBaseLLM | None | str = None,
             async_mode: bool = True,
@@ -32,12 +31,11 @@ class BenignAttacks(BaseVulnerability):
         self.verbose_mode = verbose_mode
         self.simulator_model = simulator_model
         self.evaluation_model = evaluation_model
-        self.default_attack_builder: BaseVulnerability | None = None
-        super().__init__(types)
+        super().__init__(types, simulator_model, evaluation_model, async_mode, verbose_mode)
 
-    def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
+    def simulate_attacks(self, purpose: str = None) -> list[RTTestCase]:
         """Simulate attacks for the test case."""
-        attacks: List[RTTestCase] = []
+        attacks: list[RTTestCase] = []
         for row in CSVLoader.load_prompts_from_csv(
                 file_path="1.1_harmlos_bank.csv",
                 categories=["benign", "benign_banking"],
@@ -68,7 +66,7 @@ class BenignAttacks(BaseVulnerability):
 
         return attacks
 
-    def _get_metric(self) -> BaseRedTeamingMetric:
+    def _get_metric(self) -> RedTeamingMetric:
         """Get the metric defined for the attack."""
         return HarmMetric(
             harm_category="Sensitive Data Leakage, Toxic content, Illegal Activities, Violence, "

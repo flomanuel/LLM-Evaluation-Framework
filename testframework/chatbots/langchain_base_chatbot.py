@@ -4,12 +4,10 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from pathlib import Path
 from time import perf_counter
-from typing import Any, List
+from typing import Any
 
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.documents import Document
@@ -63,10 +61,13 @@ class BaseLangChainChatbot(BaseChatbot, ABC):
         else:
             self._llm_with_tools = self._llm
 
-        logger.debug(
-            f"{self.__class__.__name__} initialized with model '{model}', "
-            f"RAG k={rag_k}, timeout_retries={self._timeout_retries}, "
-            f"tools={[t.name for t in self._tools]}"
+        logger.opt(lazy=True).debug(
+            "{} initialized with model '{}', RAG k={}, timeout_retries={}, tools={}",
+            lambda class_name=self.__class__.__name__: class_name,
+            lambda model_name=model: model_name,
+            lambda rag_value=rag_k: rag_value,
+            lambda retries=self._timeout_retries: retries,
+            lambda: [t.name for t in self._tools],
         )
 
     @abstractmethod
@@ -84,7 +85,7 @@ class BaseLangChainChatbot(BaseChatbot, ABC):
         """Set the vector store instance."""
         self._vector_store = store
 
-    def _retrieve_context(self, query: str) -> List[Document]:
+    def _retrieve_context(self, query: str) -> list[Document]:
         """Retrieve relevant documents from the vector store."""
         if self._vector_store is None:
             logger.warning("No vector store configured, skipping RAG retrieval")
@@ -93,7 +94,7 @@ class BaseLangChainChatbot(BaseChatbot, ABC):
         return self._vector_store.similarity_search(query, k=self._rag_k)
 
     def _build_prompt_with_context(
-            self, user_prompt: str, context_docs: List[Document]
+            self, user_prompt: str, context_docs: list[Document]
     ) -> str:
         """Build the enhanced prompt with RAG context."""
         if not context_docs:
@@ -141,7 +142,7 @@ Use the given context to answer the question, if needed.
             loader = PyPDFLoader(str(full_path))
             documents = loader.load()
             content = "\n\n".join(doc.page_content for doc in documents)
-            logger.debug(f"Loaded document '{file_path}' with {len(documents)} pages")
+            logger.debug("Loaded document '{}' with {} pages", file_path, len(documents))
             return content
         except Exception as exc:
             raise RuntimeError(f"Failed to read PDF '{file_path}': {exc}") from exc
@@ -195,8 +196,12 @@ Use the given context to answer the question, if needed.
         """Query the chatbot with optional RAG context."""
         effective_system_prompt = system_prompt or self.DEFAULT_SYSTEM_PROMPT
         logger.info(
-            f"Starting chatbot query (chatbot={self.name.value}, model={self._model_name}, "
-            f"is_rag={is_rag}, file_path={file_path}, prompt_chars={len(user_prompt)})"
+            "Starting chatbot query (chatbot={}, model={}, is_rag={}, file_path={}, prompt_chars={})",
+            self.name.value,
+            self._model_name,
+            is_rag,
+            file_path,
+            len(user_prompt),
         )
         query_started = perf_counter()
         attempts = self._timeout_retries + 1
@@ -206,27 +211,40 @@ Use the given context to answer the question, if needed.
                 response = self._execute_query(
                     user_prompt, is_rag, file_path, effective_system_prompt
                 )
-                logger.info(
-                    f"Completed chatbot query (chatbot={self.name.value}, model={self._model_name}, "
-                    f"attempt={attempt}/{attempts}, tool_called={response.tool.tool_called}, "
-                    f"prompt_tokens={response.prompt_tokens}, response_tokens={response.response_tokens}, "
-                    f"duration={perf_counter() - query_started:.2f}s)"
+                logger.opt(lazy=True).info(
+                    "Completed chatbot query (chatbot={}, model={}, attempt={}/{}, tool_called={}, prompt_tokens={}, response_tokens={}, duration={:.2f}s)",
+                    lambda chatbot_name=self.name.value: chatbot_name,
+                    lambda model_name=self._model_name: model_name,
+                    lambda current_attempt=attempt: current_attempt,
+                    lambda total_attempts=attempts: total_attempts,
+                    lambda tool_called=response.tool.tool_called: tool_called,
+                    lambda prompt_tokens=response.prompt_tokens: prompt_tokens,
+                    lambda response_tokens=response.response_tokens: response_tokens,
+                    lambda started=query_started: perf_counter() - started,
                 )
                 return response
             except Exception as exc:
                 if attempt < attempts:
-                    logger.warning(
-                        f"LLM query timed out, retrying "
-                        f"(chatbot={self.name.value}, model={self._model_name}, "
-                        f"attempt={attempt}/{attempts}, duration={perf_counter() - query_started:.2f}s)"
+                    logger.opt(lazy=True).warning(
+                        "LLM query timed out, retrying (chatbot={}, model={}, attempt={}/{}, duration={:.2f}s)",
+                        lambda chatbot_name=self.name.value: chatbot_name,
+                        lambda model_name=self._model_name: model_name,
+                        lambda current_attempt=attempt: current_attempt,
+                        lambda total_attempts=attempts: total_attempts,
+                        lambda started=query_started: perf_counter() - started,
                     )
                     continue
 
                 error_info = TestErrorInfo.from_exception(exc)
-                logger.error(
-                    f"LLM query failed (chatbot={self.name.value}, model={self._model_name}, "
-                    f"attempt={attempt}/{attempts}, duration={perf_counter() - query_started:.2f}s, "
-                    f"error_type={error_info.error_type.value}): {error_info.message}"
+                logger.opt(lazy=True).error(
+                    "LLM query failed (chatbot={}, model={}, attempt={}/{}, duration={:.2f}s, error_type={}): {}",
+                    lambda chatbot_name=self.name.value: chatbot_name,
+                    lambda model_name=self._model_name: model_name,
+                    lambda current_attempt=attempt: current_attempt,
+                    lambda total_attempts=attempts: total_attempts,
+                    lambda started=query_started: perf_counter() - started,
+                    lambda error_type=error_info.error_type.value: error_type,
+                    lambda error_message=error_info.message: error_message,
                 )
                 return ChatbotResponse.from_error(
                     error_info,
@@ -246,25 +264,29 @@ Use the given context to answer the question, if needed.
             effective_system_prompt: str,
     ) -> ChatbotResponse:
         """Send the actual query / prompt to the LLM."""
-        context_docs: List[Document] = []
+        context_docs: list[Document] = []
         document_content: str | None = None
         enhanced_prompt: str = user_prompt
         if file_path:
             logger.info(
-                f"Loading attack document for chatbot '{self.name.value}' "
-                f"(file_path={file_path})"
+                "Loading attack document for chatbot '{}' (file_path={})",
+                self.name.value,
+                file_path,
             )
             document_content = self._load_document(file_path)
-            logger.debug(f"Loaded document from '{file_path}'")
+            logger.debug("Loaded document from '{}'", file_path)
             enhanced_prompt = self._build_prompt_with_document(user_prompt, document_content)
         elif is_rag and self._vector_store is not None:
             logger.info(
-                f"Retrieving RAG context for chatbot '{self.name.value}' "
-                f"(top_k={self._rag_k})"
+                "Retrieving RAG context for chatbot '{}' (top_k={})",
+                self.name.value,
+                self._rag_k,
             )
             context_docs = self._retrieve_context(user_prompt)
             logger.info(
-                f"Retrieved {len(context_docs)} RAG document(s) for chatbot '{self.name.value}'"
+                "Retrieved {} RAG document(s) for chatbot '{}'",
+                len(context_docs),
+                self.name.value,
             )
             enhanced_prompt = self._build_prompt_with_context(user_prompt, context_docs)
 
@@ -274,13 +296,17 @@ Use the given context to answer the question, if needed.
         ]
 
         logger.info(
-            f"Calling LLM backend (chatbot={self.name.value}, model={self._model_name})"
+            "Calling LLM backend (chatbot={}, model={})",
+            self.name.value,
+            self._model_name,
         )
         invoke_started = perf_counter()
         response = self._llm_with_tools.invoke(messages)
-        logger.info(
-            f"LLM backend responded (chatbot={self.name.value}, model={self._model_name}, "
-            f"duration={perf_counter() - invoke_started:.2f}s)"
+        logger.opt(lazy=True).info(
+            "LLM backend responded (chatbot={}, model={}, duration={:.2f}s)",
+            lambda chatbot_name=self.name.value: chatbot_name,
+            lambda model_name=self._model_name: model_name,
+            lambda started=invoke_started: perf_counter() - started,
         )
 
         tool_called = False

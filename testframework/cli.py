@@ -4,7 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
 import argparse
 import os
 import sys
@@ -40,7 +39,7 @@ def configure_logging() -> None:
         retention="7 days",
         # backtrace=True,
     )
-    logger.info(f"Logging configured (level={log_level}, file={log_file})")
+    logger.info("Logging configured (level={}, file={})", log_level, log_file)
 
 
 def main() -> None:
@@ -55,11 +54,11 @@ def main() -> None:
     add_arguments(subparsers)
 
     args = parser.parse_args()
-    logger.info(f"CLI command received: {args.command}")
+    logger.info("CLI command received: {}", args.command)
 
     if args.command == CliArgs.RUN_BASELINE.value:
         results_dir = Path(args.results_dir)
-        logger.info(f"Starting default test suite (results_dir={results_dir})")
+        logger.info("Starting default test suite (results_dir={})", results_dir)
         test = DefaultTest(results_dir=results_dir)
         test.run()
         logger.info("Default test suite completed")
@@ -68,9 +67,11 @@ def main() -> None:
         documents_dir = Path(args.documents_dir)
         collection_name = args.collection_name or VectorStore.COLLECTION_NAME
         logger.info(
-            "Starting document ingestion "
-            f"(documents_dir={documents_dir}, chunk_size={args.chunk_size}, "
-            f"chunk_overlap={args.chunk_overlap}, collection={collection_name})"
+            "Starting document ingestion (documents_dir={}, chunk_size={}, chunk_overlap={}, collection={})",
+            documents_dir,
+            args.chunk_size,
+            args.chunk_overlap,
+            collection_name,
         )
 
         loader = DocumentLoader(
@@ -84,17 +85,15 @@ def main() -> None:
             logger.warning("No documents found to ingest. Exiting.")
             sys.exit(0)
 
-        logger.info(f"Connecting to vector store collection '{collection_name}'")
+        logger.info("Connecting to vector store collection '{}'", collection_name)
         vector_store = VectorStore(collection_name=args.collection_name)
-        logger.info(f"Persisting {len(chunks)} document chunk(s) to the vector store")
+        logger.info("Persisting {} document chunk(s) to the vector store", len(chunks))
         ids = vector_store.add_documents(chunks)
 
-        logger.info(f"Successfully ingested {len(ids)} document chunks into the vector store")
+        logger.info("Successfully ingested {} document chunks into the vector store", len(ids))
 
     elif args.command == CliArgs.SUMMARIZE_RUN.value:
-        logger.info(
-            f"Summarizing run folder '{args.run}'"
-        )
+        logger.info("Summarizing run folder '{}'", args.run)
 
         if args.output is not None:
             output_path = Path(args.output)
@@ -104,10 +103,10 @@ def main() -> None:
                 exclude_scanners=args.exclude_scanners,
                 consider_chatbot_success=args.consider_chatbot_success,
             )
-            logger.info(f"Run summary written to {output_path}")
+            logger.info("Run summary written to {}", output_path)
 
 
-def add_arguments(subparsers: _SubParsersAction[ArgumentParser]):
+def add_arguments(subparsers: _SubParsersAction):
     """Add command line arguments."""
 
     run_baseline_parser = subparsers.add_parser(

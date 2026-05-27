@@ -1,4 +1,7 @@
 ### Python template
+# macOS metadata
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -227,3 +230,7 @@ copilot.data.migration.ask2agent.xml
 /.guardrails/
 /.guardrails_model_cache/
 !/.guardrails_model_cache/.gitkeep
+/_runs/*
+/_attack_documents/*
+/.air/*
+/todo.md

@@ -4,8 +4,6 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
-
 import json
 from dataclasses import asdict
 from datetime import datetime
@@ -26,10 +24,10 @@ def save_test_run(test_run: TestRunResult, base_dir: Path | None = None) -> Path
     folder = get_run_folder(str(test_run.run_id), test_run.timestamp.start, base_dir)
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / "result.json"
-    logger.debug(f"Saving test run to: {path}")
+    logger.debug("Saving test run to: {}", path)
     with path.open("w", encoding="utf-8") as f:
         json.dump(test_run.to_json_dict(), f, default=str, indent=2)
-    logger.info(f"Test run saved successfully: {path}")
+    logger.info("Test run saved successfully: {}", path)
     return path
 
 
@@ -41,8 +39,8 @@ def save_test_case_result(result: TestCaseResult, run_folder: Path) -> Path:
     filename = f"{result.identifier}.json"
     path = testcase_folder / filename
 
-    logger.debug(f"Saving test case result to: {path}")
+    logger.debug("Saving test case result to: {}", path)
     with path.open("w", encoding="utf-8") as f:
         json.dump(asdict(result), f, default=str, indent=2)
-    logger.info(f"Test case result saved successfully: {path}")
+    logger.info("Test case result saved successfully: {}", path)
     return path

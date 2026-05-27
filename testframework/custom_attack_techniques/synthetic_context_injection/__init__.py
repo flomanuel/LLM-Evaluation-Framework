@@ -6,3 +6,5 @@
 
 from testframework.custom_attack_techniques.synthetic_context_injection.synthetic_context_injection import \
     SyntheticContextInjection
+
+__all__ = ["SyntheticContextInjection"]

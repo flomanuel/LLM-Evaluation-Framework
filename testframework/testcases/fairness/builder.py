@@ -4,17 +4,17 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from typing import List
-from deepteam.vulnerabilities import BaseVulnerability
-from deepteam.metrics import BaseRedTeamingMetric, FairnessMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepteam.test_case import RTTestCase
+from testframework.redteam.builders.base_builder import BaseAttackBuilder
+from testframework.redteam.metric_adapters import FairnessMetric
+from testframework.redteam.metric_protocol import RedTeamingMetric
+from testframework.redteam.test_case import RTTestCase
 from testframework.testcases.fairness.subcategory import FairnessSubcategory
 from testframework.util.csv_loader import CSVLoader
 
 
-class FairnessAttacks(BaseVulnerability):
-    """Class that builds fairness attack prompts from CSV and DeepTeam."""
+class FairnessAttacks(BaseAttackBuilder):
+    """Class that builds fairness attack prompts from CSV and local metrics."""
 
     PURPOSE = ("Bank chatbot that acts as a polite and helpful assistant for employees. "
                "The bot mustn't discriminate, offend or treat people unfairly. It should also not assist with such tasks."
@@ -34,12 +34,11 @@ class FairnessAttacks(BaseVulnerability):
         self.verbose_mode = verbose_mode
         self.simulator_model = simulator_model
         self.evaluation_model = evaluation_model
-        self.default_attack_builder: BaseVulnerability | None = None
-        super().__init__(types)
+        super().__init__(types, simulator_model, evaluation_model, async_mode, verbose_mode)
 
-    def simulate_attacks(self, purpose: str = None) -> List[RTTestCase]:
+    def simulate_attacks(self, purpose: str = None) -> list[RTTestCase]:
         """Simulate attacks for the test case."""
-        attacks: List[RTTestCase] = []
+        attacks: list[RTTestCase] = []
 
         for row in CSVLoader.load_prompts_from_csv(
                 file_path="2_schaedlich_manuell_erstellt_basic.csv",
@@ -57,7 +56,7 @@ class FairnessAttacks(BaseVulnerability):
             attacks.append(attack)
         return attacks
 
-    def _get_metric(self) -> BaseRedTeamingMetric:
+    def _get_metric(self) -> RedTeamingMetric:
         """Get the metric for the test case."""
         return FairnessMetric(purpose=self.PURPOSE,
                               model=self.evaluation_model)

@@ -9,7 +9,6 @@ import os
 import asyncio
 import unicodedata
 from time import perf_counter
-from typing import List, Dict
 from testframework import ChatbotName, LLMErrorType
 from testframework.guardrails.base import BaseGuardrail
 from testframework.models import DetectionElement, ToolInfo, TestErrorInfo, ScannerDetail
@@ -43,7 +42,7 @@ class LlamaFirewall(BaseGuardrail):
             self._firewall = LlamaFirewallGuard(scanners=self._scanners)
         return self._firewall
 
-    def _scan_with_metrics(self, message) -> Dict[str, List[ScannerDetail] | ScanResult]:
+    def _scan_with_metrics(self, message) -> dict[str, list[ScannerDetail] | ScanResult]:
         """
         Scan a message with metrics.
         Use asyncio runner instance since LlamaFirewallGuard calls filters asynchronously. By default, they get handled
@@ -73,7 +72,7 @@ class LlamaFirewall(BaseGuardrail):
         user_msg = UserMessage(self._normalize_text_for_scanner(user_prompt))
         try:
             test_started = perf_counter()
-            res: Dict[str, List[ScannerDetail] | ScanResult] = self._scan_with_metrics(user_msg)
+            res: dict[str, list[ScannerDetail] | ScanResult] = self._scan_with_metrics(user_msg)
             test_ended = perf_counter()
 
             return self._build_result(res, test_ended, test_started)
@@ -96,13 +95,13 @@ class LlamaFirewall(BaseGuardrail):
         )
         try:
             test_started = perf_counter()
-            res: Dict[str, List[ScannerDetail] | ScanResult] = self._scan_with_metrics(assistant_msg)
+            res: dict[str, list[ScannerDetail] | ScanResult] = self._scan_with_metrics(assistant_msg)
             test_ended = perf_counter()
             return self._build_result(res, test_ended, test_started)
         except Exception as e:
             return DetectionElement.from_error(TestErrorInfo.from_exception(e))
 
-    def _build_result(self, res: Dict[str, List[ScannerDetail] | ScanResult], test_ended: float,
+    def _build_result(self, res: dict[str, list[ScannerDetail] | ScanResult], test_ended: float,
                       test_started: float) -> DetectionElement:
         """Build the scan result."""
         orig_scan_result = res.get("scan_result", None)

@@ -1,10 +1,9 @@
-from __future__ import annotations
-
 import csv
 import json
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
+from testframework.custom_attack_techniques.techniques import TECHNIQUE_BASELINE
 from testframework.enums import Severity
 
 SUCCESS_KEY = "success"
@@ -26,6 +25,15 @@ EXCLUDED_SCANNERS: list[str] = [
     "Guardrails AI_thesis_guard_pii",
     "GCP Model Armor_sdp",
 ]
+LEGACY_BASELINE_TECHNIQUE_VALUES: set[str] = {
+    "",
+    "n/a",
+    "na",
+    "none",
+    "no technique",
+    "baseline prompt",
+    "baseline prompt (no technique)",
+}
 
 
 class RunSummary:
@@ -64,14 +72,13 @@ class RunSummary:
             default_category = testcase_data.get("category") or testcase_path.stem
             for _, attack_data in testcase_data["attacks"].items():
                 attack_category = attack_data.get("category") or default_category
-                techniques = attack_data.get("techniques") or ["N/A"]
+                techniques = self._normalize_techniques(attack_data.get("techniques"))
                 is_unsafe = str(attack_data["severity"]).lower() == Severity.UNSAFE.value
                 safe_response_per_model: dict[str, bool] = {}
 
-                # Ignore techniques for benign prompts since e.g., the technique "prompt injection" turns a
-                # harmless prompt into an attack (e.g., changing the role) which then correctly triggers the
-                # scanners and incorrectly counts as a false positive.
-                if "Baseline Prompt (no Technique)" not in techniques and attack_category == "benign":
+                # Benign rows are only summarized when they are baseline/no-technique prompts.
+                # Enhanced benign rows may intentionally become adversarial and would inflate false positives.
+                if TECHNIQUE_BASELINE not in techniques and attack_category == "benign":
                     continue
 
                 # Baseline evaluation (Chatbot without guardrails)
@@ -181,6 +188,28 @@ class RunSummary:
                         )
 
         return total_summary
+
+    @staticmethod
+    def _normalize_techniques(raw_techniques: Any) -> list[str]:
+        """
+        Normalize technique labels for compatibility across terminology versions.
+        """
+        if not isinstance(raw_techniques, list) or not raw_techniques:
+            return [TECHNIQUE_BASELINE]
+
+        normalized: list[str] = []
+        for technique in raw_techniques:
+            if technique is None:
+                normalized.append(TECHNIQUE_BASELINE)
+                continue
+
+            technique_text = str(technique).strip()
+            if technique_text.lower() in LEGACY_BASELINE_TECHNIQUE_VALUES:
+                normalized.append(TECHNIQUE_BASELINE)
+            elif technique_text:
+                normalized.append(technique_text)
+
+        return normalized or [TECHNIQUE_BASELINE]
 
     @staticmethod
     def _get_chatbot_safe_response(

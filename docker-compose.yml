@@ -33,13 +33,51 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  guardrails_ai:
+  # uncomment since the PyPi dependency is currently in quarantine
+  #  guardrails_ai:
+  #    build:
+  #      context: .
+  #      dockerfile: Dockerfile.guardrails
+  #      args:
+  #        - GUARDRAILS_TOKEN=${GURADRAILS_AI_TOKEN}
+  #    container_name: thesis_guardrails_ai
+  #    ports:
+  #      - "8000:8000"
+  #    restart: unless-stopped
+
+  testframework:
     build:
       context: .
-      dockerfile: Dockerfile
-      args:
-        - GUARDRAILS_TOKEN=${GURADRAILS_AI_TOKEN}
-    container_name: thesis_guardrails_ai
-    ports:
-      - "8000:8000"
-    restart: unless-stopped
+      dockerfile: Dockerfile.testframework
+    container_name: thesis_testframework
+    env_file: .env
+    environment:
+      # Override host-specific values so they point to compose service names / container paths
+      POSTGRES_HOST: postgres
+      HF_HOME: /root/.cache/huggingface
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+    volumes:
+      # Results and analysis outputs — stored on the host
+      - ./_runs:/app/_runs
+      # Input data — CSV attack prompts and PDF files
+      - ./_prompt_files:/app/_prompt_files
+      - ./_attack_documents:/app/_attack_documents
+      - ./_rag_documents:/app/_rag_documents
+      # Log files
+      - ./_logs:/app/_logs
+      # HuggingFace model cache (LlamaFirewall) — reuse host cache to avoid re-downloads
+      - ${HOME}/.cache/huggingface:/root/.cache/huggingface
+      # GCP Application Default Credentials (read-only)
+      - ${HOME}/.config/gcloud:/root/.config/gcloud:ro
+    extra_hosts:
+      # Allows the container to reach Ollama running on the Docker host
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    #      guardrails_ai:
+    #        condition: service_started
+    # profiles: [run] keeps this service out of `docker compose up` (infrastructure only).
+    # Use: docker compose run --rm testframework <command> [args...]
+    profiles:
+      - run

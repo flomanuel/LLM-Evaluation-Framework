@@ -4,12 +4,11 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from deepteam.attacks.base_attack import Exploitability
-from deepteam.attacks.single_turn import BaseSingleTurnAttack
-from deepteam.utils import create_progress, add_pbar, update_pbar
 from loguru import logger
 
 from testframework.custom_attack_techniques.cipher_code_expert.template import CipherCodeExpertTemplate
+from testframework.redteam.generation.progress import create_progress, add_pbar, update_pbar
+from testframework.redteam.techniques.base import Exploitability, BaseSingleTurnAttack
 
 
 # Based on DeepTeam attacks like emotional manipulation
@@ -21,7 +20,7 @@ class CipherCodeExpert(BaseSingleTurnAttack):
 
     def enhance(self, attack: str, *args, **kwargs) -> str:
         """Enhance the baseline attack."""
-        logger.info(f"Enhancing attack with {self.name} technique.")
+        logger.info("Enhancing attack with {} technique.", self.name)
         progress = create_progress()
         task_id = add_pbar(
             progress,

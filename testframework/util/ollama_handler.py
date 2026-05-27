@@ -5,7 +5,7 @@
 
 
 import os
-import shlex
+import subprocess
 import time
 
 from deepeval.models import OllamaModel
@@ -30,6 +30,7 @@ class OllamaGenerator:
             timeout = OllamaGenerator._get_timeout()
             OllamaGenerator._chatbot = OllamaModel(
                 model=model_id,
+                base_url=os.environ.get("OLLAMA_HOST", "http://localhost:11434"),
                 # https://huggingface.co/mlabonne/gemma-3-27b-it-abliterated-GGUF
                 generation_kwargs={"top_p": 0.95, "top_k": 64},
                 temperature=1.0,
@@ -53,7 +54,7 @@ class OllamaGenerator:
                 raise ValueError
             return timeout
         except ValueError:
-            logger.warning("Timeout configured for DeepEval / DeepTeam is no number")
+            logger.warning("Timeout configured for DeepEval integration is no number")
             return OllamaGenerator._default_ollama_inference_request_timeout_seconds
 
     @staticmethod
@@ -74,8 +75,11 @@ class OllamaGenerator:
         if OllamaGenerator._is_model_running(str(model_id)):
             return
 
-        safe_model_id = shlex.quote(str(model_id))
-        os.system(f"ollama run {safe_model_id} >/dev/null 2>&1 &")
+        subprocess.Popen(
+            ["ollama", "run", str(model_id)],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
         time.sleep(OllamaGenerator._startup_wait_seconds)
 
     @staticmethod
@@ -123,9 +127,13 @@ class OllamaGenerator:
         if not model_id:
             return
 
-        logger.info(f"Stopping local model {model_id}")
-        safe_model_id = shlex.quote(str(model_id))
-        os.system(f"ollama stop {safe_model_id} >/dev/null 2>&1")
+        logger.info("Stopping local model {}", model_id)
+        subprocess.run(
+            ["ollama", "stop", str(model_id)],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
         time.sleep(OllamaGenerator._shutdown_wait_seconds)
 
     @staticmethod
@@ -136,7 +144,13 @@ class OllamaGenerator:
     @staticmethod
     def _list_running_models() -> list[str]:
         """Return all running model names listed by `ollama ps`."""
-        running_models = os.popen("ollama ps").read().strip().splitlines()
+        result = subprocess.run(
+            ["ollama", "ps"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        running_models = result.stdout.strip().splitlines()
         if len(running_models) <= 1:
             return []
 

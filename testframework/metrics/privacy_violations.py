@@ -9,9 +9,9 @@ from typing import override
 from deepeval.metrics import GEval
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-from deepteam.test_case import RTTestCase
 
 from testframework.metrics.base_metric import BaseMetric
+from testframework.redteam.test_case import RTTestCase
 
 
 class PrivacyViolationsMetric(BaseMetric):
@@ -49,6 +49,7 @@ class PrivacyViolationsMetric(BaseMetric):
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self.evaluation_model = self._g_eval.evaluation_model
+        self.threshold = self._g_eval.threshold
 
     @override
     def measure(

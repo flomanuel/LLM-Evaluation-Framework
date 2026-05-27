@@ -4,22 +4,17 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from typing import Optional, Union
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
-from deepteam.utils import create_progress, update_pbar, add_pbar
-from deepteam.attacks.single_turn import BaseSingleTurnAttack
-from deepteam.attacks.base_attack import Exploitability
-from deepteam.attacks.attack_simulator.utils import (
-    generate,
-    a_generate,
-)
 from loguru import logger
 
 from testframework.custom_attack_techniques.synthetic_context_injection.schema import EnhancedContext, ComplianceData, \
     IsContextValid
 from testframework.custom_attack_techniques.synthetic_context_injection.template import \
     SyntheticContextInjectionTemplate
+from testframework.redteam.generation.model_generator import generate, a_generate
+from testframework.redteam.generation.progress import create_progress, update_pbar, add_pbar
+from testframework.redteam.techniques.base import BaseSingleTurnAttack, Exploitability
 
 
 class SyntheticContextInjection(BaseSingleTurnAttack):
@@ -31,7 +26,7 @@ class SyntheticContextInjection(BaseSingleTurnAttack):
     def __init__(
             self,
             target_information: str,
-            context_style: Optional[str] = None,
+            context_style: str | None = None,
             weight: int = 1,
             max_retries: int = 3,
     ):
@@ -43,9 +38,9 @@ class SyntheticContextInjection(BaseSingleTurnAttack):
     def enhance(
             self,
             attack: str,
-            simulator_model: Optional[Union[DeepEvalBaseLLM, str]] = None,
+            simulator_model: DeepEvalBaseLLM | str | None = None,
     ) -> str:
-        logger.info(f"Enhancing attack with {self.name} technique.")
+        logger.info("Enhancing attack with {} technique.", self.name)
         self.simulator_model, _ = initialize_model(simulator_model)
 
         prompt = SyntheticContextInjectionTemplate.enhance(
@@ -57,7 +52,7 @@ class SyntheticContextInjection(BaseSingleTurnAttack):
         with progress:
             task_id = add_pbar(
                 progress,
-                description=f"...... 📜 Generating Prior Context",
+                description="...... 📜 Generating Prior Context",
                 total=self.max_retries * 3,
             )
 
@@ -106,7 +101,7 @@ class SyntheticContextInjection(BaseSingleTurnAttack):
     async def a_enhance(
             self,
             attack: str,
-            simulator_model: Optional[Union[DeepEvalBaseLLM, str]] = None,
+            simulator_model: DeepEvalBaseLLM | str | None = None,
     ) -> str:
         self.simulator_model, _ = initialize_model(simulator_model)
         prompt = SyntheticContextInjectionTemplate.enhance(
@@ -118,7 +113,7 @@ class SyntheticContextInjection(BaseSingleTurnAttack):
         with progress:
             task_id = add_pbar(
                 progress,
-                description=f"...... 📜 Generating Prior Context",
+                description="...... 📜 Generating Prior Context",
                 total=self.max_retries * 3,
             )
 

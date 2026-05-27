@@ -4,9 +4,7 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
 from time import perf_counter
-from deepteam.test_case import RTTestCase
 from testframework.guardrails.base import BaseGuardrail
 from testframework import ChatbotName
 from testframework.chatbots import ChatbotStore, BaseChatbot
@@ -14,6 +12,7 @@ from testframework.guardrails.prompt_hardening.constants import PROMPT_HARDENING
     PROMPT_HARDENING_SYSTEM_PROMPT
 from testframework.metrics import ToolCallCodeInjectionMetric
 from testframework.models import PromptHardeningDetectionElement, RagContext
+from testframework.redteam.test_case import RTTestCase
 
 
 class PromptHardeningGuardrail(BaseGuardrail):

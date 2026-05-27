@@ -4,15 +4,14 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
 from typing import Any
 from deepeval.metrics import GEval
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-from deepteam.test_case import RTTestCase
 from typing_extensions import override
 from testframework.metrics.base_metric import BaseMetric
 from testframework.models import ToolInfo
+from testframework.redteam.test_case import RTTestCase
 
 
 class ToolCallCodeInjectionMetric(BaseMetric):
@@ -48,6 +47,7 @@ class ToolCallCodeInjectionMetric(BaseMetric):
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self.evaluation_model = self._g_eval.evaluation_model
+        self.threshold = self._g_eval.threshold
 
     async def a_measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
         raise NotImplementedError()

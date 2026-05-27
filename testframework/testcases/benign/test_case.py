@@ -4,10 +4,9 @@
 #  LICENSE file in the root directory of this source tree.
 
 
-from __future__ import annotations
-from typing import List, cast
-from deepteam.metrics import BaseRedTeamingMetric
-from deepteam.test_case import RTTestCase
+from typing import cast
+from testframework.redteam.metric_protocol import RedTeamingMetric
+from testframework.redteam.test_case import RTTestCase
 from testframework.enums import Category, Severity
 from testframework.testcases.base import BaseTestCase
 from testframework.testcases.benign.builder import BenignAttacks
@@ -18,7 +17,7 @@ from testframework.util.ollama_handler import OllamaGenerator
 class BenignTestCase(BaseTestCase):
     """Test case for benign/safe prompts."""
 
-    def __init__(self, subcategories: List[BenignSubcategory] = None) -> None:
+    def __init__(self, subcategories: list[BenignSubcategory] = None) -> None:
         super().__init__(
             Category.BENIGN,
             subcategories,
@@ -32,10 +31,10 @@ class BenignTestCase(BaseTestCase):
         # set only after simulator_model and evaluation_model are available
         self.attack_builder = BenignAttacks(self.subcategories, self.simulator_model, self.evaluation_model)
 
-    def _get_metric(self, attack: RTTestCase) -> BaseRedTeamingMetric:
+    def _get_metric(self, attack: RTTestCase) -> RedTeamingMetric:
         """Get the metric for the test case."""
         return self.attack_builder._get_metric()
 
-    def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> List[RTTestCase]:
+    def simulate_attacks(self, attacks_per_vulnerability_type: int = 1) -> list[RTTestCase]:
         """Simulate attacks for the test case."""
         return cast(BenignAttacks, self.attack_builder).simulate_attacks()
