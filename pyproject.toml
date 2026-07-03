@@ -1,6 +1,6 @@
 [project]
 name = "llm-evaluation-framework"
-version = "1.0.0"
+version = "2.0.0-beta"
 description = "Test framework for evaluating LLM chatbot guardrails with a custom red-team layer."
 authors = [{ name = "Florian Sauer" }]
 requires-python = ">=3.13.0"
