@@ -29,6 +29,7 @@ from testframework.models import (
     ChatbotResponseEvaluation,
     DetectionElement,
     DetectionResult,
+    DocumentContext,
     LLMErrorType,
     PromptHardeningDetectionElement,
     PromptVariants,
@@ -219,7 +220,7 @@ def _deserialize_chatbot_response(cr: dict[str, Any]) -> ChatbotResponse:
             embedding_model=rag_raw.get("embedding_model"),
             nodes=list(rag_raw.get("nodes") or []),
         ) if rag_raw else None,
-        document_content=None if doc_raw is None else doc_raw,
+        document_content=None if doc_raw is None else DocumentContext(document=str(doc_raw)),
         file_path=cr.get("file_path"),
         error=_deserialize_error(cr.get("error")),
     )
