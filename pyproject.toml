@@ -1,6 +1,6 @@
 [project]
 name = "llm-evaluation-framework"
-version = "2.0.0-beta"
+version = "3.0.0-beta"
 description = "Test framework for evaluating LLM chatbot guardrails with a custom red-team layer."
 authors = [{ name = "Florian Sauer" }]
 requires-python = ">=3.13.0"
@@ -84,6 +84,9 @@ disable = [
 [tool.bandit]
 skips = ["B101"]
 targets = ["testframework"]
+
+[tool.setuptools.packages.find]
+include = ["testframework*"]
 
 [tool.uv]
 package = true

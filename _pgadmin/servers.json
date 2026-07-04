@@ -1,11 +1,20 @@
 {
   "Servers": {
     "1": {
-      "Name": "Thesis PostgreSQL",
+      "Name": "Thesis RAG Vector Store",
       "Group": "Servers",
-      "Host": "postgres",
+      "Host": "postgres_rag",
       "Port": 5432,
       "MaintenanceDB": "vectordb",
+      "Username": "postgres",
+      "SSLMode": "prefer"
+    },
+    "2": {
+      "Name": "Thesis Evaluation DB",
+      "Group": "Servers",
+      "Host": "postgres_eval",
+      "Port": 5432,
+      "MaintenanceDB": "evaluation_db",
       "Username": "postgres",
       "SSLMode": "prefer"
     }

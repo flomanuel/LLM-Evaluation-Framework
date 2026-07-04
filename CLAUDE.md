@@ -18,20 +18,38 @@ results to PostgreSQL for analysis. Originally a bachelor's thesis project; now 
 - `_extras/` — supporting documentation and UML diagrams
 - `Dockerfile.guardrails` — Docker image for the Guardrails AI API server
 - `Dockerfile.testframework` — Docker image for the `llm-test-baseline` CLI
-- `docker-compose.yml` — orchestrates postgres, pgadmin, and testframework services
-- `alembic/` — migration scripts (targets the `evaluation` schema only)
+- `docker-compose.yml` — orchestrates `postgres_rag`, `postgres_eval`, pgadmin, and testframework services
+- `alembic/` — migration scripts (targets the `evaluation` schema in the ORM database only)
 
 ## Key architecture decisions
+
+### Two separate databases
+
+The ORM (evaluation) data and the langchain RAG vector store live in **separate Postgres
+instances**, each with its own container and env var family:
+
+- `postgres_rag` (`pgvector/pgvector:pg16`) — langchain `PGVector` tables
+  (`langchain_pg_embedding`, `langchain_pg_collection`). Configured via `POSTGRES_HOST`,
+  `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`. Used only by
+  `testframework/chatbots/rag/vector_store.py`.
+- `postgres_eval` (`postgres:16`, no pgvector needed) — all SQLAlchemy/Alembic entities.
+  Configured via `EVAL_DB_HOST`, `EVAL_DB_PORT`, `EVAL_DB_USER`, `EVAL_DB_PASSWORD`,
+  `EVAL_DB_NAME`. Used by `testframework/persistence/session.py` and `alembic/env.py`.
+
+Do not let these two connection configs bleed into each other — they intentionally point
+at different databases.
 
 ### Persistence layer (`testframework/persistence/`)
 
 - **ORM**: SQLAlchemy 2.0 `MappedAsDataclass` + `DeclarativeBase`. All entities live in the
-  `evaluation` schema (separate from the `public` pgvector schema).
+  `evaluation` schema, inside the dedicated `postgres_eval` database (see above) — this
+  schema layer is kept for organizational clarity even though the DB is already isolated.
 - **Schema**: Configured via `POSTGRES_SCHEMA` env var (default: `evaluation`).
   `session.py` reads this at import time; entities reference `POSTGRES_SCHEMA` in
   `__table_args__` and FK strings.
 - **Migrations**: Alembic. Run `alembic upgrade head` before first use.
-  The `alembic/env.py` filters to `evaluation` schema only — it never touches `public`.
+  `alembic/env.py` connects to `postgres_eval` via the `EVAL_DB_*` env vars and filters
+  to the `evaluation` schema only.
 - **MappedAsDataclass FK footgun**: `init=False, default=None` relationships are set LAST
   by the dataclass `__init__`, which can null out FK columns during flush. Workaround:
   explicitly assign the relationship object on the entity before flushing.

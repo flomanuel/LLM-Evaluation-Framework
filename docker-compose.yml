@@ -1,7 +1,8 @@
 services:
-  postgres:
+  # Dedicated instance for the langchain RAG vector store (pgvector extension required).
+  postgres_rag:
     image: pgvector/pgvector:pg16
-    container_name: thesis_pgvector
+    container_name: thesis_postgres_rag
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -12,6 +13,25 @@ services:
       - ./_pgdata:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-vectordb}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Dedicated instance for the SQLAlchemy/Alembic ORM (evaluation) data — no pgvector needed.
+  postgres_eval:
+    image: postgres:16
+    container_name: thesis_postgres_eval
+    environment:
+      POSTGRES_USER: ${EVAL_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${EVAL_DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${EVAL_DB_NAME:-evaluation_db}
+    ports:
+      - "${EVAL_DB_PORT:-5433}:5432"
+    volumes:
+      - ./_pgdata_eval:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${EVAL_DB_USER:-postgres} -d ${EVAL_DB_NAME:-evaluation_db}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -29,7 +49,9 @@ services:
       - ./_pgadmin_data:/var/lib/pgadmin
       - ./_pgadmin/servers.json:/pgadmin4/servers.json:ro
     depends_on:
-      postgres:
+      postgres_rag:
+        condition: service_healthy
+      postgres_eval:
         condition: service_healthy
     restart: unless-stopped
 
@@ -53,7 +75,10 @@ services:
     env_file: .env
     environment:
       # Override host-specific values so they point to compose service names / container paths
-      POSTGRES_HOST: postgres
+      POSTGRES_HOST: postgres_rag
+      POSTGRES_PORT: 5432
+      EVAL_DB_HOST: postgres_eval
+      EVAL_DB_PORT: 5432
       POSTGRES_SCHEMA: ${POSTGRES_SCHEMA:-evaluation}
       HF_HOME: /root/.cache/huggingface
       OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
@@ -74,7 +99,9 @@ services:
       # Allows the container to reach Ollama running on the Docker host
       - "host.docker.internal:host-gateway"
     depends_on:
-      postgres:
+      postgres_rag:
+        condition: service_healthy
+      postgres_eval:
         condition: service_healthy
     #      guardrails_ai:
     #        condition: service_started

@@ -22,11 +22,11 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-_host = os.environ.get("POSTGRES_HOST", "localhost")
-_port = os.environ.get("POSTGRES_PORT", "5432")
-_user = os.environ.get("POSTGRES_USER", "postgres")
-_password = os.environ.get("POSTGRES_PASSWORD", "postgres")
-_db = os.environ.get("POSTGRES_DB", "vectordb")
+_host = os.environ.get("EVAL_DB_HOST", "localhost")
+_port = os.environ.get("EVAL_DB_PORT", "5433")
+_user = os.environ.get("EVAL_DB_USER", "postgres")
+_password = os.environ.get("EVAL_DB_PASSWORD", "postgres")
+_db = os.environ.get("EVAL_DB_NAME", "evaluation_db")
 DATABASE_URL = f"postgresql+psycopg://{_user}:{_password}@{_host}:{_port}/{_db}"
 
 

@@ -11,9 +11,13 @@ __pycache__/
 /_logs/*
 !/_logs/.gitkeep
 
-# PostgreSQL data directory (Docker volume)
+# PostgreSQL data directory (Docker volume) — RAG vector store
 /_pgdata/*
 !/_pgdata/.gitkeep
+
+# PostgreSQL data directory (Docker volume) — ORM evaluation DB
+/_pgdata_eval/*
+!/_pgdata_eval/.gitkeep
 
 # pgAdmin data
 /_pgadmin_data/*

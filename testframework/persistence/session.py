@@ -8,11 +8,11 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-_HOST = os.environ.get("POSTGRES_HOST", "localhost")
-_PORT = os.environ.get("POSTGRES_PORT", "5432")
-_USER = os.environ.get("POSTGRES_USER", "postgres")
-_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "postgres")
-_DB = os.environ.get("POSTGRES_DB", "vectordb")
+_HOST = os.environ.get("EVAL_DB_HOST", "localhost")
+_PORT = os.environ.get("EVAL_DB_PORT", "5433")
+_USER = os.environ.get("EVAL_DB_USER", "postgres")
+_PASSWORD = os.environ.get("EVAL_DB_PASSWORD", "postgres")
+_DB = os.environ.get("EVAL_DB_NAME", "evaluation_db")
 POSTGRES_SCHEMA: str = os.environ.get("POSTGRES_SCHEMA", "evaluation")
 
 DATABASE_URL = f"postgresql+psycopg://{_USER}:{_PASSWORD}@{_HOST}:{_PORT}/{_DB}"

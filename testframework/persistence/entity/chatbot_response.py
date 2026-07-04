@@ -54,9 +54,15 @@ class ChatbotResponseEntity(Base):
     __tablename__ = "chatbot_response"
 
     id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True, init=False)
-    evaluation_id: Mapped[int] = mapped_column(
+    # Nullable: a chatbot_response either belongs 1:1 to a chatbot_response_evaluation
+    # (evaluation_id set), or stands alone as a prompt-hardening artifact referenced only
+    # via detection_element.chatbot_response_id (evaluation_id NULL).
+    evaluation_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey(f"{POSTGRES_SCHEMA}.chatbot_response_evaluation.id", ondelete="CASCADE"),
+        nullable=True,
+        default=None,
+        kw_only=True,
     )
     prompt: Mapped[str] = mapped_column(Text)
     raw_prompt: Mapped[str] = mapped_column(Text)

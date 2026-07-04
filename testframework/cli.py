@@ -7,7 +7,7 @@
 import argparse
 import os
 import sys
-from argparse import ArgumentParser, _SubParsersAction
+from argparse import _SubParsersAction
 from pathlib import Path
 from dotenv import load_dotenv
 from loguru import logger

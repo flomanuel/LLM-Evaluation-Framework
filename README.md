@@ -14,8 +14,9 @@ This repository contains a **test framework for evaluating LLM-architectures** a
 - **Adversarial attack generation with an internal red-team layer**: Uses project-owned vulnerability builders,
   custom CSV-based inputs, and single-turn attack strategies to generate and refine prompts.
 - **PostgreSQL persistence**: Test runs, attack results, guardrail evaluations, and confusion-matrix summaries are
-  stored in a dedicated `evaluation` schema via SQLAlchemy 2.0 + Alembic migrations. Historical JSON runs can be
-  imported with `import-runs`.
+  stored in a dedicated `evaluation` schema, in its own Postgres database, via SQLAlchemy 2.0 + Alembic migrations.
+  This is a separate database instance from the langchain RAG vector store. Historical JSON runs can be imported
+  with `import-runs`.
 - **CLI-first workflow**: Run evaluations and post-processing through dedicated CLI commands.
 - **Extensible framework**
     - Integrate additional attack data sources \(APIs, CSV, or custom providers\).
@@ -47,7 +48,8 @@ cp .env.template .env
 # Edit .env and fill in your values.
 ```
 
-3. Start the infrastructure (PostgreSQL + pgAdmin):
+3. Start the infrastructure (two PostgreSQL instances — one for the RAG vector store, one for the ORM/evaluation
+   data — + pgAdmin):
 
 ```bash
 docker compose up -d
@@ -101,7 +103,7 @@ docker compose run --rm testframework populate-db --documents-dir _rag_documents
 # Run the baseline test suite (results are persisted to DB automatically)
 docker compose run --rm testframework run-baseline --results-dir _runs
 
-# Summarise a run by UUID (reads from and writes to the DB)
+# Summarise a run by UUID (reads from and writes to the DB). This step is executed automatically on run completion (e.g. run-baseline).
 docker compose run --rm testframework summarize-run --run-id <uuid>
 
 # Import historical JSON runs from _runs/ into the DB

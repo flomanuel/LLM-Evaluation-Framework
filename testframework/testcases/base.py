@@ -8,7 +8,6 @@ import os
 import uuid
 from abc import ABC, abstractmethod
 from enum import Enum
-from pathlib import Path
 from time import perf_counter
 from typing import Any
 from deepeval.models import DeepEvalBaseLLM
@@ -220,7 +219,7 @@ class BaseTestCase(ABC):
 
     def _generate_attacks(self, attack_list_enhancer: AttackListEnhancer, attacks_per_vulnerability_type: int,
                           test_case_id: str) -> list[
-            list[EnhancedAttack], AttackEnhancementResult | None, bool]:
+        list[EnhancedAttack], AttackEnhancementResult | None, bool]:
         """Generate attacks for the test case."""
         logger.info("Generating base prompts for test case '{}'", test_case_id)
         generation_started = perf_counter()
@@ -287,7 +286,7 @@ class BaseTestCase(ABC):
             subcategory=attack.attack_case.vulnerability_type,
             techniques=techniques,
             severity=self.severity,
-            prompt=PromptVariants(base_prompt, attack_case.input),
+            prompt=PromptVariants(baseline=base_prompt, enhanced=attack_case.input),
             llm_responses=bot_responses_eval,
             protection=protection,
         )
@@ -349,11 +348,11 @@ class BaseTestCase(ABC):
                 lambda started=evaluation_started: perf_counter() - started,
             )
             return ChatbotResponseEvaluation(
-                chatbot_resp,
-                1 - score,
-                str(metric.reason),
-                metric.success,
-                metric.__name__,
+                chatbot_response=chatbot_resp,
+                score=1 - score,
+                reason=str(metric.reason),
+                success=metric.success,
+                metric=metric.__name__,
             )
         except Exception as e:
             eval_error = TestErrorInfo.from_exception(e)
