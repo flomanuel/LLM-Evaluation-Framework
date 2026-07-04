@@ -49,8 +49,15 @@ rectangle "Project Technology Stack" {
         [PostgreSQL] as Postgres
         [pgvector] as Pgvector
         [psycopg ~=3.3.3] as Psycopg
+        [SQLAlchemy ~=2.0] as SQLAlchemy
+        [Alembic ~=1.16] as Alembic
         [Docker Compose] as Docker
         [pgAdmin 4] as PgAdmin
+    }
+
+    rectangle "Testing" <<Category>> {
+        [pytest] as Pytest
+        [testcontainers ~=4.x\n(dev only)] as Testcontainers
     }
 
     rectangle "Developer Tooling" <<Category>> {
@@ -86,10 +93,16 @@ LakeraAPI ..> Python : HTTPS API usage
 
 LangChainPostgres ..> Psycopg : database driver
 LangChainPostgres ..> Postgres : vector storage
+SQLAlchemy ..> Psycopg : database driver
+SQLAlchemy ..> Postgres : evaluation schema (ORM)
+Alembic ..> SQLAlchemy : migration engine
 Postgres ..> Pgvector : vector extension
 Docker ..> Postgres : local service
 Docker ..> PgAdmin : local service
 Docker ..> GuardrailsService : optional local service
+
+Testcontainers ..> Postgres : spins up test DB
+Pytest ..> Testcontainers : persistence integration tests
 
 UV ..> Python : environment + dependency management
 

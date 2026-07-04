@@ -4,18 +4,53 @@ title Security Evaluation Tool - Conceptual Summary Flow
 
 actor User
 participant "CLI" as CLI
-participant "Run Summary" as RSummary
+participant "AnalysisService" as AService
+participant "TestRunRepository" as TRRepo
+participant "RunSummary" as RSummary
+participant "AnalysisRepository" as ARepo
+participant "Database\n(PostgreSQL)" as DB
 
-User -> CLI: summarize-run()
+== Primary path: DB-backed summary (--run-id) ==
+
+User -> CLI: summarize-run --run-id <uuid>
 activate CLI
-CLI -> RSummary: write_run_summary()
+CLI -> AService: summarize_and_store(run_id)
+activate AService
+AService -> TRRepo: find_by_id(run_id)
+activate TRRepo
+TRRepo -> DB: SELECT test_run + attacks + detections
+DB --> TRRepo: TestRunEntity
+TRRepo --> AService: TestRunEntity
+deactivate TRRepo
+AService -> AService: map entity → TestRunResult DTO
+AService -> RSummary: _build_from_dict(run_dict)
 activate RSummary
-RSummary -> RSummary: aggregate per\nchatbot/guardrail/\ncategory/technique
-RSummary -> RSummary: store JSON\nand CSV files
-RSummary --> CLI: write_run_summary: summary
+RSummary -> RSummary: aggregate per chatbot /\nguardrail / category / technique
+RSummary --> AService: summary dict
 deactivate RSummary
+AService -> ARepo: save(AnalysisRunEntity + SummaryRowEntities)
+activate ARepo
+ARepo -> DB: INSERT analysis_run + summary_row(s)
+DB --> ARepo: None
+ARepo --> AService: None
+deactivate ARepo
+AService --> CLI: summary
+deactivate AService
 CLI --> User: summarize-run: None
 deactivate CLI
 
+== Legacy path: file-based summary (--run / --output) ==
+
+User -> CLI: summarize-run --run <folder> --output <path>
+activate CLI
+CLI -> RSummary: write_run_summary(run_folder, output_path)
+activate RSummary
+RSummary -> RSummary: read testcase/*.json files
+RSummary -> RSummary: aggregate per chatbot /\nguardrail / category / technique
+RSummary -> RSummary: write JSON + CSV to output_path
+RSummary --> CLI: summary
+deactivate RSummary
+CLI --> User: summarize-run: None
+deactivate CLI
 
 @enduml

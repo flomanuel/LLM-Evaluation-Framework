@@ -181,8 +181,14 @@ package "testframework.cli" as cli_pkg {
 }
 
 package "testframework.reporting" as reporting_pkg {
+    class RunSummary {
+        +build(): Dict[str, Any]
+        +build_from_testcases(testcases: List[Dict]): Dict[str, Any]
+        +write(output_path: str | Path): Dict[str, Any]
+        {static} +_build_from_dict(run_dict, exclude_scanners, consider_chatbot_success): Dict[str, Any]
+    }
     class run_summary <<module>> {
-        {static} +write_run_summary(run_folder: str | Path, output_path: str | Path, exclude_scanners: bool, consider_chatbot_success: bool): Dict[str, Any]
+        {static} +write_run_summary(run_folder, output_path, ...): Dict[str, Any]
     }
 }
 
@@ -194,7 +200,6 @@ package "testframework.tests" as tests_pkg {
         {abstract} +setup_chatbots(): None
         {abstract} +get_test_cases(): List[BaseTestCase]
         +run(): TestRunResult
-        +store_test_run(test_run: TestRunResult): str
     }
 
     class DefaultTest extends Test {
@@ -542,6 +547,68 @@ package "testframework.custom_attack_techniques" as attack_techniques_pkg {
     }
 }
 
+package "testframework.persistence" as persistence_pkg {
+    class session <<module>> {
+        {static} Session: sessionmaker
+    }
+
+    package "entity" as entity_pkg {
+        class TestRunEntity <<MappedAsDataclass>> {
+            +id: UUID
+            +start_ts: datetime
+            +end_ts: datetime | None
+        }
+        class AttackEntity <<MappedAsDataclass>> {
+            +category: str
+            +severity: DbSeverity
+            +prompt_baseline: str
+            +prompt_enhanced: str
+        }
+        class AnalysisRunEntity <<MappedAsDataclass>> {
+            +id: int
+            +run_id: UUID
+            +exclude_scanners: bool
+        }
+        class SummaryRowEntity <<MappedAsDataclass>> {
+            +scope: str
+            +chatbot_name: str
+            +guardrail_name: str
+            +tp: int
+            +fp: int
+            +tn: int
+            +fn: int
+        }
+    }
+
+    package "repository" as persist_repo_pkg {
+        class TestRunRepository {
+            +find_by_id(run_id): TestRunEntity | None
+            +save(entity): None
+        }
+        class AnalysisRepository {
+            +save(entity): None
+        }
+        class mapper <<module>> {
+            {static} +run_result_to_entity(dto): TestRunEntity
+            {static} +run_result_from_entity(entity): TestRunResult
+        }
+    }
+
+    package "service" as persist_svc_pkg {
+        class TestRunService {
+            +save_run(run_result: TestRunResult): UUID
+        }
+        class AnalysisService {
+            +summarize_and_store(run_id, exclude_scanners, consider_chatbot_success): dict
+        }
+    }
+
+    class importer <<module>> {
+        {static} +import_runs(runs_dir, force, reanalyze): ImportStats
+        {static} +deserialize_run(data): TestRunResult
+    }
+}
+
 ' Layout hints for a compact two-column test-case area left of custom attack techniques.
 BaseTestCaseClass -[hidden]down-> BenignTestCase
 BaseTestCaseClass -[hidden]down-> ExcessiveAgencyTestCase
@@ -667,5 +734,25 @@ cli ..> DefaultTest
 cli ..> DocumentLoader
 cli ..> VectorStore
 cli ..> run_summary
+cli ..> AnalysisService
+cli ..> importer
+
+Test ..> TestRunService
+Test ..> AnalysisService
+
+TestRunService ..> TestRunRepository
+TestRunService ..> mapper
+AnalysisService ..> TestRunRepository
+AnalysisService ..> AnalysisRepository
+run_summary ..> RunSummary
+AnalysisService ..> RunSummary
+
+mapper ..> TestRunResult
+
+TestRunEntity *-- AttackEntity
+AnalysisRunEntity *-- SummaryRowEntity
+
+importer ..> TestRunService
+importer ..> AnalysisService
 
 @enduml

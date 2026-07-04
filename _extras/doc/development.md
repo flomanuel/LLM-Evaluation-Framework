@@ -30,7 +30,7 @@ uv run bandit -r testframework
 3. Start infrastructure containers via Docker Compose
 
 ```bash
-# Start postgres, pgadmin, and guardrails_ai (background)
+# Start postgres and pgadmin (background)
 docker compose up -d
 ```
 
@@ -66,13 +66,64 @@ Build the testframework image:
 docker compose build testframework
 ```
 
-Run any CLI command inside the container (results are written to host-mounted directories):
+Run CLI commands inside the container (results are written to host-mounted directories):
 ```bash
+# Apply DB migrations (first time and after upgrades)
+docker compose run --rm testframework migrate
+
+# Run the baseline test suite
 docker compose run --rm testframework run-baseline --results-dir _runs
+
+# Summarize a run by UUID (primary path — reads from and writes to the DB)
+docker compose run --rm testframework summarize-run --run-id <uuid>
+
+# Summarize from a legacy JSON run folder (secondary path)
 docker compose run --rm testframework summarize-run \
   --run _runs/<timestamp>_baseline \
   --output _runs/_outputs/summary.json
+
+# Import historical JSON run folders into the DB
+docker compose run --rm testframework import-runs --runs-dir _runs
 ```
+
+## Persistence layer
+
+Test results are stored in PostgreSQL under the `evaluation` schema (separate from the `public` pgvector schema used for RAG).
+
+### Package layout
+
+```
+testframework/persistence/
+  session.py          — SQLAlchemy sessionmaker; patched by test fixtures
+  importer.py         — import_runs(): walks _runs/*/result.json, tolerant deserializer
+  entity/             — SQLAlchemy 2.0 MappedAsDataclass ORM entities
+  repository/         — TestRunRepository, AnalysisRepository, mapper.py (DTO ↔ entity)
+  service/            — TestRunService (save run), AnalysisService (compute + store summary)
+  model/              — Pydantic v2 input models for a future API layer
+```
+
+### Migrations
+
+Managed with Alembic. The `alembic/env.py` targets the `evaluation` schema only and never touches `public`.
+
+```bash
+# Apply all pending migrations
+uv run llm-test-baseline migrate
+# or directly via Alembic
+uv run alembic upgrade head
+```
+
+### Importing historical runs
+
+JSON run folders under `_runs/` can be imported into the DB:
+
+```bash
+uv run llm-test-baseline import-runs --runs-dir _runs
+# --force      re-import runs that are already in the DB (deletes existing record first)
+# --no-reanalyze  skip computing analysis_run rows after import
+```
+
+The importer handles legacy enum formats (`"Category.ILLEGAL_ACTIVITY"`) and missing optional fields.
 
 ## One note on the architecture
 

@@ -10,7 +10,10 @@ participant "Attack Builder" as Builder
 participant "Attack List Enhancer" as Enhancer
 participant "Chatbot" as Chatbot
 participant "Evaluation" as Evaluation
-participant "Storage" as Storage
+participant "JSON Files" as FileStorage
+participant "TestRunService" as TRService
+participant "AnalysisService" as AService
+participant "Database\n(PostgreSQL)" as DB
 participant "Guardrail Runner" as GrRunner
 participant "Guardrail" as Guardrail
 
@@ -53,20 +56,37 @@ loop for each test_case in test_cases
             deactivate GrRunner
         end
     end
-    TestCase -> Storage: write_testcase(test_case)
-    activate Storage
-    Storage --> TestCase: write_testcase: None
-    deactivate Storage
+    TestCase -> FileStorage: write_testcase_json(test_case)
+    activate FileStorage
+    FileStorage --> TestCase: write_testcase_json: None
+    deactivate FileStorage
     TestCase --> TestRun: execute_test_case: None
     deactivate TestCase
 
 end
 
-TestRun -> Storage: write_run_results(run_results)
-activate Storage
-Storage --> TestRun: write_run_results: None
-deactivate Storage
-deactivate Storage
+TestRun -> FileStorage: write_result_json(run_results)
+activate FileStorage
+FileStorage --> TestRun: write_result_json: None
+deactivate FileStorage
+
+TestRun -> TRService: save_run(run_result)
+activate TRService
+TRService -> DB: INSERT test_run + attacks + detections
+DB --> TRService: run_id
+TRService --> TestRun: save_run: run_id
+deactivate TRService
+
+TestRun -> AService: summarize_and_store(run_id)
+activate AService
+AService -> DB: SELECT test_run by run_id
+DB --> AService: TestRunEntity
+AService -> AService: compute confusion matrix
+AService -> DB: INSERT analysis_run + summary_rows
+DB --> AService: None
+AService --> TestRun: summarize_and_store: summary
+deactivate AService
+
 TestRun --> CLI: start_run: persisted_run
 deactivate TestRun
 CLI --> User: run-baseline: None
