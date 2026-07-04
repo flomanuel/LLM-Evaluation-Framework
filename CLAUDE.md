@@ -6,6 +6,21 @@ A test framework for evaluating LLM architectures and guardrail applications.
 It generates adversarial attacks, runs them against chatbots and guardrails, and persists
 results to PostgreSQL for analysis. Originally a bachelor's thesis project; now a standalone tool.
 
+## Repository structure
+
+- `testframework/` — framework source code
+- `tests/` — unit and integration tests (external services mocked)
+- `_rag_documents/` — source PDFs for RAG evaluation scenarios
+- `_attack_documents/` — attack documents and adversarial fixtures
+- `_prompt_files/` — CSV prompt inputs
+- `_runs/` — generated run artifacts (JSON result files)
+- `_logs/` — log output
+- `_extras/` — supporting documentation and UML diagrams
+- `Dockerfile.guardrails` — Docker image for the Guardrails AI API server
+- `Dockerfile.testframework` — Docker image for the `llm-test-baseline` CLI
+- `docker-compose.yml` — orchestrates postgres, pgadmin, and testframework services
+- `alembic/` — migration scripts (targets the `evaluation` schema only)
+
 ## Key architecture decisions
 
 ### Persistence layer (`testframework/persistence/`)
@@ -80,6 +95,20 @@ Core data model lives in `testframework/models.py` (dataclasses).
 Enums live in `testframework/enums.py` (`Category`, `ChatbotName`, `Severity`, `CliArgs`).
 All model dataclasses use `@dataclass(eq=False, slots=True, kw_only=True)` — all constructor
 calls must use keyword arguments.
+
+## Development guidance
+
+- Keep changes scoped to the existing package structure in `testframework/`.
+- Prefer existing CLI and model abstractions over introducing new entry points.
+- Treat external integrations as boundary code; keep unit tests mocked rather than depending on live services.
+- Do not commit generated run data, local database state, secrets, or environment-specific artifacts.
+- Commit messages follow the Conventional Commits format.
+
+## Validation
+
+- For code changes, run the narrowest relevant pytest scope first.
+- Broaden to `uv run pytest tests/ -v` when shared behavior or public interfaces are affected.
+- If CLI behavior changes, validate the corresponding `llm-test-baseline` command path.
 
 ## Additional notes
 
