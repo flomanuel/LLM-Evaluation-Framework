@@ -16,6 +16,8 @@ RUN uv sync --frozen --no-dev --no-install-project
 
 # Copy source and install the project itself
 COPY testframework/ ./testframework/
+COPY alembic/ ./alembic/
+COPY alembic.ini ./alembic.ini
 RUN uv sync --frozen --no-dev
 
 
@@ -30,6 +32,8 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 COPY --from=builder /usr/local/bin/uv /usr/local/bin/uv
 COPY --from=builder /app/testframework /app/testframework
+COPY --from=builder /app/alembic /app/alembic
+COPY --from=builder /app/alembic.ini /app/alembic.ini
 COPY --from=builder /app/pyproject.toml /app/pyproject.toml
 COPY --from=ollama/ollama:latest /bin/ollama /usr/local/bin/ollama
 

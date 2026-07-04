@@ -33,7 +33,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # uncomment since the PyPi dependency is currently in quarantine
+  # the PyPi dependency is currently in quarantine
   #  guardrails_ai:
   #    build:
   #      context: .
@@ -54,6 +54,7 @@ services:
     environment:
       # Override host-specific values so they point to compose service names / container paths
       POSTGRES_HOST: postgres
+      POSTGRES_SCHEMA: ${POSTGRES_SCHEMA:-evaluation}
       HF_HOME: /root/.cache/huggingface
       OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
     volumes:

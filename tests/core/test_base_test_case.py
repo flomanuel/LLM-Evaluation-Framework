@@ -180,7 +180,6 @@ def test_find_metric_returns_custom_metric_otherwise():
 # store_results
 # ---------------------------------------------------------------------------
 
-def test_store_results_returns_none_when_run_folder_not_set():
+def test_store_results_is_noop():
     tc = _ConcreteTestCase()
-    tc.run_folder = None
     assert tc.store_results() is None

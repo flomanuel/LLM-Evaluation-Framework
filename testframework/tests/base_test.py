@@ -11,7 +11,8 @@ from time import perf_counter
 from uuid import uuid4
 from loguru import logger
 from testframework.models import TestRunResult, TestRunTimestamp, TestCaseResult
-from testframework.storage import save_test_run, get_run_folder
+from testframework.persistence.service.analysis_service import AnalysisService
+from testframework.persistence.service.test_run_service import TestRunService
 from testframework.testcases.base import BaseTestCase
 
 
@@ -22,6 +23,7 @@ class Test(ABC):
         self.name = name
         self.results_dir = results_dir or Path("_runs")
         self.test_case_results: list[TestCaseResult] = []
+        self._run_service = TestRunService()
 
     @abstractmethod
     def setup_chatbots(self) -> None:
@@ -44,25 +46,39 @@ class Test(ABC):
             self.results_dir,
         )
 
-        run_folder = get_run_folder(run_id, start, self.results_dir)
-        run_folder.mkdir(parents=True, exist_ok=True)
-        logger.debug("Created run folder for run_id={}: {}", run_id, run_folder)
+        try:
+            self._run_service.start_run(run_id, start)
+            logger.debug("Persisted test_run row for run_id={}", run_id)
+        except Exception as e:
+            logger.warning("Could not persist run start (DB unavailable?): {}", e)
 
         self.setup_chatbots()
         logger.debug("Chatbot setup completed for run_id={}", run_id)
-        self._execute_test_cases(run_folder)
+        self._execute_test_cases(run_id)
         end = datetime.now(timezone.utc)
+
+        try:
+            self._run_service.finalize_run(run_id, end)
+            logger.debug("Finalized test_run row for run_id={}", run_id)
+        except Exception as e:
+            logger.warning("Could not finalize run (DB unavailable?): {}", e)
+
+        try:
+            AnalysisService().summarize_and_store(run_id)
+            logger.debug("Persisted analysis for run_id={}", run_id)
+        except Exception as e:
+            logger.warning("Could not persist analysis (DB unavailable?): {}", e)
+
         tr = TestRunResult(
             run_id=run_id,
             timestamp=TestRunTimestamp(start=start, end=end),
             attack_categories=self.test_case_results,
         )
-        self.store_test_run(tr)
         logger.info("Test run completed: {} (duration: {})", self.name, end - start)
         return tr
 
-    def _execute_test_cases(self, run_folder: Path) -> None:
-        """Execute all test cases and store results."""
+    def _execute_test_cases(self, run_id: str) -> None:
+        """Execute all test cases and persist each result incrementally."""
         test_cases = self.get_test_cases()
         total_test_cases = len(test_cases)
         logger.info("Executing {} test case(s)", total_test_cases)
@@ -75,9 +91,17 @@ class Test(ABC):
                 tc_identifier,
             )
             case_started = perf_counter()
-            tc.run_folder = run_folder
             tc_results = tc.execute()
             self.test_case_results.append(tc_results)
+            try:
+                self._run_service.persist_test_case(run_id, tc_results)
+                logger.debug("Persisted test case '{}' for run_id={}", tc_identifier, run_id)
+            except Exception as e:
+                logger.warning(
+                    "Could not persist test case '{}' (DB unavailable?): {}",
+                    tc_identifier,
+                    e,
+                )
             logger.opt(lazy=True).info(
                 "Completed test case {}/{}: {} (attacks={}, duration={:.2f}s)",
                 lambda current_index=index: current_index,
@@ -86,12 +110,6 @@ class Test(ABC):
                 lambda results=tc_results: len(results.attacks),
                 lambda started=case_started: perf_counter() - started,
             )
-
-    def store_test_run(self, test_run: TestRunResult) -> str:
-        """Save the test run to a file."""
-        path = save_test_run(test_run, base_dir=self.results_dir)
-        logger.debug("Test run saved to: {}", path)
-        return test_run.run_id
 
     @staticmethod
     def _format_test_case_identifier(test_case: BaseTestCase) -> str:

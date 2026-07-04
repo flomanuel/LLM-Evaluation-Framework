@@ -76,8 +76,8 @@ class GcpModelArmor(BaseGuardrail):
         if not payload or not payload.strip():
             return DetectionElement.from_error(
                 TestErrorInfo(
-                    LLMErrorType.UNKNOWN,
-                    "Skipping evaluation of GCP Model Armor, since the model response is empty.",
+                    error_type=LLMErrorType.UNKNOWN,
+                    message="Skipping evaluation of GCP Model Armor, since the model response is empty.",
                 )
             )
 
@@ -144,7 +144,7 @@ class GcpModelArmor(BaseGuardrail):
             )
 
         if warning_messages:
-            error = TestErrorInfo(LLMErrorType.UNKNOWN, " | ".join(warning_messages))
+            error = TestErrorInfo(error_type=LLMErrorType.UNKNOWN, message=" | ".join(warning_messages))
         else:
             error = None
 

@@ -26,7 +26,7 @@ class LLMErrorType(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class TestErrorInfo:
     """Information about an LLM call error."""
     error_type: LLMErrorType
@@ -40,46 +40,46 @@ class TestErrorInfo:
         exc_message = str(exc).lower()
 
         if isinstance(exc, (TimeoutError, APITimeoutError, httpx.TimeoutException)):
-            return cls(LLMErrorType.TIMEOUT, str(exc))
+            return cls(error_type=LLMErrorType.TIMEOUT, message=str(exc))
         if "timed out" in exc_message or "timeout" in exc_message:
-            return cls(LLMErrorType.TIMEOUT, str(exc))
+            return cls(error_type=LLMErrorType.TIMEOUT, message=str(exc))
 
         if "deepeval" in exc_module or "openai" in exc_module:
-            return cls(LLMErrorType.GENERATION_ERROR, str(exc))
+            return cls(error_type=LLMErrorType.GENERATION_ERROR, message=str(exc))
         if isinstance(exc, ConnectionError):
-            return cls(LLMErrorType.CONNECTION_ERROR, str(exc))
+            return cls(error_type=LLMErrorType.CONNECTION_ERROR, message=str(exc))
 
-        return cls(LLMErrorType.UNKNOWN, str(exc))
+        return cls(error_type=LLMErrorType.UNKNOWN, message=str(exc))
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class TimestampRange:
     """Timestamp range for the tests."""
     start: datetime
     end: datetime
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class RagContext:
     """Context for RAG retrieval."""
     embedding_model: str | None
     nodes: list[str]
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class DocumentContext:
     """Context for document retrieval."""
     document: str
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class PromptVariants:
     """Base prompt and final prompt/attack variant used at runtime."""
     baseline: str
     enhanced: str
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class ToolInfo:
     """Information about a tool call."""
     tool_called: bool
@@ -87,7 +87,7 @@ class ToolInfo:
     tool_args: dict[str, Any] | str | None = None
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class ChatbotResponse:
     """Response from a chatbot."""
     prompt: str
@@ -129,7 +129,7 @@ class ChatbotResponse:
         )
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class ChatbotResponseEvaluation:
     """Evaluation result of a chatbot response."""
     chatbot_response: ChatbotResponse
@@ -158,7 +158,7 @@ class ChatbotResponseEvaluation:
         )
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class ScannerDetail:
     """Detailed information about a guardrail's scanner result."""
     name: str
@@ -168,7 +168,7 @@ class ScannerDetail:
     sanitized_input: str
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class DetectionElement:
     """Container for a detection result of a guardrail."""
     success: bool
@@ -198,20 +198,20 @@ class DetectionElement:
         )
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class PromptHardeningDetectionElement(DetectionElement):
     """Detection element for prompt hardening."""
     chatbot_response: ChatbotResponse | None = None
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class DetectionResult:
     """Container for the detection results of a guardrail for a specific chatbot."""
     input_detection: DetectionElement
     output_detection: DetectionElement
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class EnhancedAttack:
     """Container for a base prompt and one enhanced prompt/attack variant."""
     attack_case: RTTestCase
@@ -226,7 +226,7 @@ class EnhancedAttack:
         return self.error is not None
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class AttackEnhancementResult:
     """Summary of all enhanced attacks."""
     enhanced_attacks: list[EnhancedAttack]
@@ -251,7 +251,7 @@ class AttackEnhancementResult:
         )
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class Attack:
     """One executed prompt/attack variant with responses and guardrail results."""
     category: str
@@ -314,9 +314,9 @@ class Attack:
         )
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class TestCaseResult:
-    @dataclass
+    @dataclass(eq=False, slots=True, kw_only=True)
     class ModelInfo:
         """Model used for generating the attacks and techniques."""
         # todo: move model info outside of nested dataclass structure
@@ -354,14 +354,14 @@ class TestCaseResult:
         return count
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class TestRunTimestamp:
     """Timestamps for the whole test run."""
     start: datetime
     end: datetime
 
 
-@dataclass
+@dataclass(eq=False, slots=True, kw_only=True)
 class TestRunResult:
     """Result of a test run."""
     run_id: str

@@ -62,14 +62,18 @@ class RunSummary:
 
     def build(self) -> dict[str, Any]:
         """Build the per-model summary from testcase JSON files in a run folder."""
-        total_summary: dict[str, Any] = {}
-
-        for testcase_path in sorted(self.testcase_dir.glob(
-                "*.json")):  # sorted: always read files in the same order, no matter what filesystem is given -> reproducibility / lower risk of random effects
+        testcases: list[dict[str, Any]] = []
+        for testcase_path in sorted(self.testcase_dir.glob("*.json")):
             with testcase_path.open("r", encoding="utf-8") as file_handle:
                 testcase_data = json.load(file_handle)
+            testcases.append(testcase_data)
+        return self.build_from_testcases(testcases)
 
-            default_category = testcase_data.get("category") or testcase_path.stem
+    def build_from_testcases(self, testcases: list[dict[str, Any]]) -> dict[str, Any]:
+        """Build the per-model summary from a list of testcase dicts (same shape as JSON files)."""
+        total_summary: dict[str, Any] = {}
+        for testcase_data in testcases:
+            default_category = testcase_data.get("category") or ""
             for _, attack_data in testcase_data["attacks"].items():
                 attack_category = attack_data.get("category") or default_category
                 techniques = self._normalize_techniques(attack_data.get("techniques"))
@@ -134,18 +138,14 @@ class RunSummary:
                             for scanner_detail in detection.get("scanner_details", []):
                                 scanner_name = scanner_detail["name"]
                                 if guardrail_name == LAKERA:
-                                    # collapse all sub-category scanners into one category
                                     scanner_name = scanner_name.split('/')[0]
                                 if self.exclude_scanners and f"{guardrail_name}_{scanner_name}" in EXCLUDED_SCANNERS:
                                     continue
                                 was_detected = not scanner_detail["is_valid"]
                                 stage_results = RunSummary._ensure_node_key_exists(scanner_results, scanner_name, {})
                                 stage_result = stage_results.get(stage_name, False)
-                                # since e.g., all PII scaner subcategories for Lakera are listed as different entries but aggregated into one dict entry
-                                # true: harm detected / false: no harm detected
                                 stage_results[stage_name] = (stage_result or was_detected)
 
-                        # success describes in this context: true -> no harm detexted / false -> harm detected
                         input_success = input_detection[SUCCESS_KEY]
                         output_success = output_detection[SUCCESS_KEY]
                         if self.exclude_scanners:
@@ -188,6 +188,22 @@ class RunSummary:
                         )
 
         return total_summary
+
+    @classmethod
+    def _build_from_dict(
+        cls,
+        run_dict: dict[str, Any],
+        exclude_scanners: bool = False,
+        consider_chatbot_success: bool = False,
+    ) -> dict[str, Any]:
+        """Build a summary from a serialized TestRunResult dict (used by AnalysisService)."""
+        summary_obj = cls.__new__(cls)
+        summary_obj.run_folder = None
+        summary_obj.testcase_dir = None
+        summary_obj.exclude_scanners = exclude_scanners
+        summary_obj.consider_chatbot_success = consider_chatbot_success
+        testcases = run_dict.get("attack_categories", [])
+        return summary_obj.build_from_testcases(testcases)
 
     @staticmethod
     def _normalize_techniques(raw_techniques: Any) -> list[str]:

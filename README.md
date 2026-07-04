@@ -13,8 +13,9 @@ This repository contains a **test framework for evaluating LLM-architectures** a
   `GuardrailRunner`, `BaseGuardrail`, and `ChatbotStore`.
 - **Adversarial attack generation with an internal red-team layer**: Uses project-owned vulnerability builders,
   custom CSV-based inputs, and single-turn attack strategies to generate and refine prompts.
-- **Structured result artifacts**: Stores each test run as JSON; a separate summarization script can aggregate runs into
-  a consolidated report.
+- **PostgreSQL persistence**: Test runs, attack results, guardrail evaluations, and confusion-matrix summaries are
+  stored in a dedicated `evaluation` schema via SQLAlchemy 2.0 + Alembic migrations. Historical JSON runs can be
+  imported with `import-runs`.
 - **CLI-first workflow**: Run evaluations and post-processing through dedicated CLI commands.
 - **Extensible framework**
     - Integrate additional attack data sources \(APIs, CSV, or custom providers\).
@@ -46,22 +47,37 @@ cp .env.template .env
 # Edit .env and fill in your values.
 ```
 
-3. Start the infrastructure (PostgreSQL + pgAdmin + Guardrails AI):
+3. Start the infrastructure (PostgreSQL + pgAdmin):
 
 ```bash
 docker compose up -d
 ```
 
-4. Run the baseline test suite:
+4. Apply database migrations (first time and after upgrades):
+
+```bash
+uv run alembic upgrade head
+```
+
+5. Run the baseline test suite:
 
 ```bash
 uv run llm-test-baseline run-baseline
 ```
 
-5. Run the summary script:
+Each completed run is automatically persisted to the database and a confusion-matrix summary
+is computed and stored.
+
+6. (Optional) Summarize a specific run by ID:
 
 ```bash
-uv run llm-test-baseline summarize-run --run <path_to_run_folder> --output <path_to_output.json>
+uv run llm-test-baseline summarize-run --run-id <uuid>
+```
+
+7. (Optional) Import historical JSON runs from `_runs/`:
+
+```bash
+uv run llm-test-baseline import-runs --runs-dir _runs
 ```
 
 ### Docker (fully containerized)
@@ -76,16 +92,20 @@ docker compose up -d
 # Build the testframework image
 docker compose build testframework
 
+# Apply database migrations (first time and after upgrades)
+docker compose run --rm testframework migrate
+
 # Populate the vector store
 docker compose run --rm testframework populate-db --documents-dir _rag_documents
 
-# Run the baseline test suite
+# Run the baseline test suite (results are persisted to DB automatically)
 docker compose run --rm testframework run-baseline --results-dir _runs
 
-# Summarise a completed run
-docker compose run --rm testframework summarize-run \
-  --run _runs/<name_run_folder> \
-  --output _runs/_outputs/summary.json
+# Summarise a run by UUID (reads from and writes to the DB)
+docker compose run --rm testframework summarize-run --run-id <uuid>
+
+# Import historical JSON runs from _runs/ into the DB
+docker compose run --rm testframework import-runs --runs-dir _runs
 ```
 
 # Running the unit tests
@@ -94,16 +114,26 @@ The unit test suite lives in the `tests/` directory and uses [pytest](https://do
 All external services (Ollama, OpenAI, GCP, Lakera, LLM Guard, LlamaFirewall) are mocked — no real credentials or
 running models are required.
 
+**Note:** Tests under `tests/persistence/` use [Testcontainers](https://testcontainers-python.readthedocs.io/) to spin
+up a real Postgres instance automatically. A working Docker daemon is required to run these tests. If Docker is
+unavailable, set `POSTGRES_TEST_URL` to an existing PostgreSQL connection URL to skip container startup.
+
 Run all tests:
 
 ```bash
 uv run pytest tests/ -v
 ```
 
+Run only the persistence integration tests:
+
+```bash
+uv run pytest tests/persistence/ -v
+```
+
 Run a single file:
 
 ```bash
-uv run pytest tests/test_models.py -v
+uv run pytest tests/reporting/test_run_summary.py -v
 ```
 
 Run tests matching a keyword:

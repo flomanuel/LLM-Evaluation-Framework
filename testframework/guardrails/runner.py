@@ -90,7 +90,8 @@ class GuardrailRunner:
                                                                    prompt=full_attack,
                                                                    tool_info=tool_info)
                 result[key][bot_name] = DetectionResult(
-                    enhanced_attack_evaluation, response_evaluation
+                    input_detection=enhanced_attack_evaluation,
+                    output_detection=response_evaluation,
                 )
             logger.opt(lazy=True).info(
                 "Completed guardrail '{}' (duration={:.2f}s)",

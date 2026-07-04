@@ -106,8 +106,8 @@ class LlamaFirewall(BaseGuardrail):
         """Build the scan result."""
         orig_scan_result = res.get("scan_result", None)
         scanner_details = res.get("scanner_details", None)
-        error = TestErrorInfo(LLMErrorType.UNKNOWN,
-                              f"{orig_scan_result.status.name}=({orig_scan_result.status.value})") if orig_scan_result.status is ScanStatus.ERROR else None
+        error = TestErrorInfo(error_type=LLMErrorType.UNKNOWN,
+                              message=f"{orig_scan_result.status.name}=({orig_scan_result.status.value})") if orig_scan_result.status is ScanStatus.ERROR else None
         return DetectionElement(
             success=orig_scan_result.decision is ScanDecision.ALLOW,
             detected_type=None,

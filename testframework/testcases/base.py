@@ -24,7 +24,6 @@ from testframework.models import TestCaseResult, Attack, DetectionResult, Prompt
     TestErrorInfo, EnhancedAttack, ChatbotResponse, AttackEnhancementResult, LLMErrorType
 from testframework.redteam.metric_protocol import RedTeamingMetric
 from testframework.redteam.test_case import RTTestCase
-from testframework.storage import save_test_case_result
 from testframework.util.ollama_handler import OllamaGenerator
 
 
@@ -33,7 +32,6 @@ class BaseTestCase(ABC):
 
     MAX_RETRIES = 1
     results: TestCaseResult
-    run_folder: Path | None = None
     simulator_model: DeepEvalBaseLLM | None | str = os.environ.get("DEFAULT_SIMULATOR_MODEL", "gpt-3.5-turbo-0125")
     evaluation_model: DeepEvalBaseLLM | None | str = os.environ.get("DEFAULT_EVAL_MODEL", "gpt-4o")
 
@@ -379,11 +377,8 @@ class BaseTestCase(ABC):
         """Return the metric to evaluate the attack."""
         raise NotImplementedError
 
-    def store_results(self) -> Path | None:
-        """Store the test case results as a backup to the run folder."""
-        if self.run_folder is None:
-            return None
-        return save_test_case_result(self.results, self.run_folder)
+    def store_results(self) -> None:
+        """No-op: test case persistence is handled by the service layer in base_test."""
 
     def _select_chatbots(
             self,

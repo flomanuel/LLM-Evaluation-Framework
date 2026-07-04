@@ -53,7 +53,13 @@ class CliArgs(str, Enum):
     COLLECTION_NAME = "--collection-name"
     SUMMARIZE_RUN = "summarize-run"
     RUN = "--run"
+    RUN_ID = "--run-id"
     OUTPUT = "--output"
     EXCLUDE_SCANNERS = "--exclude-scanners"
     # chatbot success: model alignment, evaluated by LLM-as-a-Judge
     CONSIDER_CHATBOT_SUCCESS = "--consider-chatbot-success"
+    MIGRATE = "migrate"
+    IMPORT_RUNS = "import-runs"
+    RUNS_DIR = "--runs-dir"
+    FORCE = "--force"
+    NO_REANALYZE = "--no-reanalyze"

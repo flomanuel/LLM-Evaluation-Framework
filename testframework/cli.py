@@ -14,6 +14,8 @@ from loguru import logger
 
 from testframework.chatbots import VectorStore, DocumentLoader
 from testframework.enums import CliArgs
+from testframework.persistence.importer import import_runs
+from testframework.persistence.service.analysis_service import AnalysisService
 from testframework.reporting import write_run_summary
 from testframework.tests.default_test import DefaultTest
 
@@ -92,18 +94,52 @@ def main() -> None:
 
         logger.info("Successfully ingested {} document chunks into the vector store", len(ids))
 
-    elif args.command == CliArgs.SUMMARIZE_RUN.value:
-        logger.info("Summarizing run folder '{}'", args.run)
+    elif args.command == CliArgs.MIGRATE.value:
+        from alembic import command as alembic_command
+        from alembic.config import Config as AlembicConfig
+        alembic_cfg = AlembicConfig("alembic.ini")
+        alembic_command.upgrade(alembic_cfg, "head")
+        logger.info("Database migration completed successfully")
 
-        if args.output is not None:
+    elif args.command == CliArgs.IMPORT_RUNS.value:
+        runs_dir = Path(args.runs_dir)
+        stats = import_runs(
+            runs_dir=runs_dir,
+            force=args.force,
+            reanalyze=not args.no_reanalyze,
+        )
+        logger.info(
+            "Import complete: imported={}, skipped={}, failed={}",
+            stats.imported,
+            stats.skipped,
+            stats.failed,
+        )
+
+    elif args.command == CliArgs.SUMMARIZE_RUN.value:
+        run_id = getattr(args, "run_id", None)
+        run_folder = getattr(args, "run", None)
+
+        if run_id:
+            logger.info("Summarizing run '{}' from DB", run_id)
+            AnalysisService().summarize_and_store(
+                run_id,
+                exclude_scanners=args.exclude_scanners,
+                consider_chatbot_success=args.consider_chatbot_success,
+            )
+            logger.info("Analysis persisted for run_id={}", run_id)
+        elif run_folder and args.output:
+            logger.info("Summarizing run folder '{}' (legacy JSON path)", run_folder)
             output_path = Path(args.output)
             write_run_summary(
-                run_folder=args.run,
+                run_folder=run_folder,
                 output_path=output_path,
                 exclude_scanners=args.exclude_scanners,
                 consider_chatbot_success=args.consider_chatbot_success,
             )
             logger.info("Run summary written to {}", output_path)
+        else:
+            logger.error("Provide either --run-id or both --run and --output")
+            sys.exit(1)
 
 
 def add_arguments(subparsers: _SubParsersAction):
@@ -149,21 +185,53 @@ def add_arguments(subparsers: _SubParsersAction):
         help="Name of the vector store collection (default: rag_documents).",
     )
 
+    subparsers.add_parser(
+        CliArgs.MIGRATE.value,
+        help="Apply pending Alembic migrations (alembic upgrade head).",
+    )
+
+    import_runs_parser = subparsers.add_parser(
+        CliArgs.IMPORT_RUNS.value,
+        help="Import historical _runs/*/result.json files into the DB.",
+    )
+    import_runs_parser.add_argument(
+        CliArgs.RUNS_DIR.value,
+        type=str,
+        default="_runs",
+        help="Directory containing run subdirectories (default: _runs).",
+    )
+    import_runs_parser.add_argument(
+        CliArgs.FORCE.value,
+        action="store_true",
+        help="Re-import runs that already exist in the DB (deletes existing record first).",
+    )
+    import_runs_parser.add_argument(
+        CliArgs.NO_REANALYZE.value,
+        action="store_true",
+        help="Skip creating analysis_run rows after import.",
+    )
+
     summarize_run_parser = subparsers.add_parser(
         CliArgs.SUMMARIZE_RUN.value,
         help="Summarize a persisted run into per-model confusion matrices.",
     )
     summarize_run_parser.add_argument(
+        CliArgs.RUN_ID.value,
+        type=str,
+        default=None,
+        help="UUID of the run to summarize (reads from and writes to the DB).",
+    )
+    summarize_run_parser.add_argument(
         CliArgs.RUN.value,
-        required=True,
-        help="Path to the run folder containing the testcase directory.",
+        type=str,
+        default=None,
+        help="[Legacy] Path to the run folder containing the testcase directory.",
     )
     summarize_run_parser.add_argument(
         CliArgs.OUTPUT.value,
         type=str,
-        required=True,
         default=None,
-        help="Optional output path for the generated summary JSON.",
+        help="[Legacy] Output path for the generated summary JSON (used with --run).",
     )
     summarize_run_parser.add_argument(
         CliArgs.EXCLUDE_SCANNERS.value,
