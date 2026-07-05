@@ -99,7 +99,7 @@ testframework/persistence/
   entity/             — SQLAlchemy 2.0 MappedAsDataclass ORM entities
   repository/         — TestRunRepository, AnalysisRepository, mapper.py (DTO ↔ entity)
   service/            — TestRunService (save run), AnalysisService (compute + store summary)
-  model/              — Pydantic v2 input models for a future API layer
+  model/              — Pydantic v2 input models used by the API layer (each has to_entity())
 ```
 
 ### Migrations
@@ -124,6 +124,86 @@ uv run llm-test-baseline import-runs --runs-dir _runs
 ```
 
 The importer handles legacy enum formats (`"Category.ILLEGAL_ACTIVITY"`) and missing optional fields.
+
+## REST API
+
+The framework functionality is also exposed as a FastAPI REST API under `/api/v1`, mounted
+on top of the same services the CLI uses (`TestRunService`, `AnalysisService`) — no separate
+business logic.
+
+### Package layout
+
+```
+testframework/api/
+  app.py                       — create_app() factory; module-level `app = create_app()`
+  asgi_server.py               — run() starts uvicorn ("testframework.api:app")
+  constants.py                 — ETAG / IF_MATCH / IF_NONE_MATCH header names
+  dependencies.py               — ExistingRun / ExistingRunId shared Depends (404 guard)
+  errors.py                     — NotFoundError (404), RunAlreadyRunningError (409)
+  page.py                       — Pageable / Page / PageMeta pagination helpers
+  router/
+    health_router.py               — GET /health/liveness, /health/readiness
+    test_run_read_router.py        — GET endpoints (list, run, status, test-cases, analyses,
+                                      analyses/export)
+    test_run_write_router.py       — POST /test-runs (async), DELETE /test-runs/{run_id}
+testframework/reporting/analysis_csv.py — CSV/ZIP reconstruction for the analyses/export endpoint
+```
+
+### Serving locally
+
+```bash
+uv run llm-test-baseline serve
+# or directly:
+uv run uvicorn testframework.api:app --host 127.0.0.1 --port 8000
+```
+
+Env vars: `API_HOST` (default `127.0.0.1`, must be `0.0.0.0` in a container),
+`API_PORT` (default `8000`), `CORS_ALLOW_ORIGINS` (comma-separated frontend origins).
+Interactive OpenAPI/Swagger docs are served at `/docs`, the raw schema at `/openapi.json`.
+
+### Serving via Docker Compose
+
+Unlike the one-shot `testframework` service, `api` is a long-running service and is **not**
+under `profiles: [run]`, so it starts with a plain `docker compose up -d`:
+
+```bash
+docker compose up -d api
+curl http://localhost:8000/api/v1/health/liveness
+```
+
+### Route table
+
+| Method | Path                                              | Purpose                                                    |
+|--------|---------------------------------------------------|-------------------------------------------------------------|
+| GET    | `/api/v1/health/liveness`                          | Liveness probe                                              |
+| GET    | `/api/v1/health/readiness`                         | Readiness — checks `postgres_eval` connectivity             |
+| GET    | `/api/v1/test-runs`                                | Paginated run index; filter by `status`, `start_after/before` |
+| POST   | `/api/v1/test-runs`                                | Start a new baseline run (async, `202` + `Location`/`ETag`) |
+| GET    | `/api/v1/test-runs/{run_id}`                       | Full run (strong `ETag`, `304` support)                     |
+| DELETE | `/api/v1/test-runs/{run_id}`                       | Delete a run and everything attached to it                  |
+| GET    | `/api/v1/test-runs/{run_id}/status`                | Lightweight lifecycle status (poll after `POST`)             |
+| GET    | `/api/v1/test-runs/{run_id}/test-cases`            | Paginated test-case data                                    |
+| GET    | `/api/v1/test-runs/{run_id}/test-cases/{id}`       | A single test case                                           |
+| GET    | `/api/v1/test-runs/{run_id}/analyses`              | Both stored analysis variants                                |
+| GET    | `/api/v1/test-runs/{run_id}/analyses/{id}`         | A single analysis (strong, stable `ETag`)                    |
+| GET    | `/api/v1/test-runs/{run_id}/analyses/export`       | Download analyses as a ZIP of per-model `summary.csv` files  |
+
+### Design notes
+
+- **Conditional GETs**: `TestRunEntity.version` / `AnalysisRunEntity.version` are real
+  SQLAlchemy `version_id_col`s (auto-incremented on every UPDATE). Single-resource GET
+  endpoints emit `ETag: "<version>"`, strip `version` from the JSON body, and honor
+  `If-None-Match` with `304`. An analysis is never updated after creation, so its ETag is
+  stable — ideal for caching.
+- **Async run start**: `POST /test-runs` pre-inserts the `test_run` row (status `pending`)
+  so it can return a real `run_id` immediately, then hands the actual run off to FastAPI
+  `BackgroundTasks`. `TestRunService.start_run` is idempotent, so the background job's own
+  call to it (inside `Test.run()`) is a safe no-op. Only one run may be `pending`/`running`
+  at a time (`TestRunService.has_active_run()`) — a second `POST` gets `409`.
+- **DTOs, not Pydantic response models**: every read endpoint returns
+  `json.loads(json.dumps(dataclasses.asdict(dto), default=str))`, the same serialization
+  idiom `storage.py` already uses, while still declaring `response_model=<DTO>` so the
+  OpenAPI schema documents the real payload shape.
 
 ## One note on the architecture
 

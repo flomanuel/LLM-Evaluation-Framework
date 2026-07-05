@@ -115,6 +115,11 @@ def main() -> None:
             stats.failed,
         )
 
+    elif args.command == CliArgs.SERVE.value:
+        from testframework.api.asgi_server import run as run_api
+        logger.info("Starting REST API server")
+        run_api()
+
     elif args.command == CliArgs.SUMMARIZE_RUN.value:
         run_id = getattr(args, "run_id", None)
         run_folder = getattr(args, "run", None)
@@ -209,6 +214,11 @@ def add_arguments(subparsers: _SubParsersAction):
         CliArgs.NO_REANALYZE.value,
         action="store_true",
         help="Skip creating analysis_run rows after import.",
+    )
+
+    subparsers.add_parser(
+        CliArgs.SERVE.value,
+        help="Start the REST API server (uvicorn).",
     )
 
     summarize_run_parser = subparsers.add_parser(

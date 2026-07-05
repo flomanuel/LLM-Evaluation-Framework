@@ -18,6 +18,11 @@ rectangle "Project Technology Stack" {
         [loguru ~=0.7.0] as Loguru
     }
 
+    rectangle "REST API" <<Category>> {
+        [FastAPI] as FastAPI
+        [uvicorn (standard) >=0.34.0] as Uvicorn
+    }
+
     rectangle "Attack Generation & Evaluation" <<Category>> {
         [deepteam ~=1.0.6] as DeepTeam
         [deepeval ~=3.8.8] as DeepEval
@@ -73,6 +78,11 @@ rectangle "Project Technology Stack" {
 Python ..> Argparse : CLI parsing
 Python ..> Dotenv : env loading
 Python ..> Loguru : logging
+
+FastAPI ..> Uvicorn : ASGI server
+FastAPI ..> SQLAlchemy : reuses TestRunService / AnalysisService
+Uvicorn ..> Python : "testframework.api:app"
+Docker ..> FastAPI : optional long-running "api" service
 
 DeepTeam ..> DeepEval : metrics / model abstractions
 DeepEval ..> Ollama : local simulator option

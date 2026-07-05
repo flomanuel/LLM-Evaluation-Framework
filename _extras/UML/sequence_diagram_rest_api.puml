@@ -1,0 +1,118 @@
+@startuml
+autonumber
+title Security Evaluation Tool - REST API Run Flow (W1 async start -> R3 poll -> R2 read -> W2 delete)
+
+actor Client
+participant "FastAPI\n(test_run_write_router)" as WriteRouter
+participant "FastAPI\n(test_run_read_router)" as ReadRouter
+participant "BackgroundTasks" as BgTasks
+participant "TestRunService" as TRService
+participant "AnalysisService" as AService
+participant "Test\n(DefaultTest)" as TestRun
+participant "Database\n(PostgreSQL)" as DB
+
+== W1: start a run (async) ==
+
+Client -> WriteRouter: POST /api/v1/test-runs
+activate WriteRouter
+WriteRouter -> TRService: has_active_run()
+activate TRService
+TRService -> DB: SELECT test_run WHERE status IN (pending, running)
+DB --> TRService: none found
+TRService --> WriteRouter: has_active_run: False
+deactivate TRService
+
+WriteRouter -> TRService: start_run(run_id, now)
+activate TRService
+TRService -> DB: INSERT test_run (status=pending, version=1)
+DB --> TRService: version=1
+TRService --> WriteRouter: start_run: version=1
+deactivate TRService
+
+WriteRouter -> BgTasks: add_task(_execute_run, run_id, results_dir)
+WriteRouter --> Client: 202 Accepted\nLocation: /test-runs/{run_id}\nETag: "1"
+deactivate WriteRouter
+
+... response already sent; background task now runs in the threadpool ...
+
+BgTasks -> TRService: update_status(run_id, RUNNING)
+activate TRService
+TRService -> DB: UPDATE test_run SET status=running (version -> 2)
+deactivate TRService
+
+BgTasks -> TestRun: run()
+activate TestRun
+TestRun -> TRService: start_run(run_id, start)
+activate TRService
+TRService -> DB: SELECT test_run WHERE run_id=?
+DB --> TRService: existing row found
+TRService --> TestRun: start_run: version (no-op, idempotent)
+deactivate TRService
+
+TestRun -> TestRun: execute test cases\n(chatbots + guardrails)
+TestRun -> TRService: persist_test_case(run_id, test_case) [per case]
+
+TestRun -> TRService: finalize_run(run_id, end, status=COMPLETED)
+activate TRService
+TRService -> DB: UPDATE test_run SET end_ts, status=completed (version -> 3)
+deactivate TRService
+
+loop consider_chatbot_success in (True, False)
+    TestRun -> AService: summarize_and_store(run_id, exclude_scanners=True, consider_chatbot_success)
+    activate AService
+    AService -> DB: INSERT analysis_run + summary_row(s)
+    deactivate AService
+end
+deactivate TestRun
+
+note over BgTasks, TRService
+  On an unhandled exception from TestRun.run(), the background
+  wrapper itself calls finalize_run(..., status=FAILED, status_error=str(e)),
+  since Test.run() does not catch execution-level errors.
+end note
+
+== R3: poll status ==
+
+Client -> ReadRouter: GET /api/v1/test-runs/{run_id}/status
+activate ReadRouter
+ReadRouter -> TRService: get_status(run_id)
+activate TRService
+TRService -> DB: SELECT test_run (shallow, no aggregate)
+DB --> TRService: TestRunEntity
+TRService --> ReadRouter: TestRunStatusResult(status=completed, version=3)
+deactivate TRService
+ReadRouter --> Client: 200 OK {status: "completed", ...}
+deactivate ReadRouter
+
+== R2: read the full run (conditional GET) ==
+
+Client -> ReadRouter: GET /api/v1/test-runs/{run_id}\nIf-None-Match: "3"
+activate ReadRouter
+ReadRouter -> TRService: get_run(run_id)
+activate TRService
+TRService -> DB: SELECT test_run + test_cases + attacks + ... (full aggregate)
+DB --> TRService: TestRunEntity
+TRService --> ReadRouter: TestRunResult(version=3)
+deactivate TRService
+ReadRouter -> ReadRouter: int(If-None-Match) == run.version?
+ReadRouter --> Client: 304 Not Modified
+deactivate ReadRouter
+
+== W2: delete the run ==
+
+Client -> WriteRouter: DELETE /api/v1/test-runs/{run_id}
+activate WriteRouter
+WriteRouter -> TRService: exists(run_id)
+activate TRService
+TRService --> WriteRouter: True
+deactivate TRService
+WriteRouter -> TRService: delete(run_id)
+activate TRService
+TRService -> DB: DELETE test_run\n(CASCADE: test_case, attack, ...,\nanalysis_run, summary_row/error)
+DB --> TRService: None
+TRService --> WriteRouter: None
+deactivate TRService
+WriteRouter --> Client: 204 No Content
+deactivate WriteRouter
+
+@enduml

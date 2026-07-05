@@ -7,9 +7,10 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import String, Integer
+from sqlalchemy import String, Integer, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from testframework.enums import RunStatus
 from testframework.persistence.entity.base import Base
 from testframework.persistence.session import POSTGRES_SCHEMA
 
@@ -20,6 +21,8 @@ class TestRunEntity(Base):
     run_id: Mapped[str] = mapped_column(String, primary_key=True)
     start_ts: Mapped[datetime]
     end_ts: Mapped[datetime | None] = mapped_column(nullable=True, default=None)
+    status: Mapped[str] = mapped_column(Text, default=RunStatus.PENDING.value)
+    status_error: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
     version: Mapped[int] = mapped_column(Integer, default=1)
 
     test_cases: Mapped[list[TestCaseEntity]] = relationship(  # type: ignore[name-defined]

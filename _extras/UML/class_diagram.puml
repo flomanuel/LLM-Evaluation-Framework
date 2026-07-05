@@ -152,6 +152,7 @@ package "testframework.models" as models_pkg {
         +subcategories: List[str]
         +model: TestCaseResult.ModelInfo
         +attacks: Dict[str, Attack]
+        +id: int | None
         +generation_error: TestErrorInfo | None
         +enhancement_error: TestErrorInfo | None
         +identifier: str
@@ -168,8 +169,50 @@ package "testframework.models" as models_pkg {
         +run_id: str
         +timestamp: TestRunTimestamp
         +attack_categories: List[TestCaseResult]
+        +status: str | None
+        +status_error: str | None
+        +version: int | None
         +to_json_dict(): Dict[str, Any]
         {class} +new_empty(): TestRunResult
+    }
+
+    class TestRunStatusResult <<dataclass>> {
+        +run_id: str
+        +status: str | None
+        +status_error: str | None
+        +start_ts: datetime
+        +end_ts: datetime | None
+        +version: int | None
+    }
+
+    class SummaryRow <<dataclass>> {
+        +node: str
+        +scope: str
+        +attack_category: str
+        +technique: str
+        +count: int
+        +tp: int
+        +fp: int
+        +tn: int
+        +fn: int
+    }
+
+    class SummaryError <<dataclass>> {
+        +node: str
+        +attack_category: str
+        +count: int
+    }
+
+    class AnalysisRunResult <<dataclass>> {
+        +id: int
+        +run_id: str
+        +exclude_scanners: bool
+        +consider_chatbot_success: bool
+        +created_at: datetime
+        +version: int | None
+        +summary_rows: List[SummaryRow]
+        +summary_errors: List[SummaryError]
+        +to_json_dict(): Dict[str, Any]
     }
 }
 
@@ -554,9 +597,12 @@ package "testframework.persistence" as persistence_pkg {
 
     package "entity" as entity_pkg {
         class TestRunEntity <<MappedAsDataclass>> {
-            +id: UUID
+            +run_id: str
             +start_ts: datetime
             +end_ts: datetime | None
+            +status: str
+            +status_error: str | None
+            +version: int
         }
         class AttackEntity <<MappedAsDataclass>> {
             +category: str
@@ -568,6 +614,7 @@ package "testframework.persistence" as persistence_pkg {
             +id: int
             +run_id: UUID
             +exclude_scanners: bool
+            +version: int
         }
         class SummaryRowEntity <<MappedAsDataclass>> {
             +scope: str
@@ -583,29 +630,111 @@ package "testframework.persistence" as persistence_pkg {
     package "repository" as persist_repo_pkg {
         class TestRunRepository {
             +find_by_id(run_id): TestRunEntity | None
+            +find_page(run_status, start_after, start_before, offset, limit): tuple[List[TestRunEntity], int]
+            +exists_active(): bool
             +save(entity): None
         }
         class AnalysisRepository {
+            +find_by_id(analysis_id): AnalysisRunEntity | None
+            +find_by_run_id(run_id): List[AnalysisRunEntity]
             +save(entity): None
         }
         class mapper <<module>> {
             {static} +run_result_to_entity(dto): TestRunEntity
             {static} +run_result_from_entity(entity): TestRunResult
+            {static} +run_status_from_entity(entity): TestRunStatusResult
+            {static} +analysis_run_from_entity(entity): AnalysisRunResult
         }
     }
 
     package "service" as persist_svc_pkg {
         class TestRunService {
-            +save_run(run_result: TestRunResult): UUID
+            +start_run(run_id, start_ts): int
+            +finalize_run(run_id, end_ts, status, status_error): None
+            +update_status(run_id, status): None
+            +has_active_run(): bool
+            +get_status(run_id): TestRunStatusResult | None
+            +list_runs(run_status, start_after, start_before, offset, limit): tuple[List[TestRunStatusResult], int]
+            +delete(run_id): None
         }
         class AnalysisService {
             +summarize_and_store(run_id, exclude_scanners, consider_chatbot_success): dict
+            +find_by_run_id(run_id): List[AnalysisRunResult]
+            +find_by_id(analysis_id): AnalysisRunResult | None
         }
     }
 
     class importer <<module>> {
         {static} +import_runs(runs_dir, force, reanalyze): ImportStats
         {static} +deserialize_run(data): TestRunResult
+    }
+}
+
+package "testframework.reporting" as reporting_ext_pkg {
+    class analysis_csv <<module>> {
+        {static} +group_rows_by_model(rows): Dict[str, List[dict]]
+        {static} +write_summary_csv(rows): str
+        {static} +build_analyses_zip(analyses): bytes
+    }
+}
+
+package "testframework.api" as api_pkg {
+    class app <<module>> {
+        {static} +create_app(): FastAPI
+        {static} +app: FastAPI
+    }
+
+    class asgi_server <<module>> {
+        {static} +run(): None
+    }
+
+    class dependencies <<module>> {
+        {static} +get_existing_run(run_id): TestRunResult
+        {static} +require_run_exists(run_id): str
+    }
+
+    class errors <<module>> {
+        {static} +register_exception_handlers(app): None
+    }
+    class NotFoundError
+    class RunAlreadyRunningError
+
+    class Pageable <<dataclass>> {
+        +size: int
+        +number: int
+        {static} +create(number, size): Pageable
+    }
+    class Page <<dataclass>> {
+        +content: List[dict]
+        +page: PageMeta
+        {static} +create(content, pageable, total_elements): Page
+    }
+    class PageMeta <<dataclass>> {
+        +size: int
+        +number: int
+        +total_elements: int
+        +total_pages: int
+    }
+
+    package "router" as api_router_pkg {
+        class health_router <<module>> {
+            {static} +liveness(): dict
+            {static} +readiness(): dict
+        }
+        class test_run_read_router <<module>> {
+            {static} +list_runs(request): JSONResponse
+            {static} +get_by_id(request, run): Response
+            {static} +get_status(run_id): JSONResponse
+            {static} +get_test_cases(request, run): JSONResponse
+            {static} +get_test_case_by_id(test_case_id, run): JSONResponse
+            {static} +get_analyses(run_id): JSONResponse
+            {static} +export_analyses(run_id, consider_chatbot_success, exclude_scanners): Response
+            {static} +get_analysis_by_id(run_id, analysis_id, request): Response
+        }
+        class test_run_write_router <<module>> {
+            {static} +start_run(request, background_tasks, body): Response
+            {static} +delete_run(run_id): Response
+        }
     }
 }
 
@@ -748,11 +877,47 @@ run_summary ..> RunSummary
 AnalysisService ..> RunSummary
 
 mapper ..> TestRunResult
+mapper ..> TestRunStatusResult
+mapper ..> AnalysisRunResult
+
+AnalysisRunResult *-- SummaryRow
+AnalysisRunResult *-- SummaryError
 
 TestRunEntity *-- AttackEntity
 AnalysisRunEntity *-- SummaryRowEntity
 
 importer ..> TestRunService
 importer ..> AnalysisService
+
+analysis_csv ..> AnalysisRunResult
+
+Page *-- PageMeta
+
+dependencies ..> TestRunService
+dependencies ..> NotFoundError
+
+health_router ..> session
+test_run_read_router ..> TestRunService
+test_run_read_router ..> AnalysisService
+test_run_read_router ..> dependencies
+test_run_read_router ..> Page
+test_run_read_router ..> analysis_csv
+test_run_read_router ..> errors
+test_run_write_router ..> TestRunService
+test_run_write_router ..> dependencies
+test_run_write_router ..> errors
+test_run_write_router ..> DefaultTest
+
+app ..> health_router
+app ..> test_run_read_router
+app ..> test_run_write_router
+app ..> errors
+
+asgi_server ..> app
+
+cli ..> asgi_server
+
+errors ..> NotFoundError
+errors ..> RunAlreadyRunningError
 
 @enduml

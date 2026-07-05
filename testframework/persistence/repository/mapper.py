@@ -7,8 +7,9 @@
 
 from datetime import datetime, timezone
 
-from testframework.enums import Category, ChatbotName, Severity
+from testframework.enums import Category, ChatbotName, RunStatus, Severity
 from testframework.models import (
+    AnalysisRunResult,
     Attack,
     AttackEnhancementResult,
     ChatbotResponse,
@@ -22,9 +23,12 @@ from testframework.models import (
     RagContext,
     DocumentContext,
     ScannerDetail,
+    SummaryError,
+    SummaryRow,
     TestCaseResult,
     TestErrorInfo,
     TestRunResult,
+    TestRunStatusResult,
     TestRunTimestamp,
     ToolInfo,
 )
@@ -267,10 +271,18 @@ def case_result_to_entity(tc: TestCaseResult, run_id: str) -> TestCaseEntity:
 
 
 def run_result_to_entity(tr: TestRunResult) -> TestRunEntity:
+    """Build a TestRunEntity from a fully-assembled TestRunResult (importer, persist_full_run).
+
+    Such a DTO always represents an already-finished run, so it defaults to
+    COMPLETED rather than the entity's normal PENDING default (which is only
+    correct for the incremental start_run -> ... -> finalize_run flow).
+    """
     entity = TestRunEntity(
         run_id=tr.run_id,
         start_ts=tr.timestamp.start,
         end_ts=tr.timestamp.end,
+        status=tr.status or RunStatus.COMPLETED.value,
+        status_error=tr.status_error,
     )
     entity.test_cases = [case_result_to_entity(tc, tr.run_id) for tc in tr.attack_categories]
     return entity
@@ -496,6 +508,7 @@ def case_result_from_entity(entity: TestCaseEntity) -> TestCaseResult:
         attacks[key] = att_dto
 
     return TestCaseResult(
+        id=entity.id,
         category=category,
         subcategories=list(entity.subcategories or []),
         model=TestCaseResult.ModelInfo(
@@ -512,4 +525,53 @@ def run_result_from_entity(entity: TestRunEntity) -> TestRunResult:
         run_id=entity.run_id,
         timestamp=TestRunTimestamp(start=entity.start_ts, end=entity.end_ts or entity.start_ts),
         attack_categories=[case_result_from_entity(tc) for tc in entity.test_cases],
+        status=entity.status,
+        status_error=entity.status_error,
+        version=entity.version,
+    )
+
+
+def run_status_from_entity(entity: TestRunEntity) -> TestRunStatusResult:
+    return TestRunStatusResult(
+        run_id=entity.run_id,
+        status=entity.status,
+        status_error=entity.status_error,
+        start_ts=entity.start_ts,
+        end_ts=entity.end_ts,
+        version=entity.version,
+    )
+
+
+def summary_row_from_entity(entity: SummaryRowEntity) -> SummaryRow:
+    return SummaryRow(
+        node=entity.node,
+        scope=entity.scope,
+        attack_category=entity.attack_category,
+        technique=entity.technique,
+        count=entity.count,
+        tp=entity.tp,
+        fp=entity.fp,
+        tn=entity.tn,
+        fn=entity.fn,
+    )
+
+
+def summary_error_from_entity(entity: SummaryErrorEntity) -> SummaryError:
+    return SummaryError(
+        node=entity.node,
+        attack_category=entity.attack_category,
+        count=entity.count,
+    )
+
+
+def analysis_run_from_entity(entity: AnalysisRunEntity) -> AnalysisRunResult:
+    return AnalysisRunResult(
+        id=entity.id,
+        run_id=entity.run_id,
+        exclude_scanners=entity.exclude_scanners,
+        consider_chatbot_success=entity.consider_chatbot_success,
+        created_at=entity.created_at,
+        version=entity.version,
+        summary_rows=[summary_row_from_entity(r) for r in entity.summary_rows],
+        summary_errors=[summary_error_from_entity(e) for e in entity.summary_errors],
     )

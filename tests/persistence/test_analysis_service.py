@@ -161,3 +161,45 @@ def test_analysis_service_unknown_run_raises():
     """summarize_and_store raises ValueError for a non-existent run_id."""
     with pytest.raises(ValueError, match="not found"):
         AnalysisService().summarize_and_store(str(uuid4()))
+
+
+def test_find_by_run_id_returns_both_variants_with_version():
+    """After storing both auto-analysis variants, find_by_run_id returns both as DTOs."""
+    attack = _make_attack(severity=Severity.UNSAFE, chatbot_success=True, guard_success=False)
+    run = _make_run({str(uuid4()): attack})
+    TestRunService().persist_full_run(run)
+
+    for consider_chatbot_success in (True, False):
+        AnalysisService().summarize_and_store(
+            run.run_id,
+            exclude_scanners=True,
+            consider_chatbot_success=consider_chatbot_success,
+        )
+
+    analyses = AnalysisService().find_by_run_id(run.run_id)
+    assert len(analyses) == 2
+    variants = {a.consider_chatbot_success for a in analyses}
+    assert variants == {True, False}
+    for analysis in analyses:
+        assert analysis.exclude_scanners is True
+        assert analysis.version == 1
+        assert analysis.summary_rows
+
+
+def test_find_by_id_returns_single_analysis():
+    attack = _make_attack(severity=Severity.UNSAFE, chatbot_success=True, guard_success=False)
+    run = _make_run({str(uuid4()): attack})
+    TestRunService().persist_full_run(run)
+    AnalysisService().summarize_and_store(run.run_id, exclude_scanners=True, consider_chatbot_success=True)
+
+    [stored] = AnalysisService().find_by_run_id(run.run_id)
+
+    fetched = AnalysisService().find_by_id(stored.id)
+    assert fetched is not None
+    assert fetched.id == stored.id
+    assert fetched.run_id == run.run_id
+    assert fetched.version == 1
+
+
+def test_find_by_id_returns_none_for_unknown_id():
+    assert AnalysisService().find_by_id(-1) is None

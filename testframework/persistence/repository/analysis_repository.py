@@ -19,6 +19,18 @@ class AnalysisRepository:
         self._session.flush()
         return entity
 
+    def find_by_id(self, analysis_id: int) -> AnalysisRunEntity | None:
+        """Return a single analysis run by its id, or None if not found."""
+        stmt = (
+            select(AnalysisRunEntity)
+            .where(AnalysisRunEntity.id == analysis_id)
+            .options(
+                selectinload(AnalysisRunEntity.summary_rows),
+                selectinload(AnalysisRunEntity.summary_errors),
+            )
+        )
+        return self._session.scalars(stmt).first()
+
     def find_by_run_id(self, run_id: str) -> list[AnalysisRunEntity]:
         """Return all analysis runs for a given test run."""
         stmt = (

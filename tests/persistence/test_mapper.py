@@ -29,7 +29,9 @@ from testframework.models import (
     TestRunTimestamp,
     ToolInfo,
 )
+from testframework.persistence.entity.analysis import AnalysisRunEntity, SummaryErrorEntity, SummaryRowEntity
 from testframework.persistence.repository.mapper import (
+    analysis_run_from_entity,
     attack_from_entity,
     attack_to_entity,
     case_result_from_entity,
@@ -44,6 +46,7 @@ from testframework.persistence.repository.mapper import (
     evaluation_to_entity,
     run_result_from_entity,
     run_result_to_entity,
+    run_status_from_entity,
     scanner_detail_from_entity,
     scanner_detail_to_entity,
 )
@@ -318,6 +321,80 @@ def test_run_result_roundtrip():
     assert back.run_id == orig.run_id
     assert back.timestamp.start == orig.timestamp.start
     assert len(back.attack_categories) == len(orig.attack_categories)
+
+
+def test_run_result_from_entity_carries_status_and_version():
+    entity = run_result_to_entity(_make_test_run())
+    entity.status = "completed"
+    entity.status_error = None
+    entity.version = 3
+
+    back = run_result_from_entity(entity)
+    assert back.status == "completed"
+    assert back.status_error is None
+    assert back.version == 3
+
+
+def test_run_result_to_entity_defaults_to_completed_status():
+    """A fully-assembled TestRunResult (importer, persist_full_run) represents a
+    finished run, so it must not fall back to the entity's normal PENDING default.
+    """
+    entity = run_result_to_entity(_make_test_run())
+    assert entity.status == "completed"
+    assert entity.status_error is None
+
+
+def test_run_status_from_entity_maps_lightweight_fields():
+    entity = run_result_to_entity(_make_test_run())
+    entity.status = "failed"
+    entity.status_error = "boom"
+    entity.version = 2
+
+    status_dto = run_status_from_entity(entity)
+    assert status_dto.run_id == entity.run_id
+    assert status_dto.status == "failed"
+    assert status_dto.status_error == "boom"
+    assert status_dto.start_ts == entity.start_ts
+    assert status_dto.end_ts == entity.end_ts
+    assert status_dto.version == 2
+
+
+def test_analysis_run_from_entity_maps_summary_rows_and_errors():
+    entity = AnalysisRunEntity(
+        run_id="run-1",
+        exclude_scanners=True,
+        consider_chatbot_success=False,
+        created_at=_NOW,
+    )
+    entity.id = 42
+    entity.summary_rows = [
+        SummaryRowEntity(
+            analysis_run_id=42,
+            node="gpt-4/baseline",
+            scope="overall",
+            attack_category="",
+            technique="",
+            count=10,
+            tp=5,
+            fp=1,
+            tn=3,
+            fn=1,
+        )
+    ]
+    entity.summary_errors = [
+        SummaryErrorEntity(analysis_run_id=42, node="gpt-4", attack_category="ethics", count=2)
+    ]
+
+    dto = analysis_run_from_entity(entity)
+    assert dto.id == 42
+    assert dto.run_id == "run-1"
+    assert dto.exclude_scanners is True
+    assert dto.consider_chatbot_success is False
+    assert dto.version == 1
+    assert len(dto.summary_rows) == 1
+    assert dto.summary_rows[0].node == "gpt-4/baseline"
+    assert len(dto.summary_errors) == 1
+    assert dto.summary_errors[0].attack_category == "ethics"
 
 
 def test_prompt_hardening_detection_element_carries_chatbot_response():

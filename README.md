@@ -19,6 +19,9 @@ on work I did as a part of my bachelor's thesis, but has since evolved into a st
   This is a separate database instance from the langchain RAG vector store. Historical JSON runs can be imported
   with `import-runs`.
 - **CLI-first workflow**: Run evaluations and post-processing through dedicated CLI commands.
+- **REST API**: The same functionality is exposed over HTTP via a FastAPI app
+  (`uv run llm-test-baseline serve`), so a frontend can start runs, poll their status, and
+  read/download results without shelling out to the CLI.
 - **Extensible framework**
     - Integrate additional attack data sources \(APIs, CSV, or custom providers\).
     - Evaluate any target system \(single LLMs, multimodel pipelines, or agentic architectures on local or cloud
@@ -33,6 +36,9 @@ DeepEval is developed by [Confident AI](https://www.confident-ai.com/docs).
 The project-owned red-team modules are maintained in this repository.
 
 ## Quickstart
+
+Note: under _extras, an exemplare frontend for interacting with the REST API is available. See
+the [subpage](./_extras/frontend/README.md) for details.
 
 ### Local (uv)
 
@@ -83,6 +89,15 @@ uv run llm-test-baseline summarize-run --run-id <uuid>
 uv run llm-test-baseline import-runs --runs-dir _runs
 ```
 
+8. (Optional) Start the REST API instead of using the CLI directly:
+
+```bash
+uv run llm-test-baseline serve
+# Interactive docs: http://127.0.0.1:8000/docs
+```
+
+See [REST API](./_extras/doc/development.md#rest-api) for the full route table and design notes.
+
 ### Docker (fully containerized)
 
 All services, including the test runner, are managed by docker-compose.
@@ -111,6 +126,14 @@ docker compose run --rm testframework summarize-run --run-id <uuid>
 docker compose run --rm testframework import-runs --runs-dir _runs
 ```
 
+The REST API runs as its own long-running `api` service (unlike `testframework`, it is
+**not** under `profiles: [run]`, so `docker compose up -d` starts it too):
+
+```bash
+docker compose up -d api
+curl http://localhost:8000/api/v1/health/liveness
+```
+
 # Running the unit tests
 
 The unit test suite lives in the `tests/` directory and uses [pytest](https://docs.pytest.org/).
@@ -120,6 +143,9 @@ running models are required.
 **Note:** Tests under `tests/persistence/` use [Testcontainers](https://testcontainers-python.readthedocs.io/) to spin
 up a real Postgres instance automatically. A working Docker daemon is required to run these tests. If Docker is
 unavailable, set `POSTGRES_TEST_URL` to an existing PostgreSQL connection URL to skip container startup.
+
+Tests under `tests/api/` drive the real FastAPI `app` through `TestClient` with the service layer mocked —
+no Docker or database required.
 
 Run all tests:
 

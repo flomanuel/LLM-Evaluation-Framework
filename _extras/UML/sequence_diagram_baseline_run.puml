@@ -77,15 +77,22 @@ DB --> TRService: run_id
 TRService --> TestRun: save_run: run_id
 deactivate TRService
 
-TestRun -> AService: summarize_and_store(run_id)
-activate AService
-AService -> DB: SELECT test_run by run_id
-DB --> AService: TestRunEntity
-AService -> AService: compute confusion matrix
-AService -> DB: INSERT analysis_run + summary_rows
-DB --> AService: None
-AService --> TestRun: summarize_and_store: summary
-deactivate AService
+loop consider_chatbot_success in (True, False)
+    TestRun -> AService: summarize_and_store(run_id, exclude_scanners=True, consider_chatbot_success)
+    activate AService
+    AService -> DB: SELECT test_run by run_id
+    DB --> AService: TestRunEntity
+    AService -> AService: compute confusion matrix
+    AService -> DB: INSERT analysis_run (version=1) + summary_rows
+    DB --> AService: None
+    AService --> TestRun: summarize_and_store: summary
+    deactivate AService
+end
+note right of TestRun
+  Two analysis_run rows always result from a completed run:
+  one with consider_chatbot_success=True, one with False.
+  Both always use exclude_scanners=True.
+end note
 
 TestRun --> CLI: start_run: persisted_run
 deactivate TestRun

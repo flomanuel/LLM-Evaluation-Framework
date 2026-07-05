@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LLM Test Framework — API Console</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <h1>LLM Test Framework <span>API Console</span></h1>
+    <div class="config-bar">
+      <label>API base URL
+        <input type="text" id="api-base" placeholder="http://127.0.0.1:8000/api/v1">
+      </label>
+      <button id="save-config-btn">Save</button>
+      <div class="health">
+        <span class="dot" id="liveness-dot" title="Liveness unknown"></span>
+        <span class="dot" id="readiness-dot" title="Readiness unknown"></span>
+        <button id="refresh-health-btn">Check health</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div id="toast-container"></div>
+
+<main>
+  <section class="card">
+    <h2>Start a new run <span class="hint">POST /test-runs (W1)</span></h2>
+    <div class="row">
+      <label>Results dir (optional)
+        <input type="text" id="results-dir-input" placeholder="_runs">
+      </label>
+      <button id="start-run-btn">Start run</button>
+    </div>
+    <div id="start-run-result" class="result-box hidden"></div>
+  </section>
+
+  <section class="card">
+    <h2>Runs <span class="hint">GET /test-runs (R1)</span></h2>
+    <div class="filters">
+      <label>Status
+        <select id="filter-status">
+          <option value="">any</option>
+          <option value="pending">pending</option>
+          <option value="running">running</option>
+          <option value="completed">completed</option>
+          <option value="failed">failed</option>
+        </select>
+      </label>
+      <label>Start after <input type="datetime-local" id="filter-start-after"></label>
+      <label>Start before <input type="datetime-local" id="filter-start-before"></label>
+      <label>Page size <input type="number" id="filter-size" value="10" min="1" max="100"></label>
+      <button id="refresh-runs-btn">Refresh</button>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table" id="runs-table">
+        <thead>
+        <tr>
+          <th>Run ID</th>
+          <th>Status</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Version</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="runs-pagination"></div>
+  </section>
+
+  <section class="card hidden" id="run-detail-card">
+    <div class="detail-header">
+      <h2>Run detail <span class="hint">run_id = <code id="detail-run-id"></code></span></h2>
+      <button id="close-detail-btn" class="link-btn">Close ✕</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="overview">Overview</button>
+      <button class="tab-btn" data-tab="test-cases">Test cases</button>
+      <button class="tab-btn" data-tab="analyses">Analyses</button>
+    </div>
+
+    <div class="tab-panel" id="tab-overview">
+      <div class="overview-grid" id="overview-content"></div>
+      <div class="row">
+        <button id="refresh-overview-btn">Refresh run <span class="hint">GET /test-runs/{id} (R2)</span></button>
+        <button id="poll-status-btn">Poll status <span class="hint">GET /test-runs/{id}/status (R3)</span></button>
+        <button id="stop-poll-btn" class="hidden">Stop polling</button>
+        <button id="delete-run-btn" class="danger">Delete run <span class="hint">DELETE (W2)</span></button>
+      </div>
+      <div id="etag-indicator" class="hint"></div>
+      <div id="status-poll-log" class="log"></div>
+    </div>
+
+    <div class="tab-panel hidden" id="tab-test-cases">
+      <div class="row">
+        <label>Page size <input type="number" id="tc-filter-size" value="10" min="1" max="100"></label>
+        <button id="refresh-test-cases-btn">Refresh <span class="hint">GET .../test-cases (R4)</span></button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="test-cases-table">
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Category</th>
+            <th>Subcategories</th>
+            <th>Model</th>
+            <th># Attacks</th>
+            <th>Errors</th>
+            <th></th>
+          </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="test-cases-pagination"></div>
+    </div>
+
+    <div class="tab-panel hidden" id="tab-analyses">
+      <div class="row">
+        <button id="refresh-analyses-btn">Refresh <span class="hint">GET .../analyses (R6)</span></button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="analyses-table">
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Variant</th>
+            <th>Exclude scanners</th>
+            <th>Created</th>
+            <th>Version</th>
+            <th></th>
+          </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card nested">
+        <h3>Download analyses <span class="hint">GET .../analyses/export (R8)</span></h3>
+        <div class="row">
+          <label>Variant
+            <select id="export-variant">
+              <option value="">both</option>
+              <option value="true">consider_chatbot_success = true</option>
+              <option value="false">consider_chatbot_success = false</option>
+            </select>
+          </label>
+          <label><input type="checkbox" id="export-exclude-scanners" checked> exclude_scanners</label>
+          <button id="export-btn">Download ZIP</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="modal-backdrop" class="modal-backdrop hidden">
+  <div class="modal">
+    <button class="modal-close" id="modal-close-btn">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

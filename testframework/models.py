@@ -326,6 +326,8 @@ class TestCaseResult:
     subcategories: list[str]
     model: ModelInfo = field(default_factory=ModelInfo)
     attacks: dict[str, Attack] = field(default_factory=dict)
+    id: int | None = None
+    """Persisted test_case.id — populated from the entity; used to address R5."""
     generation_error: TestErrorInfo | None = None
     enhancement_error: TestErrorInfo | None = None
 
@@ -367,6 +369,9 @@ class TestRunResult:
     run_id: str
     timestamp: TestRunTimestamp
     attack_categories: list[TestCaseResult]
+    status: str | None = None
+    status_error: str | None = None
+    version: int | None = None
 
     def to_json_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -379,3 +384,57 @@ class TestRunResult:
             timestamp=TestRunTimestamp(start=now, end=now),
             attack_categories=[],
         )
+
+
+@dataclass(eq=False, slots=True, kw_only=True)
+class TestRunStatusResult:
+    """Lightweight status-only view of a test run, used for R3 status polling."""
+    run_id: str
+    status: str | None
+    status_error: str | None
+    start_ts: datetime
+    end_ts: datetime | None
+    version: int | None = None
+
+
+@dataclass(eq=False, slots=True, kw_only=True)
+class SummaryRow:
+    """One confusion-matrix row of an analysis (matches ``SummaryRowEntity``)."""
+    node: str
+    scope: str
+    attack_category: str
+    technique: str
+    count: int
+    tp: int
+    fp: int
+    tn: int
+    fn: int
+
+
+@dataclass(eq=False, slots=True, kw_only=True)
+class SummaryError:
+    """One per-category error tally of an analysis (matches ``SummaryErrorEntity``)."""
+    node: str
+    attack_category: str
+    count: int
+
+
+@dataclass(eq=False, slots=True, kw_only=True)
+class AnalysisRunResult:
+    """Result of a single analysis of a test run.
+
+    Read-side DTO for the analysis endpoints; also serves as the FastAPI
+    ``response_model``. ``version`` is populated from the entity's optimistic-lock
+    counter and is carried in the ``ETag`` header rather than the JSON body.
+    """
+    id: int
+    run_id: str
+    exclude_scanners: bool
+    consider_chatbot_success: bool
+    created_at: datetime
+    version: int | None = None
+    summary_rows: list[SummaryRow] = field(default_factory=list)
+    summary_errors: list[SummaryError] = field(default_factory=list)
+
+    def to_json_dict(self) -> dict[str, Any]:
+        return asdict(self)

@@ -24,6 +24,7 @@ class AnalysisRunEntity(Base):
     exclude_scanners: Mapped[bool] = mapped_column(Boolean)
     consider_chatbot_success: Mapped[bool] = mapped_column(Boolean)
     created_at: Mapped[datetime]
+    version: Mapped[int] = mapped_column(Integer, default=1)
 
     test_run: Mapped[TestRunEntity] = relationship(  # type: ignore[name-defined]
         "TestRunEntity",
@@ -46,6 +47,7 @@ class AnalysisRunEntity(Base):
         default_factory=list,
     )
 
+    __mapper_args__ = {"version_id_col": version}
     __table_args__ = {"schema": POSTGRES_SCHEMA}
 
 

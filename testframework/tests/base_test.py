@@ -19,11 +19,17 @@ from testframework.testcases.base import BaseTestCase
 class Test(ABC):
     """Base class orchestrating a full test run."""
 
-    def __init__(self, name: str, results_dir: Path | None = None) -> None:
+    def __init__(
+        self,
+        name: str,
+        results_dir: Path | None = None,
+        run_id: str | None = None,
+    ) -> None:
         self.name = name
         self.results_dir = results_dir or Path("_runs")
         self.test_case_results: list[TestCaseResult] = []
         self._run_service = TestRunService()
+        self._run_id = run_id
 
     @abstractmethod
     def setup_chatbots(self) -> None:
@@ -38,7 +44,7 @@ class Test(ABC):
     def run(self) -> TestRunResult:
         """Execute the test and return the results."""
         start = datetime.now(timezone.utc)
-        run_id = str(uuid4())
+        run_id = self._run_id or str(uuid4())
         logger.info(
             "Starting test run '{}' (run_id={}, results_dir={})",
             self.name,
@@ -63,11 +69,25 @@ class Test(ABC):
         except Exception as e:
             logger.warning("Could not finalize run (DB unavailable?): {}", e)
 
-        try:
-            AnalysisService().summarize_and_store(run_id)
-            logger.debug("Persisted analysis for run_id={}", run_id)
-        except Exception as e:
-            logger.warning("Could not persist analysis (DB unavailable?): {}", e)
+        for consider_chatbot_success in (True, False):
+            try:
+                AnalysisService().summarize_and_store(
+                    run_id,
+                    exclude_scanners=True,
+                    consider_chatbot_success=consider_chatbot_success,
+                )
+                logger.debug(
+                    "Persisted analysis for run_id={} (consider_chatbot_success={})",
+                    run_id,
+                    consider_chatbot_success,
+                )
+            except Exception as e:
+                logger.warning(
+                    "Could not persist analysis (run_id={}, consider_chatbot_success={}): {}",
+                    run_id,
+                    consider_chatbot_success,
+                    e,
+                )
 
         tr = TestRunResult(
             run_id=run_id,

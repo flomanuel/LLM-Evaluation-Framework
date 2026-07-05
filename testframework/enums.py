@@ -42,6 +42,14 @@ class Severity(str, Enum):
     SAFE = "safe"
 
 
+class RunStatus(str, Enum):
+    """Lifecycle status of a test run."""
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
 class CliArgs(str, Enum):
     """Define the CLI arguments."""
     RUN_BASELINE = "run-baseline"
@@ -63,3 +71,4 @@ class CliArgs(str, Enum):
     RUNS_DIR = "--runs-dir"
     FORCE = "--force"
     NO_REANALYZE = "--no-reanalyze"
+    SERVE = "serve"

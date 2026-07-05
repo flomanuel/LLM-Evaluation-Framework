@@ -30,6 +30,7 @@ from testframework.models import (
     TestRunTimestamp,
     ToolInfo,
 )
+from testframework.enums import RunStatus
 from testframework.persistence.service.test_run_service import TestRunService
 
 _NOW = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
@@ -166,3 +167,65 @@ def test_incremental_persist_start_case_finalize():
     assert fetched is not None
     assert fetched.timestamp.end == _NOW
     assert len(fetched.attack_categories) == 1
+    assert fetched.attack_categories[0].id is not None  # populated from the persisted entity, for R5
+
+
+def test_start_run_is_idempotent_for_existing_row():
+    """A pre-inserted row (e.g., by the W1 API endpoint) is not clobbered by a second start_run."""
+    svc = TestRunService()
+    run_id = str(uuid4())
+
+    first_version = svc.start_run(run_id, _NOW)
+    second_version = svc.start_run(run_id, datetime(2099, 1, 1, tzinfo=timezone.utc))
+
+    assert first_version == second_version == 1
+    fetched = svc.get_run(run_id)
+    assert fetched is not None
+    assert fetched.timestamp.start == _NOW  # untouched by the second call
+
+
+def test_has_active_run_true_while_pending_or_running():
+    """has_active_run() is a global guard, so we only assert the True-making transitions
+    here — the shared test container may hold unrelated pending rows from other tests,
+    which makes asserting a global "False" baseline order-dependent and unsafe.
+    """
+    svc = TestRunService()
+    run_id = str(uuid4())
+
+    svc.start_run(run_id, _NOW)
+    assert svc.has_active_run() is True
+
+    svc.update_status(run_id, RunStatus.RUNNING)
+    assert svc.has_active_run() is True
+
+    svc.finalize_run(run_id, _NOW, status=RunStatus.COMPLETED)
+    assert svc.get_status(run_id).status == RunStatus.COMPLETED.value
+
+
+def test_update_status_transitions_to_running():
+    svc = TestRunService()
+    run_id = str(uuid4())
+    svc.start_run(run_id, _NOW)
+
+    svc.update_status(run_id, RunStatus.RUNNING)
+
+    status_dto = svc.get_status(run_id)
+    assert status_dto is not None
+    assert status_dto.status == RunStatus.RUNNING.value
+
+
+def test_finalize_run_with_failed_status_persists_error():
+    svc = TestRunService()
+    run_id = str(uuid4())
+    svc.start_run(run_id, _NOW)
+
+    svc.finalize_run(run_id, _NOW, status=RunStatus.FAILED, status_error="boom")
+
+    status_dto = svc.get_status(run_id)
+    assert status_dto is not None
+    assert status_dto.status == RunStatus.FAILED.value
+    assert status_dto.status_error == "boom"
+
+
+def test_get_status_returns_none_for_unknown_run():
+    assert TestRunService().get_status(str(uuid4())) is None

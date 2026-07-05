@@ -7,9 +7,10 @@ from datetime import datetime, timezone
 from typing import Any
 
 import testframework.persistence.session as _session_mod
+from testframework.models import AnalysisRunResult
 from testframework.persistence.entity.analysis import AnalysisRunEntity, SummaryErrorEntity, SummaryRowEntity
 from testframework.persistence.repository.analysis_repository import AnalysisRepository
-from testframework.persistence.repository.mapper import run_result_from_entity
+from testframework.persistence.repository.mapper import analysis_run_from_entity, run_result_from_entity
 from testframework.persistence.repository.test_run_repository import TestRunRepository
 from testframework.reporting.run_summary import RunSummary
 
@@ -51,6 +52,20 @@ class AnalysisService:
             session.commit()
 
         return summary
+
+    def find_by_run_id(self, run_id: str) -> list[AnalysisRunResult]:
+        """Return all stored analyses for a run as DTOs."""
+        with _session_mod.Session() as session:
+            entities = AnalysisRepository(session).find_by_run_id(run_id)
+            return [analysis_run_from_entity(e) for e in entities]
+
+    def find_by_id(self, analysis_id: int) -> AnalysisRunResult | None:
+        """Return a single analysis by id, or None if not found."""
+        with _session_mod.Session() as session:
+            entity = AnalysisRepository(session).find_by_id(analysis_id)
+            if entity is None:
+                return None
+            return analysis_run_from_entity(entity)
 
     def _build_summary_from_dto(
         self,

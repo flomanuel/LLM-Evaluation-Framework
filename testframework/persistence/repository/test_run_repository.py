@@ -3,9 +3,12 @@
 #  This source code is licensed under the MIT license found in the
 #  LICENSE file in the root directory of this source tree.
 
-from sqlalchemy import select
+from datetime import datetime
+
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
+from testframework.enums import RunStatus
 from testframework.persistence.entity.attack import AttackEntity
 from testframework.persistence.entity.chatbot_response import (
     ChatbotResponseEntity,
@@ -64,6 +67,36 @@ class TestRunRepository:
         """Return True if a run with the given run_id is present."""
         stmt = select(TestRunEntity.run_id).where(TestRunEntity.run_id == run_id)
         return self._session.scalars(stmt).first() is not None
+
+    def exists_active(self) -> bool:
+        """Return True if any run is currently pending or running."""
+        stmt = select(TestRunEntity.run_id).where(
+            TestRunEntity.status.in_([RunStatus.PENDING.value, RunStatus.RUNNING.value])
+        ).limit(1)
+        return self._session.scalars(stmt).first() is not None
+
+    def find_page(
+        self,
+        *,
+        run_status: str | None = None,
+        start_after: datetime | None = None,
+        start_before: datetime | None = None,
+        offset: int = 0,
+        limit: int = 20,
+    ) -> tuple[list[TestRunEntity], int]:
+        """Return a shallow (no nested aggregate), newest-first page of runs, plus the total count."""
+        stmt = select(TestRunEntity)
+        if run_status is not None:
+            stmt = stmt.where(TestRunEntity.status == run_status)
+        if start_after is not None:
+            stmt = stmt.where(TestRunEntity.start_ts >= start_after)
+        if start_before is not None:
+            stmt = stmt.where(TestRunEntity.start_ts <= start_before)
+
+        total = self._session.scalar(select(func.count()).select_from(stmt.subquery())) or 0
+        page_stmt = stmt.order_by(TestRunEntity.start_ts.desc()).offset(offset).limit(limit)
+        rows = list(self._session.scalars(page_stmt).all())
+        return rows, total
 
     def delete(self, run_id: str) -> None:
         """Delete a test run and all its children (via CASCADE)."""

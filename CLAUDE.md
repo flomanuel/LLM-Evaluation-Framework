@@ -9,6 +9,7 @@ results to PostgreSQL for analysis. Originally a bachelor's thesis project; now 
 ## Repository structure
 
 - `testframework/` — framework source code
+  - `api/` — FastAPI REST API (routers, app factory, uvicorn server) — see below
 - `tests/` — unit and integration tests (external services mocked)
 - `_rag_documents/` — source PDFs for RAG evaluation scenarios
 - `_attack_documents/` — attack documents and adversarial fixtures
@@ -84,18 +85,82 @@ handles `"Category.ILLEGAL_ACTIVITY"` legacy enum strings, missing optional fiel
 
 ### Pydantic models (`testframework/persistence/model/`)
 
-Input models for a future API layer. Each has `to_entity()`. No routers exist yet.
+Input models used by the API layer where relevant. Each has `to_entity()`.
+The response/read side is exclusively the `models.py` DTO dataclasses (see below) —
+no separate Pydantic response schemas exist.
+
+### REST API (`testframework/api/`)
+
+FastAPI app exposing the test-framework functionality (previously only reachable via the
+CLI) under `/api/v1`. Richardson Maturity Level 2: real resources, correct verbs/status
+codes, conditional GETs via `ETag`/`If-None-Match` — no HATEOAS.
+
+```
+testframework/api/
+  app.py                     — create_app() factory (CORSMiddleware, routers, exception
+                                handlers); module-level `app = create_app()`
+  asgi_server.py             — run() starts uvicorn against "testframework.api:app"
+  constants.py               — ETAG / IF_MATCH / IF_NONE_MATCH header names
+  dependencies.py            — ExistingRun / ExistingRunId: shared Depends that 404 via
+                                NotFoundError when a run doesn't exist
+  errors.py                  — NotFoundError (404), RunAlreadyRunningError (409) + handlers
+  page.py                    — Pageable (parses ?page=&size=) and Page/PageMeta wrapper
+  router/
+    health_router.py            — GET /health/liveness, /health/readiness
+    test_run_read_router.py     — all GET endpoints (list, single run, status, test-cases,
+                                   analyses, analyses/export)
+    test_run_write_router.py    — POST /test-runs (start, async), DELETE /test-runs/{id}
+```
+
+- **Responses are DTOs, not Pydantic schemas.** Every read endpoint declares
+  `response_model=<DTO dataclass>` (for OpenAPI/Swagger) but actually returns a hand-built
+  `JSONResponse`/`Response`, serialized via `json.loads(json.dumps(dataclasses.asdict(dto),
+  default=str))` — the same idiom already used by `storage.py` and
+  `AnalysisService._build_summary_from_dto`. This handles the project's `(str, Enum)` members
+  and `datetime` fields without a bespoke encoder.
+- **Strong ETags from real optimistic-locking columns.** `TestRunEntity.version` and
+  `AnalysisRunEntity.version` are SQLAlchemy `version_id_col`s (auto-incremented on every
+  UPDATE). Single-resource GETs (run, single analysis) emit `ETag: "<version>"`, pop
+  `version` out of the JSON body, and return `304` on a matching `If-None-Match` — see the
+  shared `_not_modified()` helper in `test_run_read_router.py`. An analysis's version never
+  changes after creation, so its ETag is stable/immutable.
+- **Async run execution (W1).** `POST /test-runs` pre-inserts the `test_run` row (so it can
+  return a real `run_id`/`ETag` in the `202`), then schedules the real run via FastAPI
+  `BackgroundTasks` (Starlette runs sync background callables through its threadpool, so the
+  event loop isn't blocked). `TestRunService.start_run` is therefore **idempotent** — the
+  background job's own `start_run` call (inside `Test.run()`) is then a no-op. A single
+  in-flight run is enforced by `TestRunService.has_active_run()`, which checks the DB
+  `status` column (`pending`/`running`/`completed`/`failed`) rather than in-process state.
+- **CSV/ZIP export (R8).** `testframework/reporting/analysis_csv.py` reconstructs the
+  historical per-model `summary.csv` files from stored `SummaryRow` rows (splitting the
+  stored `node = "<model>/<node>"` on the first `/`) — mirrors
+  `RunSummary._build_summary_csv_rows` in reverse. One ZIP folder per analysis variant:
+  `consider_model_alignment/` (consider_chatbot_success=True) and `without_model_alignment/`
+  (=False).
+- **Route registration order matters.** `/analyses/export` (a literal path) is registered
+  before `/analyses/{analysis_id}` (R7) so Starlette's first-match routing doesn't let the
+  parameterized route swallow the literal one.
+- **Serve it:** `uv run llm-test-baseline serve` (env `API_HOST`/`API_PORT`, default
+  `127.0.0.1:8000`), or `uv run uvicorn testframework.api:app --host 0.0.0.0 --port 8000`.
+  Interactive OpenAPI docs at `/docs` once running.
 
 ## Running tests
 
 ```bash
 uv run pytest tests/        # full suite (requires Docker for Testcontainers)
-uv run pytest tests/core/ tests/reporting/   # no Docker needed
+uv run pytest tests/core/ tests/reporting/ tests/api/   # no Docker needed
 uv run pytest tests/persistence/             # needs Docker
 ```
 
 Persistence tests use `tests/persistence/conftest.py` which starts a `postgres:16` container
 via Testcontainers, runs `alembic upgrade head`, and patches `_session_module.Session`.
+`tests/api/` uses FastAPI's `TestClient` against the real `app` object with the service
+classes mocked (`unittest.mock.patch` at the router/dependency import site) — no DB needed.
+
+Note: the `tests/persistence` Postgres container is session-scoped and never cleared between
+tests, so tests that need an exact row count (e.g. `TestRunRepository.find_page`) must scope
+their query to a private marker value (a unique `status` string) rather than assuming a clean
+table — other tests' committed rows are visible.
 
 ## CLI commands
 
@@ -105,14 +170,22 @@ uv run llm-test-baseline run-baseline         # execute test suite, persist to D
 uv run llm-test-baseline summarize-run --run-id <uuid>
 uv run llm-test-baseline import-runs --runs-dir _runs [--force] [--no-reanalyze]
 uv run llm-test-baseline populate-db --documents-dir _rag_documents
+uv run llm-test-baseline serve                # start the REST API (uvicorn)
 ```
 
 ## Models and enums
 
 Core data model lives in `testframework/models.py` (dataclasses).
-Enums live in `testframework/enums.py` (`Category`, `ChatbotName`, `Severity`, `CliArgs`).
-All model dataclasses use `@dataclass(eq=False, slots=True, kw_only=True)` — all constructor
-calls must use keyword arguments.
+Enums live in `testframework/enums.py` (`Category`, `ChatbotName`, `Severity`, `RunStatus`,
+`CliArgs`). All model dataclasses use `@dataclass(eq=False, slots=True, kw_only=True)` — all
+constructor calls must use keyword arguments.
+
+Read-side DTOs that mirror an entity's optimistic-lock column carry an additive
+`version: int | None = None` field (`TestRunResult`, `AnalysisRunResult`) — populated by the
+mapper, popped out of the JSON body by the API and carried in the `ETag` header instead.
+`TestCaseResult.id` and `AnalysisRunResult.id` similarly expose the entity's PK so the API can
+address single resources (R5, R7). `TestRunStatusResult` is a separate, lightweight DTO
+(no nested aggregate) used only for run-list/status reads.
 
 ## Development guidance
 

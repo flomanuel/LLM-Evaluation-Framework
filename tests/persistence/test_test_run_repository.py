@@ -72,3 +72,60 @@ def test_delete_removes_run(db_session):
 
     repo.delete(run_id)
     assert not repo.exists(run_id)
+
+
+def test_find_page_orders_newest_first_and_paginates(db_session):
+    """The shared container accumulates committed rows from every other test in the
+    session (only db_session's OWN writes roll back, pre-existing committed rows from
+    other tests remain visible), so every case here scopes down via a private
+    run_status marker to get exact, collision-free totals.
+    """
+    repo = TestRunRepository(db_session)
+    marker = f"test_marker_{uuid4()}"
+    ids = [str(uuid4()) for _ in range(3)]
+    for i, run_id in enumerate(ids):
+        repo.save(TestRunEntity(
+            run_id=run_id,
+            start_ts=datetime(2026, 1, i + 1, tzinfo=timezone.utc),
+            end_ts=None,
+            status=marker,
+        ))
+
+    rows, total = repo.find_page(run_status=marker, offset=0, limit=2)
+    assert total == 3
+    assert [r.run_id for r in rows] == [ids[2], ids[1]]  # newest (Jan 3) first
+
+    rows_page2, total2 = repo.find_page(run_status=marker, offset=2, limit=2)
+    assert total2 == 3
+    assert [r.run_id for r in rows_page2] == [ids[0]]
+
+
+def test_find_page_filters_by_status(db_session):
+    repo = TestRunRepository(db_session)
+    marker = f"test_marker_{uuid4()}"
+    matching_id = str(uuid4())
+    repo.save(TestRunEntity(run_id=matching_id, start_ts=_NOW, end_ts=None, status=marker))
+    repo.save(TestRunEntity(run_id=str(uuid4()), start_ts=_NOW, end_ts=None, status=f"other_{marker}"))
+
+    rows, total = repo.find_page(run_status=marker, offset=0, limit=20)
+    assert total == 1
+    assert rows[0].run_id == matching_id
+
+
+def test_find_page_filters_by_start_date_range(db_session):
+    repo = TestRunRepository(db_session)
+    marker = f"test_marker_{uuid4()}"
+    early_id = str(uuid4())
+    late_id = str(uuid4())
+    repo.save(TestRunEntity(
+        run_id=early_id, start_ts=datetime(2020, 1, 1, tzinfo=timezone.utc), end_ts=None, status=marker
+    ))
+    repo.save(TestRunEntity(
+        run_id=late_id, start_ts=datetime(2030, 1, 1, tzinfo=timezone.utc), end_ts=None, status=marker
+    ))
+
+    rows, total = repo.find_page(
+        run_status=marker, start_after=datetime(2025, 1, 1, tzinfo=timezone.utc), offset=0, limit=20
+    )
+    assert total == 1
+    assert rows[0].run_id == late_id

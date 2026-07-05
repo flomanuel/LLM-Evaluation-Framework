@@ -53,10 +53,10 @@ class ImportStats:
 
 
 def import_runs(
-    runs_dir: Path | str = Path("_runs"),
-    *,
-    force: bool = False,
-    reanalyze: bool = True,
+        runs_dir: Path | str = Path("_runs"),
+        *,
+        force: bool = False,
+        reanalyze: bool = True,
 ) -> ImportStats:
     """
     Import all *runs_dir*/result.json files into the DB.
@@ -111,8 +111,10 @@ def _import_single(path: Path, *, force: bool, reanalyze: bool, stats: ImportSta
     logger.info("Imported run_id={}", run.run_id)
 
     if reanalyze:
-        AnalysisService().summarize_and_store(run.run_id)
-        logger.debug("Analysis persisted for run_id={}", run.run_id)
+        AnalysisService().summarize_and_store(run_id=run.run_id, consider_chatbot_success=True, exclude_scanners=True)
+        logger.debug("Analysis persisted for run_id={} with model alignment considered", run.run_id)
+        AnalysisService().summarize_and_store(run_id=run.run_id, consider_chatbot_success=False,  exclude_scanners=True)
+        logger.debug("Analysis persisted for run_id={} without model alignment considered", run.run_id)
 
     stats.imported += 1
 
@@ -227,7 +229,7 @@ def _deserialize_chatbot_response(cr: dict[str, Any]) -> ChatbotResponse:
 
 
 def _deserialize_detection_result(
-    guardrail_name: str, dr: dict[str, Any]
+        guardrail_name: str, dr: dict[str, Any]
 ) -> DetectionResult:
     input_det = _deserialize_detection_element(dr.get("input_detection") or {}, is_output=False)
     output_raw = dr.get("output_detection") or {}
@@ -239,7 +241,7 @@ def _deserialize_detection_result(
 
 
 def _deserialize_detection_element(
-    el: dict[str, Any], *, is_output: bool
+        el: dict[str, Any], *, is_output: bool
 ) -> DetectionElement:
     return DetectionElement(
         success=bool(el.get("success")),
@@ -308,11 +310,11 @@ def _coerce_category(raw: str) -> Category:
     if "." in raw:
         raw = raw.rsplit(".", 1)[-1]
     try:
-        return Category(raw)          # by value: "illegal-activity"
+        return Category(raw)  # by value: "illegal-activity"
     except ValueError:
         pass
     try:
-        return Category[raw.upper().replace("-", "_")]   # by name: "ILLEGAL_ACTIVITY"
+        return Category[raw.upper().replace("-", "_")]  # by name: "ILLEGAL_ACTIVITY"
     except KeyError:
         pass
     logger.warning("Unknown category '{}', falling back to ETHICS", raw)

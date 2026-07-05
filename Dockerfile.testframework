@@ -42,4 +42,6 @@ COPY --from=ollama/ollama:latest /bin/ollama /usr/local/bin/ollama
 # Create the directories so the image is self-contained for `docker run` usage.
 RUN mkdir -p _runs _prompt_files _attack_documents _rag_documents _logs
 
+EXPOSE 8000
+
 ENTRYPOINT ["llm-test-baseline"]
