@@ -177,7 +177,7 @@ def _deserialize_attack(a: dict[str, Any]) -> Attack:
         for guardrail, model_results in (a.get("protection") or {}).items()
     }
     return Attack(
-        category=str(a.get("category") or ""),
+        category=_normalize_legacy_category_string(str(a.get("category") or "")),
         subcategory=a.get("subcategory"),
         techniques=list(a.get("techniques") or []),
         severity=_coerce_severity(a.get("severity") or "safe"),
@@ -319,6 +319,24 @@ def _coerce_category(raw: str) -> Category:
         pass
     logger.warning("Unknown category '{}', falling back to ETHICS", raw)
     return Category.ETHICS
+
+
+def _normalize_legacy_category_string(raw: str) -> str:
+    """Strip the legacy 'Category.BENIGN' repr format down to its value string ('benign').
+
+    Unlike _coerce_category, empty/unrecognized input is returned unchanged rather than
+    defaulting to ETHICS: an attack-level category can legitimately be empty, in which case
+    RunSummary.build_from_testcases falls back to the owning test case's own category
+    (`attack_data.get("category") or default_category`) — forcing a default here would
+    silently break that fallback.
+    """
+    if "." not in raw:
+        return raw
+    name = raw.rsplit(".", 1)[-1]
+    try:
+        return Category[name].value
+    except KeyError:
+        return raw
 
 
 def _coerce_chatbot_name(raw: str) -> ChatbotName:

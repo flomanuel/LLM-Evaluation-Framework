@@ -176,6 +176,33 @@ class TestDeserializeRun:
         restored = deserialize_run(data)
         assert restored.attack_categories[0].category == Category.ILLEGAL_ACTIVITY
 
+    def test_legacy_attack_category_dot_format(self):
+        """Attack-level category stored as 'Category.BENIGN' must normalize to 'benign',
+        not just the test case's own category — otherwise RunSummary's benign-baseline-only
+        filter (`attack_category == "benign"`) silently fails to match and enhanced benign
+        attacks leak into the confusion-matrix counts.
+        """
+        run = _minimal_run()
+        data = json.loads(json.dumps(asdict(run), default=str))
+        attack_key = next(iter(data["attack_categories"][0]["attacks"]))
+        data["attack_categories"][0]["attacks"][attack_key]["category"] = "Category.BENIGN"
+        restored = deserialize_run(data)
+        attack = next(iter(restored.attack_categories[0].attacks.values()))
+        assert attack.category == "benign"
+
+    def test_attack_category_empty_stays_empty_for_test_case_fallback(self):
+        """An empty attack-level category must stay empty (not default to some category),
+        so RunSummary's `attack_data.get("category") or default_category` still falls back
+        to the owning test case's category.
+        """
+        run = _minimal_run()
+        data = json.loads(json.dumps(asdict(run), default=str))
+        attack_key = next(iter(data["attack_categories"][0]["attacks"]))
+        data["attack_categories"][0]["attacks"][attack_key]["category"] = ""
+        restored = deserialize_run(data)
+        attack = next(iter(restored.attack_categories[0].attacks.values()))
+        assert attack.category == ""
+
     def test_legacy_severity_dot_format(self):
         """Severity stored as 'Severity.UNSAFE' (old Python str(enum))."""
         run = _minimal_run()
@@ -305,7 +332,8 @@ class TestImportRuns:
             assert TestRunService().exists(r.run_id)
 
     def test_import_creates_analysis_run(self, tmp_path):
-        """import_runs with reanalyze=True (default) creates an analysis_run."""
+        """import_runs with reanalyze=True (default) creates both analysis_run variants
+        (consider_chatbot_success=True and False, both exclude_scanners=True)."""
         from testframework.persistence.repository.analysis_repository import AnalysisRepository
         import testframework.persistence.session as _sm
 
@@ -315,7 +343,9 @@ class TestImportRuns:
 
         with _sm.Session() as session:
             analyses = AnalysisRepository(session).find_by_run_id(run.run_id)
-        assert len(analyses) == 1
+        assert len(analyses) == 2
+        assert {a.consider_chatbot_success for a in analyses} == {True, False}
+        assert all(a.exclude_scanners for a in analyses)
 
     def test_import_no_reanalyze_skips_analysis(self, tmp_path):
         """import_runs with reanalyze=False does not create an analysis_run."""
