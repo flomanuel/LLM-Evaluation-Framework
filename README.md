@@ -37,7 +37,7 @@ The project-owned red-team modules are maintained in this repository.
 
 ## Quickstart
 
-Note: under _extras, an exemplare frontend for interacting with the REST API is available. See
+Note: under _extras, a simple frontend for interacting with the REST API is available. See
 the [subpage](./_extras/frontend/README.md) for details.
 
 ### Local (uv)
